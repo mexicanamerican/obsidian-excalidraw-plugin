@@ -12,7 +12,7 @@ Content structure:
 2. The curated script overview (index-new.md)
 3. Raw source of every *.md script in /ea-scripts (each fenced code block is auto-closed to ensure well-formed aggregation)
 
-Generated on: 2026-02-14T19:35:42.415Z
+Generated on: 2026-02-27T17:11:57.194Z
 
 ---
 
@@ -10599,8 +10599,12 @@ const toggleFold = async (mode = "L0") => {
   const sel = getMindmapNodeFromSelection();
   if (!sel) return;
 
-  const allElements = ea.getViewElements();
-  ea.copyViewElementsToEAforEditing(allElements);
+  const allViewElements = ea.getViewElements();
+  const info = getHierarchy(sel, allViewElements);
+  
+  // Only target elements in the specific mindmap tree to avoid massive array loops 
+  const projectElements = getMindmapProjectElements(info.rootId, allViewElements);
+  ea.copyViewElementsToEAforEditing(projectElements);
   const wbElements = ea.getElements();
 
   const targetNode = wbElements.find(el => el.id === sel.id);
@@ -10651,17 +10655,13 @@ const toggleFold = async (mode = "L0") => {
     });
   }
 
-  const info = getHierarchy(sel, ea.getViewElements());
   updateBranchVisibility(targetNode.id, false, wbElements, true, info.rootId);
 
   await addElementsToView({ captureUpdate: autoLayoutDisabled ? "IMMEDIATELY" : "EVENTUALLY" });
 
   if (!autoLayoutDisabled) {
-    const info = getHierarchy(sel, ea.getViewElements());
     await triggerGlobalLayout(info.rootId);
   }
-
-  const currentViewElements = ea.getViewElements();
 
   ea.viewUpdateScene({appState: {selectedGroupIds: {}}});
   focusSelected();
@@ -12020,7 +12020,10 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
     };
   };
 
-  ea.copyViewElementsToEAforEditing(ea.getViewElements());
+  const viewElements = ea.getViewElements();
+  const projectElements = getMindmapProjectElements(rootId, viewElements);
+
+  ea.copyViewElementsToEAforEditing(projectElements);
   let allElements = ea.getElements();
   let root = allElements.find((el) => el.id === rootId);
   if (!root) return;
@@ -12060,7 +12063,6 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
   if (boundaryNodeSnapshot.size > 0) {
     for (const [id, oldSnapshot] of boundaryNodeSnapshot) {
       const newEl = ea.getElement(id);
-      // Note: newEl might be null if not modified in workbench, but run() usually touches everything in branch.
       if (newEl) {
          if (Math.abs(newEl.x - oldSnapshot.x) > 0.01 ||
              Math.abs(newEl.y - oldSnapshot.y) > 0.01 ||
@@ -12076,7 +12078,11 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
   if (result1.structuralChange || forceUngroup || boundaryMoved) {
     await addElementsToView({ captureUpdate: "EVENTUALLY" });
 
-    ea.copyViewElementsToEAforEditing(ea.getViewElements());
+    // Isolate subset again for the second pass
+    const viewElementsRun2 = ea.getViewElements();
+    const projectElementsRun2 = getMindmapProjectElements(rootId, viewElementsRun2);
+
+    ea.copyViewElementsToEAforEditing(projectElementsRun2);
     allElements = ea.getElements();
     root = allElements.find((el) => el.id === rootId);
     
@@ -12247,7 +12253,9 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
         const incomingArrow = allElements.find(
           (a) => a.type === "arrow" && a.customData?.isBranch && a.endBinding?.elementId === parent.id,
         );
-        nodeColor = incomingArrow ? incomingArrow.strokeColor : parent.strokeColor;
+        nodeColor = incomingArrow
+          ? incomingArrow.strokeColor
+          : (parent.strokeColor && parent.strokeColor.toLowerCase() !== "transparent" ? parent.strokeColor : defaultNodeColor);
       } else {
         nodeColor = parent.strokeColor;
       }
@@ -13099,8 +13107,12 @@ const importTextToMap = async (rawText) => {
 
   const stack = [{ indent: -1, node: currentParent }];
 
-  if (rootSelected) {
-    ea.copyViewElementsToEAforEditing(ea.getViewElements().filter(el=> !ea.getElement(el.id))); // ensure EA has copies of existing elements
+if (rootSelected) {
+    const allViewElements = ea.getViewElements();
+    const info = getHierarchy(sel, allViewElements);
+    const projectElements = getMindmapProjectElements(info.rootId, allViewElements);
+    // ensure EA has copies of existing tree elements, not the entire scene
+    ea.copyViewElementsToEAforEditing(projectElements.filter(el => !ea.getElement(el.id))); 
   }
   
   for (const item of parsed) {
@@ -14059,6 +14071,52 @@ const getDecorationAndCrossLinkIdsForBranches = (branchIds, allElements, rootId)
   }
 
   return Array.from(decorationsAndCrossLInks);
+};
+
+/**
+ * Identifies all elements belonging to a specific mindmap tree to optimize performance on large canvases.
+ * This includes nodes, branch arrows, crosslinks, decorations, boundaries, and bound text.
+ */
+const getMindmapProjectElements = (rootId, allViewElements) => {
+  // 1. Get core structural IDs
+  const branchIds = getBranchElementIds(rootId, allViewElements);
+  
+  // 2. Get decorations and cross-links (requires scanning allViewElements for groups/arrows)
+  const decorationAndCrossLinkIds = getDecorationAndCrossLinkIdsForBranches(branchIds, allViewElements, rootId);
+  
+  const projectElementIds = new Set([...branchIds, ...decorationAndCrossLinkIds]);
+  const projectElements = [];
+  const addedIds = new Set();
+  
+  const addWithDependencies = (id) => {
+    if (addedIds.has(id)) return;
+    const el = allViewElements.find(e => e.id === id);
+    if (!el) return;
+    
+    projectElements.push(el);
+    addedIds.add(id);
+    
+    // Include text inside containers or arrows
+    if (el.boundElements) {
+      el.boundElements.forEach(be => addWithDependencies(be.id));
+    }
+    // Include container of text
+    if (el.containerId) {
+      addWithDependencies(el.containerId);
+    }
+    // Include fold indicators
+    if (el.customData?.foldIndicatorId) {
+      addWithDependencies(el.customData.foldIndicatorId);
+    }
+    // Include boundaries
+    if (el.customData?.boundaryId) {
+      addWithDependencies(el.customData.boundaryId);
+    }
+  };
+  
+  projectElementIds.forEach(id => addWithDependencies(id));
+  
+  return projectElements;
 };
 
 /**

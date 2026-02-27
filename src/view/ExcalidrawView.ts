@@ -3748,8 +3748,10 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
     if (!api) {
       return false;
     }
-    const elementsMap = arrayToMap(api.getSceneElements());
+    const sceneElements = api.getSceneElements() as ExcalidrawElement[];
+    const elementsMap = arrayToMap(sceneElements);
     const textElements = newElements.filter((el) => el.type == "text");
+    let shouldRefreshArrows = false;
     for (let i = 0; i < textElements.length; i++) {
       const textElement = textElements[i] as Mutable<ExcalidrawTextElement>;
       const {parseResult, link} =
@@ -3776,6 +3778,9 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
         textElement.width = width;
         textElement.height = height;
       }
+      if (textElement.containerId) {
+        shouldRefreshArrows = true;
+      }
     }
 
     if (repositionToCursor) {
@@ -3786,22 +3791,33 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
       );
     }
 
-    const newIds = newElements.map((e) => e.id);
-    const el: ExcalidrawElement[] = api.getSceneElements() as ExcalidrawElement[];
-    const removeList: string[] = [];
+    const newIds = new Set(newElements.map((e) => e.id));
+    const newElementsMap = new Map(newElements.map((element) => [element.id, element]));
+    const removeSet = new Set<string>();
+    const updatedSceneElements: ExcalidrawElement[] = [...sceneElements];
 
     //need to update elements in scene.elements to maintain sequence of layers
-    for (let i = 0; i < el.length; i++) {
-      const id = el[i].id;
-      if (newIds.includes(id)) {
-        el[i] = newElements.filter((ne) => ne.id === id)[0];
-        removeList.push(id);
+    for (let i = 0; i < updatedSceneElements.length; i++) {
+      const id = updatedSceneElements[i].id;
+      if (newIds.has(id)) {
+        updatedSceneElements[i] = newElementsMap.get(id);
+        removeSet.add(id);
       }
     }
 
+    const newElementsToInsert = newElements.filter((e) => !removeSet.has(e.id));
     const elements = newElementsOnTop
-      ? el.concat(newElements.filter((e) => !removeList.includes(e.id)))
-      : newElements.filter((e) => !removeList.includes(e.id)).concat(el);
+      ? updatedSceneElements.concat(newElementsToInsert)
+      : newElementsToInsert.concat(updatedSceneElements);
+
+    if (!shouldRefreshArrows) {
+      shouldRefreshArrows = newElements.some((e) =>
+        ["arrow", "line", "freedraw", "elbow-arrow", "iframe"].includes(e.type)
+        || Boolean((e as any).boundElements?.length)
+        || Boolean((e as any).startBinding)
+        || Boolean((e as any).endBinding)
+      );
+    }
     
     const files: BinaryFileData[] = [];
     if (images && Object.keys(images).length >0) {  
@@ -3857,8 +3873,14 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
       api.addFiles(files);
     }
 
-    api.updateContainerSize(api.getSceneElements().filter(el => newIds.includes(el.id)).filter(isContainer));
-    api.refreshAllArrows();
+    const newContainers = newElements.filter(isContainer);
+    if (newContainers.length > 0) {
+      api.updateContainerSize(newContainers);
+      shouldRefreshArrows = true;
+    }
+    if (shouldRefreshArrows) {
+      api.refreshAllArrows();
+    }
     if (save) {
       await this.save(false); //preventReload=false will ensure that markdown links are paresed and displayed correctly
     } else {

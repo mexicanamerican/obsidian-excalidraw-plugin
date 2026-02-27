@@ -1864,7 +1864,7 @@ export type AIRequest = {
 /* ************************************** */
 /* node_modules/@zsviczian/excalidraw/types/element/src/types.d.ts */
 /* ************************************** */
-export type ChartType = "bar" | "line";
+export type ChartType = "bar" | "line" | "radar";
 export type FillStyle = "hachure" | "cross-hatch" | "solid" | "zigzag";
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
 export type FontFamilyValues = typeof FONT_FAMILY[FontFamilyKeys];
@@ -2296,6 +2296,7 @@ export type StaticCanvasAppState = Readonly<_CommonCanvasAppState & {
     croppingElementId: AppState["croppingElementId"];
 }>;
 export type InteractiveCanvasAppState = Readonly<_CommonCanvasAppState & {
+    activeTool: AppState["activeTool"];
     activeEmbeddable: AppState["activeEmbeddable"];
     selectionElement: AppState["selectionElement"];
     selectedGroupIds: AppState["selectedGroupIds"];
@@ -2324,6 +2325,7 @@ export type InteractiveCanvasAppState = Readonly<_CommonCanvasAppState & {
     frameColor: AppState["frameColor"];
     shouldCacheIgnoreZoom: AppState["shouldCacheIgnoreZoom"];
     exportScale: AppState["exportScale"];
+    currentItemArrowType: AppState["currentItemArrowType"];
 }>;
 export type ObservedAppState = ObservedStandaloneAppState & ObservedElementsAppState;
 export type ObservedStandaloneAppState = {
@@ -2458,6 +2460,10 @@ export interface AppState {
     } | {
         name: "elementLinkSelector";
         sourceElementId: ExcalidrawElement["id"];
+    } | {
+        name: "charts";
+        data: Spreadsheet;
+        rawText: string;
     };
     /**
      * Reflects user preference for whether the default sidebar should be docked.
@@ -2508,14 +2514,6 @@ export interface AppState {
         open: boolean;
         /** bitmap. Use `STATS_PANELS` bit values */
         panels: number;
-    };
-    currentChartType: ChartType;
-    pasteDialog: {
-        shown: false;
-        data: null;
-    } | {
-        shown: true;
-        data: Spreadsheet;
     };
     showHyperlinkPopup: false | "info" | "editor";
     linkOpacity: number;
@@ -2888,7 +2886,6 @@ export interface ExcalidrawImperativeAPI {
     zoomToFit: InstanceType<typeof App>["zoomToFit"];
     refreshEditorInterface: InstanceType<typeof App>["refreshEditorInterface"];
     isTouchScreen: InstanceType<typeof App>["isTouchScreen"];
-    setTrayModeEnabled: InstanceType<typeof App>["setTrayModeEnabled"];
     setDesktopUIMode: InstanceType<typeof App>["setDesktopUIMode"];
     setMobileModeAllowed: InstanceType<typeof App>["setMobileModeAllowed"];
     isTrayModeEnabled: InstanceType<typeof App>["isTrayModeEnabled"];
@@ -3061,7 +3058,7 @@ export declare const useApp: () => AppClassProperties;
 export declare const useAppProps: () => AppProps;
 export declare const useEditorInterface: () => Readonly<{
     formFactor: "phone" | "tablet" | "desktop";
-    desktopUIMode: "compact" | "full" | "tray";
+    desktopUIMode: "compact" | "full" | "tray" | "mobile";
     userAgent: Readonly<{
         isMobileDevice: boolean;
         platform: "ios" | "android" | "other" | "unknown";
@@ -3069,7 +3066,6 @@ export declare const useEditorInterface: () => Readonly<{
     isTouchScreen: boolean;
     canFitSidebar: boolean;
     isLandscape: boolean;
-    preferTrayMode: boolean;
 }>;
 export declare const useStylesPanelMode: () => StylesPanelMode;
 export declare const useExcalidrawContainer: () => {
@@ -3290,7 +3286,9 @@ declare class App extends React.Component<AppProps, AppState> {
      */
     getEffectiveGridSize: () => NullableGridSize;
     private getHTMLIFrameElement;
-    private handleEmbeddableCenterClick;
+    private handleIframeLikeElementHover;
+    /** @returns true if iframe-like element click handled */
+    private handleIframeLikeCenterClick;
     private isIframeLikeElementCenter;
     private updateEmbedValidationStatus;
     private updateEmbeddables;
@@ -3337,12 +3335,11 @@ declare class App extends React.Component<AppProps, AppState> {
     private resetScene;
     private initializeScene;
     private getFormFactor;
-    refreshEditorInterface: (preferTrayMode?: boolean) => void;
+    refreshEditorInterface: () => void;
     private reconcileStylesPanelMode;
     /** TO BE USED LATER */
     private setDesktopUIMode;
     private isTouchScreen;
-    private setTrayModeEnabled;
     isTrayModeEnabled: () => boolean;
     private clearImageShapeCache;
     componentDidMount(): Promise<void>;
@@ -3520,7 +3517,7 @@ declare class App extends React.Component<AppProps, AppState> {
     private finishImageCropping;
     private handleCanvasDoubleClick;
     private getElementLinkAtPosition;
-    private redirectToLink;
+    private handleElementLinkClick;
     private getTopLayerFrameAtSceneCoords;
     private handleCanvasPointerMove;
     private handleEraser;

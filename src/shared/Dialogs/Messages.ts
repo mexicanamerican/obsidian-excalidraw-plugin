@@ -17,6 +17,23 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 
 <div class="ex-coffee-div"><a href="https://ko-fi.com/zsolt"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com"  height=45></a></div>
 `,
+"2.20.6":`
+## Fixed
+- Significant performance improvement of MindMap Builder and all other scripts modifying elements in large scenes containing thousands of elements.
+- Multiple arrow related updates and fixes from Excalidraw.com [#10832](https://github.com/excalidraw/excalidraw/pull/10832) [#10831](https://github.com/excalidraw/excalidraw/pull/10831) [#10816](https://github.com/excalidraw/excalidraw/pull/10816)
+
+## New from Excalidraw.com
+- Allow clicking on links and embeds with laser tool [#10797](https://github.com/excalidraw/excalidraw/pull/10797)
+- Improved paste text to diagram with more options and support for more data [#10824](https://github.com/excalidraw/excalidraw/pull/10824)
+
+try copy/pasting this into Excalidraw:
+\`\`\`
+skill, junior, medior, senior
+business_analysis, 2, 6, 9
+business_writing, 3, 7, 9
+stakeholder_mgmt, 1, 6, 10
+\`\`\`
+`,
 "2.20.5":`
 ## Fixed
 - Obsidian Mobile: The floating navigation bar got stuck at the bottom after closing Excalidraw or switching to a markdown note. [#2673](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2673)
