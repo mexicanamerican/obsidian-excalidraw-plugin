@@ -311,6 +311,8 @@ const STRINGS = {
     DESC_LAYOUT_INDICATOR_OPACITY: "Opacity of the '...' fold indicator (0-100).",
     CONTAINER_PADDING: "Container Padding",
     DESC_LAYOUT_CONTAINER_PADDING: "Padding inside the box when 'Box Child Nodes' or 'Box/Unbox' is used.",
+    MAX_SEGMENT_LENGTH: "Boundary Line Precision",
+    DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "Boundary smoothing precision. Smaller values are more precise (30 = Precise), larger values are rougher (200 = Rough).",
     MANUAL_GAP_MULTIPLIER: "Manual-layout Gap Multiplier",
     DESC_LAYOUT_MANUAL_GAP: "Spacing multiplier when adding nodes while Auto-Layout is disabled.",
     MANUAL_JITTER_RANGE: "Manual-layout Jitter Range",
@@ -528,6 +530,8 @@ addLocale("zh", {
   DESC_LAYOUT_INDICATOR_OPACITY: "折叠指示符的不透明度（0-100）。",
   CONTAINER_PADDING: "容器内边距",
   DESC_LAYOUT_CONTAINER_PADDING: "使用边框样式时的内边距。",
+  MAX_SEGMENT_LENGTH: "边界线精度",
+  DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "边界平滑精度。值越小越精细（30 = 精细），值越大越粗略（200 = 粗略）。",
   MANUAL_GAP_MULTIPLIER: "手动布局间距倍数",
   DESC_LAYOUT_MANUAL_GAP: "禁用自动布局时添加节点的间距倍数。",
   MANUAL_JITTER_RANGE: "手动布局抖动范围",
@@ -739,6 +743,12 @@ const LAYOUT_METADATA = {
     def: 10, min: 0, max: 50, step: 2,
     desc: t("DESC_LAYOUT_CONTAINER_PADDING"),
     name: t("CONTAINER_PADDING"),
+  },
+  MAX_SEGMENT_LENGTH: {
+    section: "SECTION_VISUALS",
+    def: 80, min: 30, max: 200, step: 10,
+    desc: t("DESC_LAYOUT_BOUNDARY_LINE_PRECISION"),
+    name: t("MAX_SEGMENT_LENGTH"),
   },
 
   // --- Manual Mode ---
@@ -2502,10 +2512,26 @@ const updateNodeBoundary = (node, allElements, rootId) => {
 
   if (branchElements.length === 0) return;
 
+  const root = allElements.find(el => el.id === rootId);
+  const growthMode = root?.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalBoundaryMode = growthMode === "Up-facing" || growthMode === "Down-facing" || growthMode === "Up-Down";
+
   const padding = 15;
   let allPoints =[];
 
   branchElements.forEach(el => {
+    if (isVerticalBoundaryMode && el.type === "arrow" && Array.isArray(el.points) && el.points.length > 0) {
+      el.points.forEach(([px, py]) => {
+        const x = el.x + px;
+        const y = el.y + py;
+        allPoints.push([x - padding, y - padding]);
+        allPoints.push([x + padding, y - padding]);
+        allPoints.push([x + padding, y + padding]);
+        allPoints.push([x - padding, y + padding]);
+      });
+      return;
+    }
+
     const x1 = el.x - padding;
     const y1 = el.y - padding;
     const x2 = el.x + el.width + padding;
@@ -2523,7 +2549,7 @@ const updateNodeBoundary = (node, allElements, rootId) => {
 
   // Subdivide long segments to tame the bezier curve over-extension
   const subdividedPoints =[];
-  const MAX_SEGMENT_LENGTH = 80; // Force points every 80px
+  const MAX_SEGMENT_LENGTH = layoutSettings.MAX_SEGMENT_LENGTH ?? LAYOUT_METADATA.MAX_SEGMENT_LENGTH.def;
   for (let i = 0; i < hullPoints.length; i++) {
     const p1 = hullPoints[i];
     const p2 = hullPoints[(i + 1) % hullPoints.length];
