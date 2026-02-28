@@ -2495,7 +2495,7 @@ const updateNodeBoundary = (node, allElements, rootId) => {
   if (branchElements.length === 0) return;
 
   const padding = 15;
-  let allPoints = [];
+  let allPoints =[];
 
   branchElements.forEach(el => {
     const x1 = el.x - padding;
@@ -2513,7 +2513,28 @@ const updateNodeBoundary = (node, allElements, rootId) => {
 
   if (hullPoints.length < 3) return;
 
+  // Subdivide long segments to tame the bezier curve over-extension
+  const subdividedPoints =[];
+  const MAX_SEGMENT_LENGTH = 80; // Force points every 80px
+  for (let i = 0; i < hullPoints.length; i++) {
+    const p1 = hullPoints[i];
+    const p2 = hullPoints[(i + 1) % hullPoints.length];
+    subdividedPoints.push(p1);
+    
+    const dist = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    if (dist > MAX_SEGMENT_LENGTH) {
+      const steps = Math.ceil(dist / MAX_SEGMENT_LENGTH);
+      for (let j = 1; j < steps; j++) {
+        subdividedPoints.push([
+          p1[0] + (p2[0] - p1[0]) * (j / steps),
+          p1[1] + (p2[1] - p1[1]) * (j / steps)
+        ]);
+      }
+    }
+  }
+
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  // Calculate bounding box using the original hull points
   hullPoints.forEach(p => {
     if (p[0] < minX) minX = p[0];
     if (p[1] < minY) minY = p[1];
@@ -2533,7 +2554,8 @@ const updateNodeBoundary = (node, allElements, rootId) => {
   boundaryEl.width = w;
   boundaryEl.height = h;
 
-  const normalizedPoints = hullPoints.map(p => [p[0] - minX, p[1] - minY]);
+  // Use the newly subdivided points for the final path
+  const normalizedPoints = subdividedPoints.map(p => [p[0] - minX, p[1] - minY]);
   normalizedPoints.push([normalizedPoints[0][0], normalizedPoints[0][1]]); // Close loop
   boundaryEl.points = normalizedPoints;
 
@@ -2546,7 +2568,7 @@ const updateNodeBoundary = (node, allElements, rootId) => {
          boundaryEl.groupIds = [node.groupIds[0]];
      }
   } else {
-     boundaryEl.groupIds = [];
+     boundaryEl.groupIds =[];
   }
 };
 
@@ -5198,6 +5220,17 @@ const updateSubtreeColor = (nodeId, oldColor, newColor, allElements) => {
   const eaNode = ea.getElement(nodeId);
   eaNode.strokeColor = newColor;
 
+  // Update boundary color to match if the node has one
+  if (node.customData?.boundaryId) {
+    const boundaryEl = allElements.find(e => e.id === node.customData.boundaryId);
+    if (boundaryEl) {
+      if (!ea.getElement(boundaryEl.id)) ea.copyViewElementsToEAforEditing([boundaryEl]);
+      const eaBoundary = ea.getElement(boundaryEl.id);
+      eaBoundary.strokeColor = newColor;
+      eaBoundary.backgroundColor = newColor;
+    }
+  }
+
   // Update incoming arrow (Ontology/Connector)
   const incomingArrow = allElements.find(
     (a) => a.type === "arrow" &&
@@ -5253,7 +5286,7 @@ const changeNodeOrder = async (key) => {
   const curCenterY = current.y + current.height / 2;
   
   const mapMode = root.customData?.growthMode || currentModalGrowthMode;
-  const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
+  const isVerticalMode =["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
   const isRadial = (mapMode === "Radial");
 
   const isInPositive = isVerticalMode ? (curCenterY > rootCenterY) : (curCenter > rootCenter);
@@ -5339,8 +5372,11 @@ const changeNodeOrder = async (key) => {
       // If we are promoting to Level 1 (Child of Root), give it a fresh color if multicolor is on.
       // Otherwise, it keeps the parent's color (which is now its sibling).
       if (grandParent.id === root.id && rootMulticolor) {
-         const existingL1Colors = getChildrenNodes(root.id, allElements).map(n => n.strokeColor);
-         const newColor = getDynamicColor(existingL1Colors);
+         let newColor = current.customData?.previousL1Color;
+         if (!newColor) {
+             const existingL1Colors = getChildrenNodes(root.id, allElements).map(n => n.strokeColor);
+             newColor = getDynamicColor(existingL1Colors);
+         }
          updateSubtreeColor(current.id, current.strokeColor, newColor, allElements);
       }
 
@@ -5399,7 +5435,16 @@ const changeNodeOrder = async (key) => {
       const nextOrder = newParentChildren.length > 0 ? Math.max(...newParentChildren.map(getMindmapOrder)) + 1 : 0;
       
       ea.copyViewElementsToEAforEditing([current]);
-      ea.addAppendUpdateCustomData(current.id, { mindmapOrder: nextOrder });
+      
+      // Store previous L1 color if we are demoting from L1
+      if (parent.id === root.id) {
+          ea.addAppendUpdateCustomData(current.id, { 
+              mindmapOrder: nextOrder,
+              previousL1Color: current.strokeColor
+          });
+      } else {
+          ea.addAppendUpdateCustomData(current.id, { mindmapOrder: nextOrder });
+      }
       
       // New depth is Parent's Depth + 2 (Child of Sibling)
       const parentInfo = getHierarchy(parent, allElements);
