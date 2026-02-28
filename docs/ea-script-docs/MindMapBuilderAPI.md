@@ -314,7 +314,7 @@ if (!roles.ok) return;
 ### 9) Build a feature showcase mindmap (Right-Left + boundaries)
 
 ```js
-(async()={
+(async () => {
   const ensureMindMapBuilder = async () => {
     const ea = window.ExcalidrawAutomate;
     if (!ea) throw new Error("ExcalidrawAutomate is not available");
@@ -448,6 +448,7 @@ if (!roles.ok) return;
 
   const rootInfo = assertOk(mmb.getMapInfo(rootData.nodeId), "getMapInfo root");
   const rootText = assertOk(mmb.getNodeText(rootData.nodeId), "getNodeText root");
+  mmb.performAction(mmb.Actions.ZOOM);
 
   console.log("Map created", { rootInfo, rootText, branchNodeIds });
 })();

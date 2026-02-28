@@ -280,6 +280,7 @@ const STRINGS = {
     SECTION_GENERAL: "General Spacing",
     SECTION_RADIAL: "Radial Layout (Clockwise)",
     SECTION_DIRECTIONAL: "Directional Layout (Left/Right)",
+    SECTION_VERTICAL: "Vertical Maps (Up/Down)",
     SECTION_VISUALS: "Visual Elements",
     SECTION_MANUAL: "Manual Mode Behavior",
     LAYOUT_RESET: "Reset All to Default",
@@ -320,6 +321,22 @@ const STRINGS = {
     DESC_LAYOUT_CONTAINER_PADDING: "Padding inside the box when 'Box Child Nodes' or 'Box/Unbox' is used.",
     MAX_SEGMENT_LENGTH: "Boundary Line Precision",
     DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "Boundary smoothing precision. Smaller values are more precise (30 = Precise), larger values are rougher (200 = Rough).",
+    VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE: "Subtree Width Blend (Single-sided)",
+    DESC_VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE: "How strongly one-sided submaps (Right-facing / Left-facing) reserve horizontal sibling space in vertical maps. High impact.",
+    VERTICAL_SUBTREE_WIDTH_BLEND_DUAL: "Subtree Width Blend (Dual-sided)",
+    DESC_VERTICAL_SUBTREE_WIDTH_BLEND_DUAL: "How strongly dual-sided submaps (Right-Left) reserve horizontal sibling space in vertical maps. High impact.",
+    VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER: "Subtree Smooth Threshold Multiplier",
+    DESC_VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER: "Starts smooth compression after this multiple of Gap Y to avoid spacing jumps when adding more children. Usually subtle unless the map is large.",
+    VERTICAL_SUBTREE_SMOOTH_MIN_SCALE: "Subtree Smooth Minimum Scale",
+    DESC_VERTICAL_SUBTREE_SMOOTH_MIN_SCALE: "Minimum compression scale used by the vertical subtree width smoother. Higher values preserve more width. Usually subtle unless the map is large.",
+    HORIZONTAL_L1_SOFTCAP_THRESHOLD: "Horizontal L1 Soft Cap Threshold",
+    DESC_HORIZONTAL_L1_SOFTCAP_THRESHOLD: "Soft cap (px) before Up/Down Level-1 subtree widths are compressed. Medium to high impact on large maps.",
+    HORIZONTAL_L1_COMPRESSION_MIN_SCALE: "Horizontal L1 Compression Min Scale",
+    DESC_HORIZONTAL_L1_COMPRESSION_MIN_SCALE: "Minimum compression scale for Up/Down Level-1 width compression. Higher values preserve more width. Medium impact after soft cap is reached.",
+    VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO: "Compact Parent-Child Gap Ratio",
+    DESC_VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO: "In compact vertical subtrees, uses this fraction of Gap X for parent-child distance. Very high visible impact.",
+    DIRECTIONAL_CROSS_AXIS_RATIO: "Directional Cross-axis Ratio",
+    DESC_DIRECTIONAL_CROSS_AXIS_RATIO: "Cross-axis radius ratio for directional arc layouts (0.2 = flatter arcs, 1.0 = rounder arcs). High visual impact on L1 spread.",
     MANUAL_GAP_MULTIPLIER: "Manual-layout Gap Multiplier",
     DESC_LAYOUT_MANUAL_GAP: "Spacing multiplier when adding nodes while Auto-Layout is disabled.",
     MANUAL_JITTER_RANGE: "Manual-layout Jitter Range",
@@ -506,6 +523,7 @@ addLocale("zh", {
   SECTION_GENERAL: "常规间距",
   SECTION_RADIAL: "径向布局（顺时针）",
   SECTION_DIRECTIONAL: "定向布局（左/右）",
+  SECTION_VERTICAL: "垂直导图（上/下）",
   SECTION_VISUALS: "视觉元素",
   SECTION_MANUAL: "手动模式行为",
   LAYOUT_RESET: "重置所有为默认值",
@@ -546,6 +564,22 @@ addLocale("zh", {
   DESC_LAYOUT_CONTAINER_PADDING: "使用边框样式时的内边距。",
   MAX_SEGMENT_LENGTH: "边界线精度",
   DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "边界平滑精度。值越小越精细（30 = 精细），值越大越粗略（200 = 粗略）。",
+  VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE: "子树宽度混合（单侧）",
+  DESC_VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE: "在垂直导图中，单侧子图（右向/左向）对同级水平占位宽度的影响强度。影响很大。",
+  VERTICAL_SUBTREE_WIDTH_BLEND_DUAL: "子树宽度混合（双侧）",
+  DESC_VERTICAL_SUBTREE_WIDTH_BLEND_DUAL: "在垂直导图中，双侧子图（右左）对同级水平占位宽度的影响强度。影响很大。",
+  VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER: "子树平滑阈值倍数",
+  DESC_VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER: "超过 Gap Y 的该倍数后开始平滑压缩，以避免新增第 2/3 个子节点时间距突增。通常在大图中更明显。",
+  VERTICAL_SUBTREE_SMOOTH_MIN_SCALE: "子树平滑最小尺度",
+  DESC_VERTICAL_SUBTREE_SMOOTH_MIN_SCALE: "垂直子树宽度平滑器使用的最小压缩尺度。值越大越保留原宽度。通常在大图中更明显。",
+  HORIZONTAL_L1_SOFTCAP_THRESHOLD: "水平 L1 软上限阈值",
+  DESC_HORIZONTAL_L1_SOFTCAP_THRESHOLD: "在上/下导图中，L1 子树宽度超过该像素值后开始压缩。对大图影响中到高。",
+  HORIZONTAL_L1_COMPRESSION_MIN_SCALE: "水平 L1 压缩最小尺度",
+  DESC_HORIZONTAL_L1_COMPRESSION_MIN_SCALE: "上/下导图 L1 宽度压缩使用的最小尺度。值越大越保留原宽度。达到软上限后影响中等。",
+  VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO: "紧凑父子间距比例",
+  DESC_VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO: "在紧凑垂直子树中，父子距离使用 Gap X 的该比例。可见影响非常大。",
+  DIRECTIONAL_CROSS_AXIS_RATIO: "定向布局横轴比例",
+  DESC_DIRECTIONAL_CROSS_AXIS_RATIO: "定向弧布局的横轴半径比例（0.2 更扁平，1.0 更圆）。对 L1 展开形态影响很大。",
   MANUAL_GAP_MULTIPLIER: "手动布局间距倍数",
   DESC_LAYOUT_MANUAL_GAP: "禁用自动布局时添加节点的间距倍数。",
   MANUAL_JITTER_RANGE: "手动布局抖动范围",
@@ -737,6 +771,56 @@ const LAYOUT_METADATA = {
     def: 7, min: 0, max: 20, step: 1,
     desc: t("DESC_LAYOUT_RADIUS_PADDING"),
     name: t("RADIUS_PADDING_PER_NODE"),
+  },
+
+  // --- Vertical Maps (Up/Down) ---
+  VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE: {
+    section: "SECTION_VERTICAL",
+    def: 0.35, min: 0.05, max: 1.2, step: 0.05,
+    desc: t("DESC_VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE"),
+    name: t("VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE"),
+  },
+  VERTICAL_SUBTREE_WIDTH_BLEND_DUAL: {
+    section: "SECTION_VERTICAL",
+    def: 0.6, min: 0.1, max: 1.4, step: 0.05,
+    desc: t("DESC_VERTICAL_SUBTREE_WIDTH_BLEND_DUAL"),
+    name: t("VERTICAL_SUBTREE_WIDTH_BLEND_DUAL"),
+  },
+  VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER: {
+    section: "SECTION_VERTICAL",
+    def: 6.0, min: 0.5, max: 20.0, step: 0.5,
+    desc: t("DESC_VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER"),
+    name: t("VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER"),
+  },
+  VERTICAL_SUBTREE_SMOOTH_MIN_SCALE: {
+    section: "SECTION_VERTICAL",
+    def: 240, min: 10, max: 1600, step: 10,
+    desc: t("DESC_VERTICAL_SUBTREE_SMOOTH_MIN_SCALE"),
+    name: t("VERTICAL_SUBTREE_SMOOTH_MIN_SCALE"),
+  },
+  HORIZONTAL_L1_SOFTCAP_THRESHOLD: {
+    section: "SECTION_VERTICAL",
+    def: 560, min: 20, max: 3000, step: 20,
+    desc: t("DESC_HORIZONTAL_L1_SOFTCAP_THRESHOLD"),
+    name: t("HORIZONTAL_L1_SOFTCAP_THRESHOLD"),
+  },
+  HORIZONTAL_L1_COMPRESSION_MIN_SCALE: {
+    section: "SECTION_VERTICAL",
+    def: 240, min: 10, max: 1600, step: 10,
+    desc: t("DESC_HORIZONTAL_L1_COMPRESSION_MIN_SCALE"),
+    name: t("HORIZONTAL_L1_COMPRESSION_MIN_SCALE"),
+  },
+  VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO: {
+    section: "SECTION_VERTICAL",
+    def: 0.55, min: 0.05, max: 1.3, step: 0.05,
+    desc: t("DESC_VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO"),
+    name: t("VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO"),
+  },
+  DIRECTIONAL_CROSS_AXIS_RATIO: {
+    section: "SECTION_VERTICAL",
+    def: 0.2, min: 0.05, max: 1.2, step: 0.05,
+    desc: t("DESC_DIRECTIONAL_CROSS_AXIS_RATIO"),
+    name: t("DIRECTIONAL_CROSS_AXIS_RATIO"),
   },
 
   // --- Visuals ---
@@ -2588,9 +2672,10 @@ const getVerticalPlacementWidth = (nodeId, allElements, childrenByParent, widthC
     const directionalRawWidth = Math.max(node.width, node.width + primaryGap + maxChildWidth);
     // Single-sided directional submaps mostly expand away from siblings.
     // Compress their reserved slot width to avoid over-spacing in vertical parent layout.
+    const singleSideBlend = layoutSettings.VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE ?? LAYOUT_METADATA.VERTICAL_SUBTREE_WIDTH_BLEND_SINGLE.def;
     projectedWidth = Math.max(
       compactMinWidth,
-      node.width + (directionalRawWidth - node.width) * 0.35,
+      node.width + (directionalRawWidth - node.width) * singleSideBlend,
     );
   } else {
     const nodeCenterX = node.x + node.width / 2;
@@ -2610,9 +2695,10 @@ const getVerticalPlacementWidth = (nodeId, allElements, childrenByParent, widthC
       (leftMax > 0 ? primaryGap + leftMax : 0) +
       (rightMax > 0 ? primaryGap + rightMax : 0);
     // Dual-sided maps need more reserved width than single-sided ones, but still less than full bbox width.
+    const dualSideBlend = layoutSettings.VERTICAL_SUBTREE_WIDTH_BLEND_DUAL ?? LAYOUT_METADATA.VERTICAL_SUBTREE_WIDTH_BLEND_DUAL.def;
     projectedWidth = Math.max(
       compactMinWidth,
-      node.width + (Math.max(node.width, directionalRawWidth) - node.width) * 0.6,
+      node.width + (Math.max(node.width, directionalRawWidth) - node.width) * dualSideBlend,
     );
   }
 
@@ -2624,14 +2710,16 @@ const getVerticalPlacementWidth = (nodeId, allElements, childrenByParent, widthC
 
   // Smooth width growth so adding the 2nd/3rd child does not suddenly blow up sibling spacing.
   const widthExtra = Math.max(0, effectiveWidth - node.width);
+  const smoothThresholdMultiplier = layoutSettings.VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER ?? LAYOUT_METADATA.VERTICAL_SUBTREE_SMOOTH_THRESHOLD_MULTIPLIER.def;
   const softThreshold = Math.max(
     layoutSettings.GAP_X,
-    layoutSettings.GAP_Y * 6,
+    layoutSettings.GAP_Y * smoothThresholdMultiplier,
   );
 
   let smoothedWidth = effectiveWidth;
   if (widthExtra > softThreshold) {
-    const compressionScale = Math.max(120, layoutSettings.GAP_X * 2);
+    const smoothMinScale = layoutSettings.VERTICAL_SUBTREE_SMOOTH_MIN_SCALE ?? LAYOUT_METADATA.VERTICAL_SUBTREE_SMOOTH_MIN_SCALE.def;
+    const compressionScale = Math.max(smoothMinScale, layoutSettings.GAP_X * 2);
     const remaining = widthExtra - softThreshold;
     const compressedRemaining = compressionScale * Math.log1p(remaining / compressionScale);
     smoothedWidth = node.width + softThreshold + compressedRemaining;
@@ -3582,7 +3670,7 @@ const layoutSubtreeVertical = (nodeId, targetCenterX, targetY, side, allElements
     });
     const compactGap = Math.max(
       layoutSettings.GAP_Y,
-      Math.round(layoutSettings.GAP_X * 0.55),
+      Math.round(layoutSettings.GAP_X * (layoutSettings.VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO ?? LAYOUT_METADATA.VERTICAL_COMPACT_PARENT_CHILD_GAP_RATIO.def)),
     );
     const dynamicGapPrimary = (unpinnedChildren.length <= 2 && allChildrenCompact)
       ? compactGap
@@ -3806,7 +3894,8 @@ const verticalL1Distribution = (nodes, context, l1Metrics, totalSubtreeHeight, i
   const totalContentHeight = totalSubtreeHeight + (count - 1) * layoutSettings.GAP_Y;
   const radiusFromHeight = totalContentHeight / layoutSettings.DIRECTIONAL_ARC_SPAN_RADIANS;
   const radiusY = Math.max(Math.round(rootBox.height * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusFromHeight) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
-  const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusY * 0.2) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+  const crossAxisRatio = layoutSettings.DIRECTIONAL_CROSS_AXIS_RATIO ?? LAYOUT_METADATA.DIRECTIONAL_CROSS_AXIS_RATIO.def;
+  const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusY * crossAxisRatio) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
 
   const totalThetaDeg = (totalContentHeight / radiusY) * (180 / Math.PI);
   let currentAngle = isLeftSide ? centerAngle + totalThetaDeg / 2 : centerAngle - totalThetaDeg / 2;
@@ -3874,12 +3963,13 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
     if (rawWidth <= nodeWidth) return rawWidth;
 
     const extra = rawWidth - nodeWidth;
-    const softCapThreshold = Math.max(500, (layoutSettings.MIN_RADIUS ?? LAYOUT_METADATA.MIN_RADIUS.def) * 1.6);
+    const softCapThreshold = layoutSettings.HORIZONTAL_L1_SOFTCAP_THRESHOLD ?? LAYOUT_METADATA.HORIZONTAL_L1_SOFTCAP_THRESHOLD.def;
     if (extra <= softCapThreshold) return rawWidth;
 
     // Preserve small/medium maps, compress only very large subtree footprints.
     const remaining = extra - softCapThreshold;
-    const compressionScale = Math.max(120, (layoutSettings.GAP_X ?? LAYOUT_METADATA.GAP_X.def) * 2);
+    const compressionMinScale = layoutSettings.HORIZONTAL_L1_COMPRESSION_MIN_SCALE ?? LAYOUT_METADATA.HORIZONTAL_L1_COMPRESSION_MIN_SCALE.def;
+    const compressionScale = Math.max(compressionMinScale, (layoutSettings.GAP_X ?? LAYOUT_METADATA.GAP_X.def) * 2);
     // log1p keeps growth monotonic while guaranteeing compressedRemaining <= remaining.
     const compressedRemaining = compressionScale * Math.log1p(remaining / compressionScale);
     return nodeWidth + softCapThreshold + compressedRemaining;
@@ -3903,7 +3993,8 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
   
   // Notice axis swaps: Radius Y calculates based on Width
   const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusFromWidth) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
-  const radiusY = Math.max(Math.round(rootBox.height * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusX * 0.2) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+  const crossAxisRatio = layoutSettings.DIRECTIONAL_CROSS_AXIS_RATIO ?? LAYOUT_METADATA.DIRECTIONAL_CROSS_AXIS_RATIO.def;
+  const radiusY = Math.max(Math.round(rootBox.height * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusX * crossAxisRatio) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
 
   const totalThetaDeg = (totalContentWidth / radiusX) * (180 / Math.PI);
   // Reversing the angle spread depending on side to maintain visual reading flow
@@ -7673,35 +7764,86 @@ class PaletteManagerModal extends ea.FloatingModal {
 class LayoutConfigModal extends ea.FloatingModal {
   constructor(app, currentSettings, onUpdate) {
     super(app);
-    this.settings = JSON.parse(JSON.stringify(currentSettings));
+    this.settings = this.normalizeSettings(currentSettings);
     this.onUpdate = onUpdate;
     this.updateTimer = null;
+    this.focusRefreshHandler = (evt) => this.handleFocusRefresh(evt);
+    this.focusDoc = null;
+  }
+
+  normalizeSettings(settingsLike) {
+    const normalized = {};
+    Object.keys(LAYOUT_METADATA).forEach((key) => {
+      const meta = LAYOUT_METADATA[key];
+      const candidate = settingsLike?.[key];
+      normalized[key] = typeof candidate === "number" && Number.isFinite(candidate) ? candidate : meta.def;
+    });
+    return normalized;
   }
 
   onOpen() {
-    this.display();
+    this.display({ preserveSectionState: false });
+    this.focusDoc = this.contentEl?.ownerDocument ?? document;
+    this.focusDoc.addEventListener("focusin", this.focusRefreshHandler, true);
   }
 
   onClose() {
+    if (this.focusDoc) {
+      this.focusDoc.removeEventListener("focusin", this.focusRefreshHandler, true);
+      this.focusDoc = null;
+    }
     if (this.updateTimer) clearTimeout(this.updateTimer);
+    this.settings = this.normalizeSettings(this.settings);
     this.onUpdate(this.settings);
+  }
+
+  handleFocusRefresh(evt) {
+    if (!ea.targetView) {
+      this.close();
+      return;
+    }
+    if (!this.contentEl || !(this.contentEl.contains(evt.target) || this.modalEl.contains(evt.target))) return;
+
+    const sel = getMindmapNodeFromSelection();
+    if (!sel) return;
+
+    const allElements = ea.getViewElements();
+    const settingsRoot = getSettingsRootNode(sel, allElements) ?? sel;
+    const rootCfg = getRootConfigForNode(settingsRoot);
+    const nextSettings = this.normalizeSettings(rootCfg?.layoutSettings);
+    if (!nextSettings) return;
+
+    const currentSig = JSON.stringify(this.settings);
+    const nextSig = JSON.stringify(nextSettings);
+    if (currentSig === nextSig) return;
+
+    this.settings = nextSettings;
+    this.display({ preserveSectionState: true });
   }
 
   triggerUpdate() {
     if (this.updateTimer) clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
+      this.settings = this.normalizeSettings(this.settings);
       this.onUpdate(this.settings);
       this.updateTimer = null;
     }, 500);
   }
 
-  display() {
+  display({ preserveSectionState = true } = {}) {
     const { contentEl } = this;
 
     let lastScrollPosition = 0;
+    const previousSectionState = {};
     const existingContainer = contentEl.querySelector(".layout-settings-container");
     if (existingContainer) {
       lastScrollPosition = existingContainer.scrollTop;
+      if (preserveSectionState) {
+        existingContainer.querySelectorAll("details[data-layout-section]").forEach((detailsEl) => {
+          const sectionKey = detailsEl.getAttribute("data-layout-section");
+          if (sectionKey) previousSectionState[sectionKey] = detailsEl.open;
+        });
+      }
     }
 
     contentEl.empty();
@@ -7722,8 +7864,9 @@ class LayoutConfigModal extends ea.FloatingModal {
 
     const renderSection = (sectionKey, title) => {
       if (!groupedKeys[sectionKey]) return;
-      
-      const details = container.createEl("details", { attr: { open: true } });
+
+      const details = container.createEl("details", { attr: { "data-layout-section": sectionKey } });
+      details.open = preserveSectionState ? (previousSectionState[sectionKey] ?? false) : false;
       details.style.marginBottom = "10px";
       details.style.border = "1px solid var(--background-modifier-border)";
       details.style.borderRadius = "5px";
@@ -7761,7 +7904,7 @@ class LayoutConfigModal extends ea.FloatingModal {
 
         setting.addSlider(slider => slider
           .setLimits(meta.min, meta.max, meta.step)
-          .setValue(this.settings[key])
+          .setValue(this.settings[key] ?? meta.def)
           .onChange(value => {
             this.settings[key] = value;
             valLabel.setText(String(value.toFixed(meta.step < 1 ? 1 : 0)));
@@ -7796,6 +7939,7 @@ class LayoutConfigModal extends ea.FloatingModal {
     renderSection("SECTION_GENERAL", t("SECTION_GENERAL"));
     renderSection("SECTION_RADIAL", t("SECTION_RADIAL"));
     renderSection("SECTION_DIRECTIONAL", t("SECTION_DIRECTIONAL"));
+    renderSection("SECTION_VERTICAL", t("SECTION_VERTICAL"));
     renderSection("SECTION_VISUALS", t("SECTION_VISUALS"));
     renderSection("SECTION_MANUAL", t("SECTION_MANUAL"));
 
@@ -10095,7 +10239,7 @@ const performAction = async (action, event) => {
     },
   };
 
-  window.MindMapBuilder = API;
+  window.MindMapBuilderAPI = API;
 })();
 
 let uiUpdateTimer = null;
@@ -10262,6 +10406,7 @@ ea.createSidepanelTab(t("DOCK_TITLE"), true, true).then((tab) => {
   tab.onClose = async () => {
     removeEventListeners();
     delete window.MindmapBuilder;
+    delete window.MindMapBuilderAPI;
     removeStyles();
     if (floatingInputModal) {
       if (floatingInputModal.modalEl && floatingInputModal.modalEl.parentElement) {
