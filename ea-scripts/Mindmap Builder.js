@@ -7536,6 +7536,11 @@ class LayoutConfigModal extends ea.FloatingModal {
     this.display();
   }
 
+  onClose() {
+    if (this.updateTimer) clearTimeout(this.updateTimer);
+    this.onUpdate(this.settings);
+  }
+
   triggerUpdate() {
     if (this.updateTimer) clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
@@ -8080,7 +8085,10 @@ const renderBody = (contentEl) => {
           const sel = getMindmapNodeFromSelection();
           if (!sel) return;
           await updateRootNodeCustomData({ layoutSettings: newSettings }, sel);
-          await refreshMapLayout(sel);
+          const allElements = ea.getViewElements();
+          const hierarchy = getHierarchy(sel, allElements);
+          const masterRoot = allElements.find((el) => el.id === hierarchy.rootId) ?? sel;
+          await refreshMapLayout(masterRoot);
         });
         modal.open();
       })
