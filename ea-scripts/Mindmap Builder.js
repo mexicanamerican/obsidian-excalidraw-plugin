@@ -6392,6 +6392,9 @@ const updateUI = (sel) => {
     setButtonDisabled(zoomBtn, false);
     setButtonDisabled(focusBtn, false);
     setButtonDisabled(floatingZoomBtn, false);
+    if (boundaryBtn) {
+      boundaryBtn.setIcon(sel.customData?.boundaryId ? "cloud-off" : "cloud");
+    }
     setButtonDisabled(boundaryBtn, isRootSelected);
     setButtonDisabled(cutBtn, isRootSelected);
     setButtonDisabled(copyBtn, false);
