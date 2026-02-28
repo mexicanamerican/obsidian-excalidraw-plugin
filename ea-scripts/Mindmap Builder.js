@@ -563,7 +563,7 @@ const VALUE_SETS = Object.freeze({
     none: 0,
   }),
   FONT_SCALE: Object.freeze(["Use scene fontsize", "Fibonacci Scale", "Normal Scale"]),
-  GROWTH: Object.freeze(["Radial", "Right-facing", "Left-facing", "Right-Left"]),
+  GROWTH: Object.freeze(["Radial", "Right-facing", "Left-facing", "Right-Left", "Up-facing", "Down-facing", "Up-Down"]),
   ZOOM: Object.freeze(["Low", "Medium", "High"]),
   ARROW: Object.freeze(["curved", "straight"]),
   BRANCH_SCALE: Object.freeze(["Hierarchical", "Uniform"]),
@@ -2307,6 +2307,56 @@ const getSubtreeHeight = (nodeId, allElements, childrenByParent, heightCache, el
   return totalHeight;
 };
 
+const getSubtreeWidth = (nodeId, allElements, childrenByParent, widthCache, elementById) => {
+  if (widthCache?.has(nodeId)) return widthCache.get(nodeId);
+
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  if (!node) return 0;
+
+  if (node.customData?.isFolded) {
+    const foldedWidth = node.width;
+    if (widthCache) widthCache.set(nodeId, foldedWidth);
+    return foldedWidth;
+  }
+
+  const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+  const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
+
+  let totalWidth = 0;
+
+  if (unpinnedChildren.length === 0) {
+    totalWidth = node.width;
+  } else {
+    let childrenWidth = 0;
+    unpinnedChildren.forEach((child, index) => {
+      childrenWidth += getSubtreeWidth(child.id, allElements, childrenByParent, widthCache, elementById);
+      if (index < unpinnedChildren.length - 1) {
+        const childNode = elementById?.get(child.id) ?? allElements.find((el) => el.id === child.id);
+
+        // Check if child behaves as a leaf (ignoring pinned descendants)
+        const grandChildren = childrenByParent?.get(child.id) ?? getChildrenNodes(child.id, allElements);
+        const hasUnpinnedGrandChildren = grandChildren.some(gc => !gc.customData?.isPinned);
+
+        const fontSize = childNode.fontSize ?? 20;
+        // For vertical layouts, we reuse GAP_Y as the horizontal sibling gap to maintain proportion
+        const gap = !hasUnpinnedGrandChildren ? Math.round(fontSize * layoutSettings.GAP_MULTIPLIER) : layoutSettings.GAP_Y;
+        childrenWidth += gap;
+      }
+    });
+    totalWidth = Math.max(node.width, childrenWidth);
+  }
+
+  // Feature: Boundary Spacing
+  // If the node has a visual boundary, add padding to the total subtree height
+  // The boundary adds 15px padding on all sides (see updateNodeBoundary), so we add 2*15=30px
+  if (node.customData?.boundaryId) {
+    totalWidth += 30;
+  }
+
+  if (widthCache) widthCache.set(nodeId, totalWidth);
+  return totalWidth;
+};
+
 /**
  * Determines if an element is part of the mindmap structure.
  */
@@ -2640,58 +2690,109 @@ const addUpdateArrowLabel = (arrow, text) => {
 }
 
 const configureArrow = (context) => {
-  const {arrowId, isChildRight, startId, endId, coordinates, isRadial} = context;
+  const {arrowId, isChildRight, isChildBelow, startId, endId, coordinates, isRadial, layoutDirection} = context;
   const {sX, sY, eX, eY} = coordinates;
 
-  // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
-  // In Radial mode, bind to the center (0.5) of the root node
-  const startRatio = isRadial ? 0.50001 : (isChildRight ? 0.9999 : 0.0001);
-  const endRatio = isChildRight ? 0.0001 : 0.9999;
-  const centerYRatio = 0.5001;
-
   const eaArrow = ea.getElement(arrowId);
+  const isVertical = layoutDirection === "vertical";
 
-  eaArrow.startBinding = {
-    ...eaArrow.startBinding,
-    elementId: startId,
-    mode: "orbit",
-    fixedPoint: [startRatio, centerYRatio]
-  };
+  if (isVertical) {
+    // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
+    // In Radial mode, bind to the center (0.5) of the root node
+    const startRatio = isRadial ? 0.50001 : (isChildBelow ? 0.9999 : 0.0001);
+    const endRatio = isChildBelow ? 0.0001 : 0.9999;
+    const centerRatio = 0.5001;
 
-  eaArrow.endBinding = {
-    ...eaArrow.endBinding,
-    elementId: endId,
-    mode: "orbit",
-    fixedPoint: [endRatio, centerYRatio]
-  };
+    eaArrow.startBinding = {
+      ...eaArrow.startBinding,
+      elementId: startId,
+      mode: "orbit",
+      fixedPoint: [centerRatio, startRatio]
+    };
 
-  eaArrow.x = sX;
-  eaArrow.y = sY;
+    eaArrow.endBinding = {
+      ...eaArrow.endBinding,
+      elementId: endId,
+      mode: "orbit",
+      fixedPoint: [centerRatio, endRatio]
+    };
 
-  const dx = eX - sX;
-  const dy = eY - sY;
+    eaArrow.x = sX;
+    eaArrow.y = sY;
 
-  if (arrowType === "straight") {
-    eaArrow.roundness = null;
-    eaArrow.points = [
-      [0, 0],
-      [dx, dy],
-    ];
-  } else {
-    eaArrow.roundness = { type: 2 };
-    if (isRadial) {
+    const dx = eX - sX;
+    const dy = eY - sY;
+
+    if (arrowType === "straight") {
+      eaArrow.roundness = null;
       eaArrow.points = [
         [0, 0],
-        [dx * 2 / 3, dy * 0.75],
         [dx, dy]
       ];
     } else {
+      eaArrow.roundness = { type: 2 };
+      if (isRadial) {
+        // Swapped coefficients for vertical curve: Y progresses faster than X initially
+        eaArrow.points = [
+          [0, 0],[dx * 0.75, dy * 2 / 3],
+          [dx, dy]
+        ];
+      } else {
+        // Swapped coefficients for vertical curve: Y progresses faster than X initially
+        // This ensures lines shoot out vertically first before fanning out horizontally
+        eaArrow.points = [
+          [0, 0],[dx * 0.25, dy / 3],[dx * 0.75, dy * 2 / 3],
+          [dx, dy]
+        ];
+      }
+    }
+  } else {
+    // Standard horizontal logic
+    // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
+    // In Radial mode, bind to the center (0.5) of the root node
+    const startRatio = isRadial ? 0.50001 : (isChildRight ? 0.9999 : 0.0001);
+    const endRatio = isChildRight ? 0.0001 : 0.9999;
+    const centerYRatio = 0.5001;
+
+    eaArrow.startBinding = {
+      ...eaArrow.startBinding,
+      elementId: startId,
+      mode: "orbit",
+      fixedPoint: [startRatio, centerYRatio]
+    };
+
+    eaArrow.endBinding = {
+      ...eaArrow.endBinding,
+      elementId: endId,
+      mode: "orbit",
+      fixedPoint: [endRatio, centerYRatio]
+    };
+
+    eaArrow.x = sX;
+    eaArrow.y = sY;
+
+    const dx = eX - sX;
+    const dy = eY - sY;
+
+    if (arrowType === "straight") {
+      eaArrow.roundness = null;
       eaArrow.points = [
-        [0, 0],
-        [dx / 3, dy * 0.25],
-        [dx * 2 / 3, dy * 0.75],
-        [dx, dy]
+        [0, 0],[dx, dy]
       ];
+    } else {
+      eaArrow.roundness = { type: 2 };
+      if (isRadial) {
+        eaArrow.points = [
+          [0, 0],
+          [dx * 2 / 3, dy * 0.75],[dx, dy]
+        ];
+      } else {
+        // Standard horizontal curve: X progresses faster than Y initially
+        eaArrow.points = [
+          [0, 0],[dx / 3, dy * 0.25],
+          [dx * 2 / 3, dy * 0.75],[dx, dy]
+        ];
+      }
     }
   }
 };
@@ -2850,7 +2951,7 @@ const layoutSubtree = (nodeId, targetX, targetCenterY, side, allElements, hasGlo
   }
 };
 
-const updateL1Arrow = (node, context) => {
+const updateL1Arrow = (node, context, layoutDirection = "horizontal") => {
   const { rootId, rootCenter, mode } = context;
 
   const arrow = ea.getElements().find(
@@ -2866,22 +2967,198 @@ const updateL1Arrow = (node, context) => {
     
     if (!childNode || !rootNode) return;
 
-    const childCenterX = childNode.x + childNode.width / 2;
-    const isChildRight = childCenterX > rootCenter.x;
     const isRadial = mode === "Radial";
 
-    // In Radial mode, start arrow from the center of the root node
-    const sX = isRadial ? rootCenter.x : (isChildRight ? rootNode.x + rootNode.width : rootNode.x);
-    const sY = rootCenter.y;
-    
-    const eX = isChildRight ? childNode.x : childNode.x + childNode.width;
-    const eY = childNode.y + childNode.height / 2;
+    if (layoutDirection === "vertical") {
+      const childCenterY = childNode.y + childNode.height / 2;
+      const isChildBelow = childCenterY > rootCenter.y;
 
-    configureArrow({
-      arrowId: arrow.id, isChildRight, startId: rootId, endId: node.id,
-      coordinates: {sX, sY, eX, eY},
-      isRadial
+      // In Radial mode, start arrow from the center of the root node
+      const sX = rootCenter.x;
+      const sY = isRadial ? rootCenter.y : (isChildBelow ? rootNode.y + rootNode.height : rootNode.y);
+      
+      const eX = childNode.x + childNode.width / 2;
+      const eY = isChildBelow ? childNode.y : childNode.y + childNode.height;
+
+      configureArrow({
+        arrowId: arrow.id, isChildBelow, startId: rootId, endId: node.id,
+        coordinates: {sX, sY, eX, eY},
+        isRadial, layoutDirection
+      });
+    } else {
+      const childCenterX = childNode.x + childNode.width / 2;
+      const isChildRight = childCenterX > rootCenter.x;
+
+      // In Radial mode, start arrow from the center of the root node
+      const sX = isRadial ? rootCenter.x : (isChildRight ? rootNode.x + rootNode.width : rootNode.x);
+      const sY = rootCenter.y;
+      
+      const eX = isChildRight ? childNode.x : childNode.x + childNode.width;
+      const eY = childNode.y + childNode.height / 2;
+
+      configureArrow({
+        arrowId: arrow.id, isChildRight, startId: rootId, endId: node.id,
+        coordinates: {sX, sY, eX, eY},
+        isRadial, layoutDirection
+      });
+    }
+  }
+};
+
+const layoutSubtreeVertical = (nodeId, targetCenterX, targetY, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder = false, rootId, parentMap = null) => {
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  const eaNode = ea.getElement(nodeId);
+
+  const isPinned = node.customData?.isPinned === true;
+
+  if (!isPinned) {
+    eaNode.x = targetCenterX - node.width / 2;
+    eaNode.y = side === 1 ? targetY : targetY - node.height;
+  }
+
+  if (node.customData?.isFolded) return;
+
+  const currentXCenter = eaNode.x + node.width / 2;
+  const currentY = eaNode.y;
+
+  let effectiveSide = side;
+  const parent = getParentNode(nodeId, allElements, parentMap);
+
+  if (parent) {
+    const parentCenterY = parent.y + parent.height / 2;
+    const nodeCenterY = currentY + node.height / 2;
+    effectiveSide = nodeCenterY >= parentCenterY ? 1 : -1;
+  }
+
+  // Handle Fold Indicator
+  if (node.customData?.foldIndicatorId) {
+    const ind = ea.getElement(node.customData.foldIndicatorId);
+    if(ind) {
+      ind.x = eaNode.x + eaNode.width / 2 - ind.width / 2;
+      if (effectiveSide === 1) {
+          ind.y = eaNode.y + eaNode.height + layoutSettings.INDICATOR_OFFSET;
+          ind.textAlign = "center";
+      } else {
+          ind.y = eaNode.y - layoutSettings.INDICATOR_OFFSET - ind.height;
+          ind.textAlign = "center";
+      }
+    }
+  }
+
+  const textElement = ea.getBoundTextElement(eaNode).eaElement;
+  if (textElement && !centerText && textElement.textAlign !== "center") {
+    // In vertical mode, nodes usually look best centered, but we enforce it here
+    textElement.textAlign = "center";
+  }
+
+  const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+  const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
+  const pinnedChildren = children.filter(child => child.customData?.isPinned);
+
+  if (unpinnedChildren.length > 0) {
+    // SORTING LOGIC:
+    // If mustHonorMindmapOrder is true: Explicitly sort by mindmapOrder to enforce the manual change.
+    // If mustHonorMindmapOrder is false: Fallback to visual X-position to keep map strictly ordered by position (auto-layout).
+    unpinnedChildren.sort((a, b) => {
+      if (mustHonorMindmapOrder) {
+        return getMindmapOrder(a) - getMindmapOrder(b);
+      }
+      const dx = a.x - b.x;
+      if (dx !== 0) return dx;
+      return String(a.id).localeCompare(String(b.id));
     });
+
+    // Only update mindmapOrder to match visual reality if we are NOT in a manual sort operation
+    if (!mustHonorMindmapOrder) {
+      unpinnedChildren.forEach((child, i) => {
+        if (getMindmapOrder(child) !== i) {
+          ea.addAppendUpdateCustomData(child.id, { mindmapOrder: i });
+        }
+      });
+    }
+
+    const subtreeWidth = getSubtreeWidth(nodeId, allElements, childrenByParent, widthCache, elementById);
+    let currentX = currentXCenter - subtreeWidth / 2;
+    // Primary layout gap used for Parent-Child spacing (vertical)
+    const dynamicGapPrimary = layoutSettings.GAP_X;
+
+    unpinnedChildren.forEach((child) => {
+      const childW = getSubtreeWidth(child.id, allElements, childrenByParent, widthCache, elementById);
+
+      layoutSubtreeVertical(
+        child.id,
+        currentX + childW / 2,
+        effectiveSide === 1 ? currentY + node.height + dynamicGapPrimary : currentY - dynamicGapPrimary,
+        effectiveSide,
+        allElements,
+        hasGlobalFolds,
+        childrenByParent,
+        widthCache,
+        elementById,
+        mustHonorMindmapOrder,
+        rootId,
+        parentMap,
+      );
+
+      const childNode = elementById?.get(child.id) ?? allElements.find((el) => el.id === child.id);
+
+      const grandChildren = childrenByParent?.get(child.id) ?? getChildrenNodes(child.id, allElements);
+      const hasUnpinnedGrandChildren = grandChildren.some(gc => !gc.customData?.isPinned);
+
+      const fontSize = childNode.fontSize ?? 20;
+      // Reusing GAP_Y for the cross-axis (sibling) gap to maintain spacing proportionality
+      const gap = !hasUnpinnedGrandChildren ? Math.round(fontSize * layoutSettings.GAP_MULTIPLIER) : layoutSettings.GAP_Y;
+
+      currentX += childW + gap;
+    });
+  }
+
+  pinnedChildren.forEach(child => layoutSubtreeVertical(
+    child.id,
+    child.x + child.width / 2,
+    child.y + (effectiveSide === 1 ? 0 : child.height),
+    effectiveSide,
+    allElements,
+    hasGlobalFolds,
+    childrenByParent,
+    widthCache,
+    elementById,
+    mustHonorMindmapOrder,
+    rootId,
+    parentMap,
+  ));
+
+  // Update Arrows
+  children.forEach(child => {
+    const arrow = allElements.find(
+      (a) =>
+        a.type === "arrow" &&
+        a.customData?.isBranch &&
+        a.startBinding?.elementId === nodeId &&
+        a.endBinding?.elementId === child.id,
+    );
+
+    if (arrow) {
+      const eaChild = ea.getElement(child.id);
+      const childCenterY = eaChild.y + eaChild.height / 2;
+      const parentCenterY = currentY + node.height / 2;
+      const isChildBelow = childCenterY > parentCenterY;
+
+      const sX = currentXCenter;
+      const sY = isChildBelow ? currentY + node.height : currentY;
+      
+      const eX = eaChild.x + eaChild.width / 2;
+      const eY = isChildBelow ? eaChild.y : eaChild.y + eaChild.height;
+
+      configureArrow({
+        arrowId: arrow.id, isChildBelow, startId:node.id, endId: child.id,
+        coordinates: {sX, sY, eX, eY}, layoutDirection: "vertical"
+      });
+    }
+  });
+
+  if (node.customData?.boundaryId) {
+     updateNodeBoundary(node, ea.getElements(), rootId);
   }
 };
 
@@ -3081,6 +3358,75 @@ const verticalL1Distribution = (nodes, context, l1Metrics, totalSubtreeHeight, i
   });
 };
 
+const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, isTopSide, centerAngle, gapMultiplier, mustHonorMindmapOrder = false) => {
+  const { allElements, rootBox, rootCenter, hasGlobalFolds, childrenByParent, widthCache, elementById, rootId, parentMap } = context;
+  const count = nodes.length;
+
+  // --- HORIZONTAL DIRECTIONAL LAYOUT (UP/DOWN) ---
+  const totalContentWidth = totalSubtreeWidth + (count - 1) * layoutSettings.GAP_Y;
+  const radiusFromWidth = totalContentWidth / layoutSettings.DIRECTIONAL_ARC_SPAN_RADIANS;
+  
+  // Notice axis swaps: Radius Y calculates based on Width
+  const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusFromWidth) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+  const radiusY = Math.max(Math.round(rootBox.height * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusX * 0.2) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+
+  const totalThetaDeg = (totalContentWidth / radiusX) * (180 / Math.PI);
+  // Reversing the angle spread depending on side to maintain visual reading flow
+  let currentAngle = isTopSide ? centerAngle - totalThetaDeg / 2 : centerAngle + totalThetaDeg / 2;
+
+  nodes.forEach((node, i) => {
+    const nodeWidth = l1Metrics[i];
+    const isPinned = node.customData?.isPinned === true;
+    const side = isTopSide ? -1 : 1;
+
+    const getAngularInfo = (targetNode, width) => {
+      const angleRad = Math.atan2((targetNode.y + targetNode.height / 2) - rootCenter.y, (targetNode.x + targetNode.width / 2) - rootCenter.x);
+      const angleDeg = angleRad * (180 / Math.PI);
+      const normAngle = angleDeg < 0 ? angleDeg + 360 : angleDeg;
+      const spanDeg = (width / radiusX) * (180 / Math.PI);
+      return { center: normAngle, span: spanDeg, start: normAngle - spanDeg / 2, end: normAngle + spanDeg / 2 };
+    };
+
+    const effectiveGap = layoutSettings.GAP_Y * gapMultiplier;
+    const gapSpanDeg = (effectiveGap / radiusX) * (180 / Math.PI);
+    const nodeSpanDeg = (nodeWidth / radiusX) * (180 / Math.PI);
+
+    if (isPinned) {
+      layoutSubtreeVertical(node.id, node.x + node.width / 2, node.y, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder, rootId, parentMap);
+      const info = getAngularInfo(node, nodeWidth);
+      if (isTopSide) {
+        if (currentAngle < info.start - gapSpanDeg) currentAngle = info.start - gapSpanDeg;
+      } else {
+        if (currentAngle > info.end + gapSpanDeg) currentAngle = info.end + gapSpanDeg;
+      }
+    } else {
+      const nextPinned = nodes.slice(i + 1).find(n => n.customData?.isPinned);
+      if (nextPinned) {
+        const nextInfo = getAngularInfo(nextPinned, getSubtreeWidth(nextPinned.id, allElements, childrenByParent, widthCache, elementById));
+        if (isTopSide) {
+           if (currentAngle + nodeSpanDeg > nextInfo.start - gapSpanDeg) currentAngle = nextInfo.start - gapSpanDeg - nodeSpanDeg;
+        } else {
+           if (currentAngle - nodeSpanDeg < nextInfo.end + gapSpanDeg) currentAngle = nextInfo.end + gapSpanDeg + nodeSpanDeg;
+        }
+      }
+
+      let angleDeg = isTopSide ? currentAngle + nodeSpanDeg / 2 : currentAngle - nodeSpanDeg / 2;
+      currentAngle = isTopSide ? currentAngle + (nodeSpanDeg + gapSpanDeg) : currentAngle - (nodeSpanDeg + gapSpanDeg);
+
+      const angleRad = angleDeg * (Math.PI / 180);
+      const tCX = rootCenter.x + radiusX * Math.cos(angleRad);
+      const tCY = rootCenter.y + radiusY * Math.sin(angleRad);
+      layoutSubtreeVertical(node.id, tCX, tCY, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder, rootId, parentMap);
+    }
+
+    if (node.customData?.mindmapNew) {
+      ea.addAppendUpdateCustomData(node.id, { mindmapNew: undefined });
+    }
+    updateL1Arrow(node, context, "vertical");
+    if (groupBranches) applyRecursiveGrouping(node.id, allElements);
+  });
+};
+
 /**
  * Unified layout function for Level 1 nodes.
  * Uses a Vertical Ellipse for Radial mode. Ensures nodes are distributed across
@@ -3089,20 +3435,26 @@ const verticalL1Distribution = (nodes, context, l1Metrics, totalSubtreeHeight, i
  */
 const layoutL1Nodes = (nodes, options, context, mustHonorMindmapOrder = false) => {
   if (nodes.length === 0) return false;
-  const { allElements, childrenByParent, heightCache, elementById } = context;
+  const { allElements, childrenByParent, heightCache, widthCache, elementById } = context;
   const { sortMethod, centerAngle, gapMultiplier } = options;
 
   // SORTING: Respect the established mindmapOrder (0..N)
   nodes.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
 
-  const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
-  const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
-
-  const isLeftSide = sortMethod === "vertical" && Math.abs((centerAngle ?? 0) - 270) < 1;
-
   if (sortMethod === "radial") {
+    const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
+    const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
     radialL1Distribution(nodes, context, l1Metrics, totalSubtreeHeight, options, mustHonorMindmapOrder);
+  } else if (sortMethod === "horizontal") {
+    const l1Metrics = nodes.map(node => getSubtreeWidth(node.id, allElements, childrenByParent, widthCache, elementById));
+    const totalSubtreeWidth = l1Metrics.reduce((sum, w) => sum + w, 0);
+    // 270 degrees represents the Top (Up-facing), 90 degrees represents the Bottom (Down-facing)
+    const isTopSide = Math.abs((centerAngle ?? 0) - 270) < 1;
+    horizontalL1Distribution(nodes, context, l1Metrics, totalSubtreeWidth, isTopSide, centerAngle, gapMultiplier, mustHonorMindmapOrder);
   } else {
+    const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
+    const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
+    const isLeftSide = sortMethod === "vertical" && Math.abs((centerAngle ?? 0) - 270) < 1;
     verticalL1Distribution(nodes, context, l1Metrics, totalSubtreeHeight, isLeftSide, centerAngle, gapMultiplier, mustHonorMindmapOrder);
   }
   
@@ -3119,6 +3471,7 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
   if (l1Nodes.length === 0) return false;
 
   let orderChanged = false;
+  const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mode);
 
   /** 
    * Helper to sort by Reading Order: Right-side Top-to-Bottom, then Left-side Top-to-Bottom.
@@ -3127,10 +3480,22 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
   const sortByReadingOrder = (a, b) => {
     const aCX = a.x + a.width / 2;
     const bCX = b.x + b.width / 2;
-    const aIsR = aCX > rootCenter.x;
-    const bIsR = bCX > rootCenter.x;
-    if (aIsR !== bIsR) return aIsR ? -1 : 1; 
-    return a.y - b.y; 
+    const aCY = a.y + a.height / 2;
+    const bCY = b.y + b.height / 2;
+
+    if (isVerticalMode) {
+       // Vertical modes: Sort bottom-side (Left->Right) then top-side (Left->Right)
+       const aIsBottom = aCY > rootCenter.y;
+       const bIsBottom = bCY > rootCenter.y;
+       if (aIsBottom !== bIsBottom) return aIsBottom ? -1 : 1; 
+       return aCX - bCX; 
+    } else {
+       // Horizontal modes: Sort right-side (Top->Bottom) then left-side (Top->Bottom)
+       const aIsR = aCX > rootCenter.x;
+       const bIsR = bCX > rootCenter.x;
+       if (aIsR !== bIsR) return aIsR ? -1 : 1; 
+       return a.y - b.y; 
+    }
   };
 
   /** Helper to sort by Angle: Clockwise around the root center. */
@@ -3152,9 +3517,9 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
     }
   });
 
+  // New nodes always need an update since they lack established order or have a temp one
   newNodes.forEach((node, i) => {
     const newOrder = existingNodes.length + i;
-    // New nodes always need an update since they lack established order or have a temp one
     ea.addAppendUpdateCustomData(node.id, { mindmapOrder: newOrder });
     orderChanged = true;
   });
@@ -3194,6 +3559,7 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
     const parentMap = buildParentMap(allElements, elementById);
     const childrenByParent = buildChildrenMap(allElements, elementById);
     const heightCache = new Map();
+    const widthCache = new Map();
 
     const branchIds = new Set(mindmapIds);
     const groupToNodes = buildGroupToNodes(branchIds, allElements);
@@ -3223,6 +3589,7 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
       mode: newMode,
       childrenByParent,
       heightCache,
+      widthCache,
       elementById,
       parentMap,
     };
@@ -3245,9 +3612,9 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
         gapMultiplier: layoutSettings.GAP_MULTIPLIER_RADIAL,
         fillSweep: root.customData?.fillSweep ?? fillSweep,
       }, layoutContext, mustHonorMindmapOrder);
-    } else {
+    } else if (["Right-facing", "Left-facing", "Right-Left"].includes(newMode)) {
       const leftNodes = [];
-      const rightNodes = [];
+      const rightNodes =[];
 
       if (newMode === "Right-Left") {
         if (isModeSwitch && !mustHonorMindmapOrder) {
@@ -3274,6 +3641,39 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
       }
       if (leftNodes.length > 0) {
         layoutL1Nodes(leftNodes, { sortMethod: "vertical", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+      }
+    } else if (["Up-facing", "Down-facing", "Up-Down"].includes(newMode)) {
+      const upNodes =[];
+      const downNodes =[];
+
+      if (newMode === "Up-Down") {
+        if (isModeSwitch && !mustHonorMindmapOrder) {
+          const splitIdx = Math.ceil(l1Nodes.length / 2);
+          l1Nodes.forEach((node, i) => {
+            if (i < splitIdx) downNodes.push(node);
+            else upNodes.push(node);
+          });
+        } else {
+          l1Nodes.forEach((node) => {
+            const nodeCY = node.y + node.height / 2;
+            if (nodeCY > rootCenter.y) downNodes.push(node);
+            else upNodes.push(node);
+          });
+        }
+      } else if (newMode === "Up-facing") {
+        l1Nodes.forEach(node => upNodes.push(node));
+      } else {
+        l1Nodes.forEach(node => downNodes.push(node));
+      }
+
+      // Initialize cache required for vertical mode width tracking
+      layoutContext.widthCache = new Map();
+      
+      if (downNodes.length > 0) {
+        layoutL1Nodes(downNodes, { sortMethod: "horizontal", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+      }
+      if (upNodes.length > 0) {
+        layoutL1Nodes(upNodes, { sortMethod: "horizontal", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
       }
     }
 
@@ -3607,11 +4007,13 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     const parentBox = getNodeBox(parent, allElements);
     
     // Determine direction for initial offset to prevent visual jumping
-    let targetSide = 1; // 1 = Right, -1 = Left
+    const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mode);
+
+    let targetSide = 1; // 1 = Right/Down, -1 = Left/Up
     if (depth === 1) {
-      if (mode === "Left-facing") targetSide = -1;
-      else if (mode === "Right-facing") targetSide = 1;
-      else if (mode === "Right-Left") {
+      if (mode === "Left-facing" || mode === "Up-facing") targetSide = -1;
+      else if (mode === "Right-facing" || mode === "Down-facing") targetSide = 1;
+      else if (mode === "Right-Left" || mode === "Up-Down") {
          const siblings = getChildrenNodes(parent.id, allElements);
          const idx = siblings.length; // Index of the new node being added
          if (idx < 2) targetSide = 1;
@@ -3619,52 +4021,88 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
          else targetSide = idx % 2 === 0 ? 1 : -1;
       } else {
         // Default to parent side or Right for Radial/Fallback layouts
-        const parentCenterX = parentBox.minX + parentBox.width / 2;
-        targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+        if (isVerticalMode) {
+          const parentCenterY = parentBox.minY + parentBox.height / 2;
+          targetSide = parentCenterY > rootCenter.y ? 1 : -1;
+        } else {
+          const parentCenterX = parentBox.minX + parentBox.width / 2;
+          targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+        }
       }
     } else {
        // Deep nodes follow parent's side
-       const parentCenterX = parentBox.minX + parentBox.width / 2;
-       targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+       if (isVerticalMode) {
+          const parentCenterY = parentBox.minY + parentBox.height / 2;
+          targetSide = parentCenterY > rootCenter.y ? 1 : -1;
+       } else {
+          const parentCenterX = parentBox.minX + parentBox.width / 2;
+          targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+       }
     }
 
     let side = targetSide;
+    let px = parentBox.minX, py = parentBox.minY;
 
-    const offset = (mode === "Radial" || side === 1)
-      ? rootBox.width * 2
-      : -rootBox.width;
-      
-    let px = parentBox.minX + offset,
+    if (isVerticalMode) {
+      const offset = side === 1 ? rootBox.height * 2 : -rootBox.height;
+      px = parentBox.minX + parentBox.width / 2 - (shouldWrap ? curMaxW : metrics.width) / 2;
+      py = parentBox.minY + offset;
+
+      // If pos is provided (e.g. from Add Sibling), override placement.
+      // This maintains the "same side" logic because the originator's X is used.
+      if (!autoLayoutDisabled && pos) {
+        px = pos.x; py = pos.y;
+        side = (py + metrics.height / 2 > rootCenter.y) ? 1 : -1;
+      } else if (!autoLayoutDisabled) {
+        // Ensure new node is placed below existing siblings to preserve visual order
+        const siblings = getChildrenNodes(parent.id, allElements);
+        if (siblings.length > 0) {
+          const sortedSiblings = siblings.sort((a, b) => a.x - b.x);
+          const lastSibling = sortedSiblings[sortedSiblings.length - 1];
+          const lastSiblingBox = getNodeBox(lastSibling, allElements);
+          px = lastSiblingBox.minX + lastSiblingBox.width + layoutSettings.GAP_Y; 
+          py = parentBox.minY + (side === 1 ? parentBox.height + layoutSettings.GAP_X : -layoutSettings.GAP_X - metrics.height);
+        }
+      } else if (autoLayoutDisabled) {
+        const manualGapY = Math.round(parentBox.height * layoutSettings.MANUAL_GAP_MULTIPLIER);
+        const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        px = parentBox.minX + parentBox.width / 2 - metrics.width / 2 + jitterX;
+        py = side === 1 
+          ? parentBox.minY + parentBox.height + manualGapY + jitterY
+          : parentBox.minY - manualGapY - metrics.height + jitterY;
+      }
+    } else {
+      const offset = (mode === "Radial" || side === 1) ? rootBox.width * 2 : -rootBox.width;
+      px = parentBox.minX + offset;
       py = parentBox.minY;
 
-    // If pos is provided (e.g. from Add Sibling), override placement.
-    // This maintains the "same side" logic because the originator's X is used.
-    if (!autoLayoutDisabled && pos) {
-      px = pos.x;
-      py = pos.y;
-      // Recalculate side based on provided position relative to root
-      side = (px + (shouldWrap ? curMaxW : metrics.width) / 2 > rootCenter.x) ? 1 : -1;
-    } else if (!autoLayoutDisabled) { // Ensure new node is placed below existing siblings to preserve visual order
-      const siblings = getChildrenNodes(parent.id, allElements);
-      if (siblings.length > 0) {
-        const sortedSiblings = siblings.sort((a, b) => a.y - b.y);
-        const lastSibling = sortedSiblings[sortedSiblings.length - 1];
-        const lastSiblingBox = getNodeBox(lastSibling, allElements);
-        py = lastSiblingBox.minY + lastSiblingBox.height + layoutSettings.GAP_Y;
+      // If pos is provided (e.g. from Add Sibling), override placement.
+      if (!autoLayoutDisabled && pos) {
+        px = pos.x; py = pos.y;
+        side = (px + (shouldWrap ? curMaxW : metrics.width) / 2 > rootCenter.x) ? 1 : -1;
+      } else if (!autoLayoutDisabled) {
+        // Ensure new node is placed below existing siblings to preserve visual order
+        const siblings = getChildrenNodes(parent.id, allElements);
+        if (siblings.length > 0) {
+          const sortedSiblings = siblings.sort((a, b) => a.y - b.y);
+          const lastSibling = sortedSiblings[sortedSiblings.length - 1];
+          const lastSiblingBox = getNodeBox(lastSibling, allElements);
+          py = lastSiblingBox.minY + lastSiblingBox.height + layoutSettings.GAP_Y;
+        }
+      } else if (autoLayoutDisabled) {
+        const manualGapX = Math.round(parentBox.width * layoutSettings.MANUAL_GAP_MULTIPLIER);
+        const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const nodeW = shouldWrap ? curMaxW : metrics.width;
+        px = side === 1
+          ? parentBox.minX + parentBox.width + manualGapX + jitterX
+          : parentBox.minX - manualGapX - nodeW + jitterX;
+        py = parentBox.minY + parentBox.height / 2 - metrics.height / 2 + jitterY;
       }
-    } else if (autoLayoutDisabled) {
-      const manualGapX = Math.round(parentBox.width * layoutSettings.MANUAL_GAP_MULTIPLIER);
-      const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
-      const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
-      const nodeW = shouldWrap ? curMaxW : metrics.width;
-      px = side === 1
-        ? parentBox.minX + parentBox.width + manualGapX + jitterX
-        : parentBox.minX - manualGapX - nodeW + jitterX;
-      py = parentBox.minY + parentBox.height / 2 - metrics.height / 2 + jitterY;
     }
-    const textAlign = centerText
-      ? "center"
-      : side === 1 ? "left" : "right";
+
+    const textAlign = centerText ? "center" : (isVerticalMode ? "center" : (side === 1 ? "left" : "right"));
 
     if (imageInfo?.isImagePath) {
       newNodeId = await addImage({
@@ -4811,24 +5249,25 @@ const changeNodeOrder = async (key) => {
 
   const rootCenter = root.x + root.width / 2;
   const curCenter = current.x + current.width / 2;
-  const isInRight = curCenter > rootCenter;
-  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
-
-  // ---------------------------------------------------------
-  // Feature: L1 Node Side Swap (Right-Left Map Exclusively)
-  // ---------------------------------------------------------
-  const isRightLeft = (mapMode === "Right-Left");
-  const isRadial = (mapMode === "Radial");
-  const isLeftFacing = (mapMode === "Left-facing");
+  const rootCenterY = root.y + root.height / 2;
+  const curCenterY = current.y + current.height / 2;
   
-  if (parent.id === root.id && isRightLeft) {
-     const moveRight = !isInRight && key === "ArrowRight"; // Left Node -> Right Side
-     const moveLeft = isInRight && key === "ArrowLeft";    // Right Node -> Left Side
+  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
+  const isRadial = (mapMode === "Radial");
 
-     if (moveRight || moveLeft) {
+  const isInPositive = isVerticalMode ? (curCenterY > rootCenterY) : (curCenter > rootCenter);
+
+  // ---------------------------------------------------------
+  // Feature: L1 Node Side Swap 
+  // ---------------------------------------------------------
+  if (parent.id === root.id && ((!isVerticalMode && mapMode === "Right-Left") || (isVerticalMode && mapMode === "Up-Down"))) {
+     const movePos = isVerticalMode ? (!isInPositive && key === "ArrowDown") : (!isInPositive && key === "ArrowRight"); // Negative Side -> Positive Side
+     const moveNeg = isVerticalMode ? (isInPositive && key === "ArrowUp")   : (isInPositive && key === "ArrowLeft");    // Positive Side -> Negative Side
+
+     if (movePos || moveNeg) {
         // Calculate Delta to mirror across root center
-        // TargetX = RootX + (RootX - CurX) => Delta = 2 * (RootX - CurX)
-        const deltaX = 2 * (rootCenter - curCenter);
+        const delta = isVerticalMode ? 2 * (rootCenterY - curCenterY) : 2 * (rootCenter - curCenter);
         
         // Gather all elements in branch + decorations
         const branchIds = getBranchElementIds(current.id, allElements);
@@ -4850,7 +5289,8 @@ const changeNodeOrder = async (key) => {
         ea.copyViewElementsToEAforEditing(arr);
         arr.forEach(el => {
             const eaEl = ea.getElement(el.id);
-            eaEl.x += deltaX;
+            if (isVerticalMode) eaEl.y += delta;
+            else eaEl.x += delta;
         });
         
         await addElementsToView({ captureUpdate: "EVENTUALLY" });
@@ -4861,10 +5301,14 @@ const changeNodeOrder = async (key) => {
      }
   }
 
-  // 1. Structural Promotion (Left/Right Arrows moving "Inward")
-  // Selected node must be rewired to parent of current parent (Grandparent)
-  const isPromote = (isInRight && key === "ArrowLeft") || (!isInRight && key === "ArrowRight");
-  const isDemote = (isInRight && key === "ArrowRight") || (!isInRight && key === "ArrowLeft");
+  // 1. Structural Promotion / Demotion
+  const isPromote = isVerticalMode
+      ? ((isInPositive && key === "ArrowUp") || (!isInPositive && key === "ArrowDown"))
+      : ((isInPositive && key === "ArrowLeft") || (!isInPositive && key === "ArrowRight"));
+      
+  const isDemote = isVerticalMode
+      ? ((isInPositive && key === "ArrowDown") || (!isInPositive && key === "ArrowUp"))
+      : ((isInPositive && key === "ArrowRight") || (!isInPositive && key === "ArrowLeft"));
   
   if (isPromote) {
     if (parent.id === root.id) return; // Cannot promote L1 nodes (they are already attached to root)
@@ -4885,7 +5329,7 @@ const changeNodeOrder = async (key) => {
       const parentOrder = getMindmapOrder(parent);
       ea.copyViewElementsToEAforEditing([current]);
       ea.addAppendUpdateCustomData(current.id, {
-        mindmapOrder: isRadial && !isInRight ? parentOrder - 0.5 : parentOrder + 0.5 
+        mindmapOrder: isRadial && !isInPositive ? parentOrder - 0.5 : parentOrder + 0.5 
       });
       const parentInfo = getHierarchy(parent, allElements);
       
@@ -4919,23 +5363,26 @@ const changeNodeOrder = async (key) => {
     }
     
     const currentIndex = siblings.findIndex(s => s.id === current.id);
+    const mirrorBehavior = (isRadial && !isInPositive);
     
-    // Determine visual direction based on layout mode
-    const mirrorBehavior = (isInRight && isRadial) || !isRadial;
+    let targetIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
     
-    // Attempt to move to sibling ABOVE first
-    // Normal: Above is index-1. Radial Left: Above is index+1
-    let targetIndex = mirrorBehavior ? currentIndex - 1 : currentIndex + 1;
-    
-    // Fallback: If no sibling above, move to sibling BELOW
+    // Prevent out-of-bounds demotion
     if (targetIndex < 0 || targetIndex >= siblings.length) {
-      targetIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
+      new Notice("Cannot demote: No valid sibling to attach to.");
+      return;
     }
     
-    // Safety check
-    if (targetIndex < 0 || targetIndex >= siblings.length) return;
-    
     const newParent = siblings[targetIndex];
+    
+    // Prevent cross-side demotion for L1 nodes
+    if (parent.id === root.id) {
+       const targetIsPos = isVerticalMode ? (newParent.y + newParent.height/2 > rootCenterY) : (newParent.x + newParent.width/2 > rootCenter);
+       if (targetIsPos !== isInPositive) {
+          new Notice("Cannot demote: Cross-side demotion is not allowed.");
+          return;
+       }
+    }
     
     // Find the arrow to update structural binding
     const arrow = allElements.find(
@@ -4949,9 +5396,8 @@ const changeNodeOrder = async (key) => {
       reconnectArrow(parent, newParent, arrow, "start");
       // Determine new order: Append as last child of new parent
       const newParentChildren = getChildrenNodes(newParent.id, allElements);
-      const nextOrder = newParentChildren.length > 0 
-        ? Math.max(...newParentChildren.map(getMindmapOrder)) + 1 
-        : 0;
+      const nextOrder = newParentChildren.length > 0 ? Math.max(...newParentChildren.map(getMindmapOrder)) + 1 : 0;
+      
       ea.copyViewElementsToEAforEditing([current]);
       ea.addAppendUpdateCustomData(current.id, { mindmapOrder: nextOrder });
       
@@ -4975,8 +5421,11 @@ const changeNodeOrder = async (key) => {
     return;
   }
 
-  // 2. Sibling Reordering (Up/Down Arrows)
-  if (key === "ArrowUp" || key === "ArrowDown") {
+  // 2. Sibling Reordering (Up/Down/Left/Right Arrows)
+  const isReorderPos = isVerticalMode ? (key === "ArrowRight") : (key === "ArrowDown");
+  const isReorderNeg = isVerticalMode ? (key === "ArrowLeft") : (key === "ArrowUp");
+
+  if (isReorderPos || isReorderNeg) {
     const siblings = getChildrenNodes(parent.id, allElements);
     if (siblings.length < 2) return;
 
@@ -4987,19 +5436,39 @@ const changeNodeOrder = async (key) => {
     if (currentIndex === -1) return;
 
     let swapIndex = -1;
-    const mirrorBehavior = (isInRight && isRadial) || !isRadial;
     
-    // Logic: 
-    // Radial Left: List is Bottom-to-Top (Clockwise). Up = Index+1 (Next).
-    // All Others: List is Top-to-Bottom. Up = Index-1 (Prev).
-    if (key === "ArrowUp") {
-      swapIndex = mirrorBehavior ? currentIndex - 1 : currentIndex + 1;
+    if (isVerticalMode) {
+       // Up/Down facing uses Left/Right keys for siblings
+       if (key === "ArrowRight") swapIndex = currentIndex + 1;
+       if (key === "ArrowLeft") swapIndex = currentIndex - 1;
     } else {
-      swapIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
+       // Radial Left flips the interpretation of Up/Down since it generates from Bottom to Top
+       if (isRadial && !isInPositive) {
+         if (key === "ArrowUp") swapIndex = currentIndex + 1;
+         if (key === "ArrowDown") swapIndex = currentIndex - 1;
+       } else {
+         if (key === "ArrowDown") swapIndex = currentIndex + 1;
+         if (key === "ArrowUp") swapIndex = currentIndex - 1;
+       }
+    }
+
+    // Apply circular wrapping for Radial mode (Level 1 nodes only)
+    if (isRadial && parent.id === root.id) {
+       swapIndex = (swapIndex + siblings.length) % siblings.length;
     }
 
     // Boundary checks
     if (swapIndex >= 0 && swapIndex < siblings.length) {
+      const swapNode = siblings[swapIndex];
+      
+      // Prevent cross-side swapping for L1 nodes (Except for Radial maps, where we just wrapped)
+      if (parent.id === root.id && !isRadial) {
+         const swapIsPos = isVerticalMode ? (swapNode.y + swapNode.height/2 > rootCenterY) : (swapNode.x + swapNode.width/2 > rootCenter);
+         if (swapIsPos !== isInPositive) {
+            return; // Silently block cross-side reordering
+         }
+      }
+
       // Re-normalize all orders to clean integers to prevent drift
       ea.copyViewElementsToEAforEditing(siblings);
       
@@ -5038,6 +5507,9 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
   const root = allElements.find((e) => e.id === info.rootId);
   const rootCenter = { x: root.x + root.width / 2, y: root.y + root.height / 2 };
 
+  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalLayout = ["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
+
   if (current.id === root.id) {
     if (current.customData?.isFolded) {
       await toggleFold("L0");
@@ -5048,48 +5520,50 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     if (children.length) {
       // Sort by order/index first to establish the visual list sequence
       sortChildrenStable(children);
-
       let targetChild = null;
 
-      if (key === "ArrowUp") {
-        // First sibling (Visual Top, usually Index 0)
-        targetChild = children[0];
-      } else if (key === "ArrowDown") {
-        // Last sibling (Visual Bottom, usually Index N)
-        targetChild = children[children.length - 1];
-      } else {
-        // Left/Right Logic
-        // Calculate relative positions
-        const childrenWithPos = children.map(c => {
-          const cCenter = { x: c.x + c.width / 2, y: c.y + c.height / 2 };
-          return {
+      if (isVerticalLayout) {
+        if (key === "ArrowLeft") targetChild = children[0];
+        else if (key === "ArrowRight") targetChild = children[children.length - 1];
+        else {
+          // Left/Right Logic
+          // Calculate relative positions
+          const childrenWithPos = children.map(c => ({
             node: c,
-            dx: cCenter.x - rootCenter.x,
-            dy: Math.abs(cCenter.y - rootCenter.y) // distance from horizontal centerline
-          };
-        });
+            dx: Math.abs((c.x + c.width/2) - rootCenter.x), // distance from vertical centerline
+            dy: (c.y + c.height/2) - rootCenter.y 
+          }));
 
-        if (key === "ArrowRight") {
-          // Find nodes to the right (dx > 0)
-          const rightNodes = childrenWithPos.filter(c => c.dx > 0);
-          if (rightNodes.length > 0) {
-            // Find the one closest to the middle (min dy)
-            rightNodes.sort((a, b) => a.dy - b.dy);
-            targetChild = rightNodes[0].node;
-          } else {
-            // Fallback if no nodes on right (e.g. Left-facing layout), select first in list
-            targetChild = children[0];
+          if (key === "ArrowDown") {
+            // Find nodes below (dy > 0)
+            const downNodes = childrenWithPos.filter(c => c.dy > 0).sort((a,b)=>a.dx - b.dx);
+            targetChild = downNodes.length > 0 ? downNodes[0].node : children[0];
+          } else if (key === "ArrowUp") {
+             // Find nodes above (dy < 0)
+            const upNodes = childrenWithPos.filter(c => c.dy < 0).sort((a,b)=>a.dx - b.dx);
+            targetChild = upNodes.length > 0 ? upNodes[0].node : children[children.length - 1];
           }
-        } else if (key === "ArrowLeft") {
-          // Find nodes to the left (dx < 0)
-          const leftNodes = childrenWithPos.filter(c => c.dx < 0);
-          if (leftNodes.length > 0) {
-            // Find the one closest to the middle (min dy)
-            leftNodes.sort((a, b) => a.dy - b.dy);
-            targetChild = leftNodes[0].node;
-          } else {
-            // Fallback if no nodes on left (e.g. Right-facing layout), select last in list
-            targetChild = children[children.length - 1];
+        }
+      } else {
+        if (key === "ArrowUp") targetChild = children[0];
+        else if (key === "ArrowDown") targetChild = children[children.length - 1];
+        else {
+          // Left/Right Logic
+          // Calculate relative positions
+          const childrenWithPos = children.map(c => ({
+            node: c,
+            dx: (c.x + c.width/2) - rootCenter.x,
+            dy: Math.abs((c.y + c.height/2) - rootCenter.y) // distance from horizontal centerline
+          }));
+
+          if (key === "ArrowRight") {
+            // Find nodes to the right (dx > 0)
+            const rightNodes = childrenWithPos.filter(c => c.dx > 0).sort((a,b)=>a.dy - b.dy);
+            targetChild = rightNodes.length > 0 ? rightNodes[0].node : children[0];
+          } else if (key === "ArrowLeft") {
+            // Find nodes to the left (dx < 0)
+            const leftNodes = childrenWithPos.filter(c => c.dx < 0).sort((a,b)=>a.dy - b.dy);
+            targetChild = leftNodes.length > 0 ? leftNodes[0].node : children[children.length - 1];
           }
         }
       }
@@ -5103,10 +5577,20 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     return;
   }
 
-  if (key === "ArrowLeft" || key === "ArrowRight") {
+  const isHierarchyNav = isVerticalLayout ? (key === "ArrowUp" || key === "ArrowDown") : (key === "ArrowLeft" || key === "ArrowRight");
+  const isSiblingNav = isVerticalLayout ? (key === "ArrowLeft" || key === "ArrowRight") : (key === "ArrowUp" || key === "ArrowDown");
+
+  if (isHierarchyNav) {
     const curCenter = { x: current.x + current.width / 2, y: current.y + current.height / 2 };
-    const isInRight = curCenter.x > rootCenter.x;
-    const goIn = (key === "ArrowLeft" && isInRight) || (key === "ArrowRight" && !isInRight);
+    const isInPositive = isVerticalLayout ? (curCenter.y > rootCenter.y) : (curCenter.x > rootCenter.x);
+    
+    let goIn = false;
+    if (isVerticalLayout) {
+        goIn = (key === "ArrowUp" && isInPositive) || (key === "ArrowDown" && !isInPositive);
+    } else {
+        goIn = (key === "ArrowLeft" && isInPositive) || (key === "ArrowRight" && !isInPositive);
+    }
+
     if (goIn) {
       selectNodeInView(getParentNode(current.id, allElements));
     } else {
@@ -5117,7 +5601,7 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
       const ch = getChildrenNodes(current.id, allElements).sort((a, b) => (a.customData?.mindmapOrder ?? 100) - (b.customData?.mindmapOrder ?? 100));
       if (ch.length) selectNodeInView(ch[0]);
     }
-  } else if (key === "ArrowUp" || key === "ArrowDown") {
+  } else if (isSiblingNav) {
     const parent = getParentNode(current.id, allElements);
     if (!parent) return;
 
@@ -5137,24 +5621,19 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     const idx = siblings.findIndex((s) => s.id === current.id);
     const startIndex = (idx === -1 ? 0 : idx); // Start at 0 if current isn't found
 
-    const mapMode = root.customData?.growthMode || currentModalGrowthMode;
-    const currentIsLeftwardBranch = (current.x + current.width / 2) < (parent.x + parent.width / 2);
-    
+    const currentIsNegativeBranch = isVerticalLayout 
+         ? (current.y + current.height/2) < (parent.y + parent.height/2)
+         : (current.x + current.width/2) < (parent.x + parent.width/2);
+
     // Reverse up/down for left-facing branches in directional modes
-
     let navigateForward; // true for next sibling (clockwise), false for previous (counter-clockwise)
-    if (currentIsLeftwardBranch) {
-        navigateForward = (key === "ArrowUp"); // Reversed: Up moves forward, Down moves backward
+    if (isVerticalLayout) {
+      navigateForward = currentIsNegativeBranch ? (key === "ArrowRight") : (key === "ArrowLeft");
     } else {
-        navigateForward = (key === "ArrowDown"); // Normal: Down moves forward, Up moves backward
+      navigateForward = currentIsNegativeBranch ? (key === "ArrowUp") : (key === "ArrowDown");
     }
 
-    let nIdx;
-    if (navigateForward) {
-        nIdx = (startIndex + 1) % siblings.length;
-    } else {
-        nIdx = (startIndex - 1 + siblings.length) % siblings.length;
-    }
+    let nIdx = navigateForward ? (startIndex + 1) % siblings.length : (startIndex - 1 + siblings.length) % siblings.length;
     selectNodeInView(siblings[nIdx]);
   }
 
@@ -7870,6 +8349,8 @@ const addSibling = async (event, insertAfter=true) => {
     const info = getHierarchy(selectedForSibling, allElementsForSibling);
     const root = allElementsForSibling.find(el => el.id === info.rootId);
     const parentOfSelected = getParentNode(selectedForSibling.id, allElementsForSibling);
+    const rootMode = root.customData?.growthMode || currentModalGrowthMode;
+    const isVertical =["Up-facing", "Down-facing", "Up-Down"].includes(rootMode);
     
     // If parent exists, add to that parent (Sibling). 
     // If no parent (Root was selected), add to selected (Child).
@@ -7877,8 +8358,8 @@ const addSibling = async (event, insertAfter=true) => {
     
     // Default position: slightly lower to ensure correct Y-sort order in directional maps
     let pos = {
-      x: selectedForSibling.x,
-      y: selectedForSibling.y + (insertAfter ? selectedForSibling.height : 0) + dir,
+      x: selectedForSibling.x + (isVertical && insertAfter ? selectedForSibling.width : 0) + (isVertical ? dir : 0),
+      y: selectedForSibling.y + (!isVertical && insertAfter ? selectedForSibling.height : 0) + (!isVertical ? dir : 0),
     };
 
     // Specific logic for Radial L1 nodes:
@@ -8067,15 +8548,20 @@ const performAction = async (action, event) => {
           }
           if (!handledRecent && sel) {
             const parent = getParentNode(sel.id, allElements);
-            const siblings = parent ? getChildrenNodes(parent.id, allElements) : [];
+            const siblings = parent ? getChildrenNodes(parent.id, allElements) :[];
 
             if (siblings.length > 1) {
-              await navigateMap({key: "ArrowDown", zoom: false, focus: false});
+              // Iterates forward continuously in logical index order, 
+              // ignoring spatial/directional orientation bindings like ArrowDown
+              siblings.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
+              const idx = siblings.findIndex(s => s.id === sel.id);
+              const nextIdx = (idx + 1) % siblings.length;
+              selectNodeInView(siblings[nextIdx]);
             }
             else {
               const children = getChildrenNodes(sel.id, allElements);
               if (children.length > 0) {
-                sortChildrenStable(children);
+                children.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
                 selectNodeInView(children[0]);
               }
               else if (parent) {
