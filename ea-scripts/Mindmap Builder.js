@@ -2549,6 +2549,98 @@ const getSubtreeWidth = (nodeId, allElements, childrenByParent, widthCache, elem
   return totalWidth;
 };
 
+const getVerticalPlacementWidth = (nodeId, allElements, childrenByParent, widthCache, elementById, placementWidthCache = null) => {
+  if (placementWidthCache?.has(nodeId)) return placementWidthCache.get(nodeId);
+
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  if (!node) return 0;
+
+  const baseWidth = getSubtreeWidth(nodeId, allElements, childrenByParent, widthCache, elementById);
+
+  if (node.customData?.isAdditionalRoot !== true) {
+    if (placementWidthCache) placementWidthCache.set(nodeId, baseWidth);
+    return baseWidth;
+  }
+
+  const mode = node.customData?.growthMode;
+  if (!["Right-facing", "Left-facing", "Right-Left"].includes(mode)) {
+    if (placementWidthCache) placementWidthCache.set(nodeId, baseWidth);
+    return baseWidth;
+  }
+
+  const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+  const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
+  if (unpinnedChildren.length === 0) {
+    if (placementWidthCache) placementWidthCache.set(nodeId, baseWidth);
+    return baseWidth;
+  }
+
+  const childWidths = unpinnedChildren.map((child) =>
+    getVerticalPlacementWidth(child.id, allElements, childrenByParent, widthCache, elementById, placementWidthCache)
+  );
+
+  const primaryGap = layoutSettings.GAP_X;
+  const compactMinWidth = node.width + layoutSettings.GAP_Y * 2;
+  let projectedWidth;
+
+  if (mode === "Right-facing" || mode === "Left-facing") {
+    const maxChildWidth = childWidths.reduce((max, width) => Math.max(max, width), 0);
+    const directionalRawWidth = Math.max(node.width, node.width + primaryGap + maxChildWidth);
+    // Single-sided directional submaps mostly expand away from siblings.
+    // Compress their reserved slot width to avoid over-spacing in vertical parent layout.
+    projectedWidth = Math.max(
+      compactMinWidth,
+      node.width + (directionalRawWidth - node.width) * 0.35,
+    );
+  } else {
+    const nodeCenterX = node.x + node.width / 2;
+    let leftMax = 0;
+    let rightMax = 0;
+
+    unpinnedChildren.forEach((child, index) => {
+      const childCenterX = child.x + child.width / 2;
+      if (childCenterX < nodeCenterX) {
+        leftMax = Math.max(leftMax, childWidths[index]);
+      } else {
+        rightMax = Math.max(rightMax, childWidths[index]);
+      }
+    });
+
+    const directionalRawWidth = node.width +
+      (leftMax > 0 ? primaryGap + leftMax : 0) +
+      (rightMax > 0 ? primaryGap + rightMax : 0);
+    // Dual-sided maps need more reserved width than single-sided ones, but still less than full bbox width.
+    projectedWidth = Math.max(
+      compactMinWidth,
+      node.width + (Math.max(node.width, directionalRawWidth) - node.width) * 0.6,
+    );
+  }
+
+  if (node.customData?.boundaryId) {
+    projectedWidth += 30;
+  }
+
+  const effectiveWidth = Math.min(baseWidth, projectedWidth);
+
+  // Smooth width growth so adding the 2nd/3rd child does not suddenly blow up sibling spacing.
+  const widthExtra = Math.max(0, effectiveWidth - node.width);
+  const softThreshold = Math.max(
+    layoutSettings.GAP_X,
+    layoutSettings.GAP_Y * 6,
+  );
+
+  let smoothedWidth = effectiveWidth;
+  if (widthExtra > softThreshold) {
+    const compressionScale = Math.max(120, layoutSettings.GAP_X * 2);
+    const remaining = widthExtra - softThreshold;
+    const compressedRemaining = compressionScale * Math.log1p(remaining / compressionScale);
+    smoothedWidth = node.width + softThreshold + compressedRemaining;
+  }
+
+  if (placementWidthCache) placementWidthCache.set(nodeId, smoothedWidth);
+  return smoothedWidth;
+};
+
 /**
  * Determines if an element is part of the mindmap structure.
  */
@@ -3466,13 +3558,38 @@ const layoutSubtreeVertical = (nodeId, targetCenterX, targetY, side, allElements
       });
     }
 
-    const subtreeWidth = getSubtreeWidth(nodeId, allElements, childrenByParent, widthCache, elementById);
-    let currentX = currentXCenter - subtreeWidth / 2;
-    // Primary layout gap used for Parent-Child spacing (vertical)
-    const dynamicGapPrimary = layoutSettings.GAP_X;
+    const placementWidthCache = new Map();
+    const childWidths = unpinnedChildren.map((child) =>
+      getVerticalPlacementWidth(child.id, allElements, childrenByParent, widthCache, elementById, placementWidthCache)
+    );
+    const childrenRowWidth = childWidths.reduce((sum, width, index) => {
+      const childNode = elementById?.get(unpinnedChildren[index].id) ?? allElements.find((el) => el.id === unpinnedChildren[index].id);
+      const grandChildren = childrenByParent?.get(unpinnedChildren[index].id) ?? getChildrenNodes(unpinnedChildren[index].id, allElements);
+      const hasUnpinnedGrandChildren = grandChildren.some(gc => !gc.customData?.isPinned);
+      const fontSize = childNode?.fontSize ?? 20;
+      const gap = index < unpinnedChildren.length - 1
+        ? (!hasUnpinnedGrandChildren ? Math.round(fontSize * layoutSettings.GAP_MULTIPLIER) : layoutSettings.GAP_Y)
+        : 0;
+      return sum + width + gap;
+    }, 0);
 
-    unpinnedChildren.forEach((child) => {
-      const childW = getSubtreeWidth(child.id, allElements, childrenByParent, widthCache, elementById);
+    let currentX = currentXCenter - childrenRowWidth / 2;
+    // Primary layout gap used for Parent-Child spacing (vertical)
+    // Keep default spacing for larger branches, but tighten compact (1-2 child) subtrees.
+    const allChildrenCompact = unpinnedChildren.every((child) => {
+      const grandChildren = childrenByParent?.get(child.id) ?? getChildrenNodes(child.id, allElements);
+      return !grandChildren.some(gc => !gc.customData?.isPinned);
+    });
+    const compactGap = Math.max(
+      layoutSettings.GAP_Y,
+      Math.round(layoutSettings.GAP_X * 0.55),
+    );
+    const dynamicGapPrimary = (unpinnedChildren.length <= 2 && allChildrenCompact)
+      ? compactGap
+      : layoutSettings.GAP_X;
+
+    unpinnedChildren.forEach((child, index) => {
+      const childW = childWidths[index];
 
       layoutSubtreeVertical(
         child.id,
@@ -3752,8 +3869,37 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
   const count = nodes.length;
 
   // --- HORIZONTAL DIRECTIONAL LAYOUT (UP/DOWN) ---
-  const totalContentWidth = totalSubtreeWidth + (count - 1) * layoutSettings.GAP_Y;
-  const radiusFromWidth = totalContentWidth / layoutSettings.DIRECTIONAL_ARC_SPAN_RADIANS;
+  const compressDirectionalWidth = (node, rawWidth) => {
+    const nodeWidth = Math.max(node?.width ?? 0, 1);
+    if (rawWidth <= nodeWidth) return rawWidth;
+
+    const extra = rawWidth - nodeWidth;
+    const softCapThreshold = Math.max(500, (layoutSettings.MIN_RADIUS ?? LAYOUT_METADATA.MIN_RADIUS.def) * 1.6);
+    if (extra <= softCapThreshold) return rawWidth;
+
+    // Preserve small/medium maps, compress only very large subtree footprints.
+    const remaining = extra - softCapThreshold;
+    const compressionScale = Math.max(120, (layoutSettings.GAP_X ?? LAYOUT_METADATA.GAP_X.def) * 2);
+    // log1p keeps growth monotonic while guaranteeing compressedRemaining <= remaining.
+    const compressedRemaining = compressionScale * Math.log1p(remaining / compressionScale);
+    return nodeWidth + softCapThreshold + compressedRemaining;
+  };
+
+  const effectiveWidths = nodes.map((node, i) => compressDirectionalWidth(node, l1Metrics[i]));
+  const effectiveWidthById = new Map(nodes.map((node, i) => [node.id, effectiveWidths[i]]));
+
+  const totalEffectiveWidth = effectiveWidths.reduce((sum, width) => sum + width, 0);
+  const effectiveGap = layoutSettings.GAP_Y * gapMultiplier;
+  const totalContentWidth = totalEffectiveWidth + (count - 1) * effectiveGap;
+
+  const baseArcSpan = layoutSettings.DIRECTIONAL_ARC_SPAN_RADIANS;
+  const baselineRadius = Math.max(
+    Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR),
+    layoutSettings.MIN_RADIUS,
+  ) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+  const pressure = totalContentWidth / Math.max(1, baselineRadius * baseArcSpan);
+  const adaptiveArcSpan = Math.min(Math.PI, Math.max(baseArcSpan, baseArcSpan * Math.sqrt(Math.max(1, pressure))));
+  const radiusFromWidth = totalContentWidth / adaptiveArcSpan;
   
   // Notice axis swaps: Radius Y calculates based on Width
   const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusFromWidth) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
@@ -3764,7 +3910,7 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
   let currentAngle = isTopSide ? centerAngle - totalThetaDeg / 2 : centerAngle + totalThetaDeg / 2;
 
   nodes.forEach((node, i) => {
-    const nodeWidth = l1Metrics[i];
+    const nodeWidth = effectiveWidths[i];
     const isPinned = node.customData?.isPinned === true;
     const side = isTopSide ? -1 : 1;
 
@@ -3776,7 +3922,6 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
       return { center: normAngle, span: spanDeg, start: normAngle - spanDeg / 2, end: normAngle + spanDeg / 2 };
     };
 
-    const effectiveGap = layoutSettings.GAP_Y * gapMultiplier;
     const gapSpanDeg = (effectiveGap / radiusX) * (180 / Math.PI);
     const nodeSpanDeg = (nodeWidth / radiusX) * (180 / Math.PI);
 
@@ -3791,7 +3936,8 @@ const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, 
     } else {
       const nextPinned = nodes.slice(i + 1).find(n => n.customData?.isPinned);
       if (nextPinned) {
-        const nextInfo = getAngularInfo(nextPinned, getSubtreeWidth(nextPinned.id, allElements, childrenByParent, widthCache, elementById));
+        const nextPinnedWidth = effectiveWidthById.get(nextPinned.id) ?? compressDirectionalWidth(nextPinned, getSubtreeWidth(nextPinned.id, allElements, childrenByParent, widthCache, elementById));
+        const nextInfo = getAngularInfo(nextPinned, nextPinnedWidth);
         if (isTopSide) {
            if (currentAngle + nodeSpanDeg > nextInfo.start - gapSpanDeg) currentAngle = nextInfo.start - gapSpanDeg - nodeSpanDeg;
         } else {
