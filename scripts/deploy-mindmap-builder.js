@@ -26,6 +26,7 @@ The script balances **automation** (auto-layout, recursive grouping, and contras
 
 > [!Info]
 > Mindmap Builder is Minified and compressed to reduce size and improve performance. You can find the source here: [Mindmap Builder.js](https://github.com/zsviczian/obsidian-excalidraw-plugin/blob/master/ea-scripts/Mindmap%20Builder.js)
+> API documentation: [MindMapBuilderAPI.md](https://github.com/zsviczian/obsidian-excalidraw-plugin/blob/master/docs/ea-script-docs/MindMapBuilderAPI.md)
 
 ## Show Your Love!
 

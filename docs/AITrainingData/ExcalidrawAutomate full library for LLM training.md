@@ -11173,7 +11173,7 @@ Content structure:
 2. The curated script overview (index-new.md)
 3. Raw source of every *.md script in /ea-scripts (each fenced code block is auto-closed to ensure well-formed aggregation)
 
-Generated on: 2026-02-27T17:11:57.194Z
+Generated on: 2026-02-28T16:08:34.043Z
 
 ---
 
@@ -20028,8 +20028,16 @@ const STRINGS = {
     NOTICE_CANNOT_MOVE_ROOT: "Cannot move the root node.",
     NOTICE_CANNOT_PRMOTE_L1: "Cannot promote Level 1 nodes.",
     NOTICE_CANNOT_DEMOTE: "Cannot demote node. No previous sibling to attach to.",
+    NOTICE_SELECT_NODE_CONTAINING_LINK: "Select a node containing a link.",
+    NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT: "Cannot demote: No sibling found to accept this node.",
+    NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING: "Cannot demote: No valid sibling to attach to.",
+    NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED: "Cannot demote: Cross-side demotion is not allowed.",
     NOTICE_CANNOT_MOVE_AUTO_LAYOUT_DISABLED: "Cannot move nodes when Auto-Layout is disabled. Enable Auto-Layout first.",
     NOTICE_BRANCH_WIDTH_MANUAL_OVERRIDE: "Branch width were not updated because some branch widths were manually modified.",
+    NOTICE_CANNOT_CHANGE_MASTER_ROOT: "The master root cannot be converted.",
+    NOTICE_SUBMAP_ROOT_ADDED: "Submap root enabled.",
+    NOTICE_SUBMAP_ROOT_REMOVED: "Submap root removed. Children now follow the parent map layout.",
+    CONFIRM_REMOVE_SUBMAP_ROOT: "Change this submap root back to a normal node?\n\nIt will lose its local layout metadata, and its children will be rearranged by the parent root's layout logic.",
 
     // Action labels (display only)
     ACTION_LABEL_ADD: "Add Child",
@@ -20058,6 +20066,7 @@ const STRINGS = {
     ACTION_LABEL_DOCK_UNDOCK: "Dock/Undock",
     ACTION_LABEL_HIDE: "Dock & hide",
     ACTION_LABEL_REARRANGE: "Rearrange Map",
+    ACTION_LABEL_TOGGLE_SUBMAP_ROOT: "Start/End Submap Root",
 
     // Tooltips (shared)
     PIN_TOOLTIP_PINNED: "This element is pinned. Click to unpin the location of the selected element",
@@ -20086,6 +20095,8 @@ const STRINGS = {
     TOOLTIP_FOLD_ALL: "Fold/Unfold Branch Recursively",
     TOOLTIP_IMPORT_OUTLINE: "Import headings from linked file as child nodes",
     TOOLTIP_RESET_TO_DEFAULT: "Reset to default",
+    TOOLTIP_SUBMAP_ROOT_ADD: "Start submap from selected node",
+    TOOLTIP_SUBMAP_ROOT_REMOVE: "Convert submap root back to a normal node",
 
     // Buttons and labels
     DOCK_TITLE: "Mind Map Builder",
@@ -20185,6 +20196,8 @@ const STRINGS = {
     DESC_LAYOUT_INDICATOR_OPACITY: "Opacity of the '...' fold indicator (0-100).",
     CONTAINER_PADDING: "Container Padding",
     DESC_LAYOUT_CONTAINER_PADDING: "Padding inside the box when 'Box Child Nodes' or 'Box/Unbox' is used.",
+    MAX_SEGMENT_LENGTH: "Boundary Line Precision",
+    DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "Boundary smoothing precision. Smaller values are more precise (30 = Precise), larger values are rougher (200 = Rough).",
     MANUAL_GAP_MULTIPLIER: "Manual-layout Gap Multiplier",
     DESC_LAYOUT_MANUAL_GAP: "Spacing multiplier when adding nodes while Auto-Layout is disabled.",
     MANUAL_JITTER_RANGE: "Manual-layout Jitter Range",
@@ -20241,8 +20254,16 @@ addLocale("zh", {
   NOTICE_CANNOT_MOVE_ROOT: "无法移动根节点。",
   NOTICE_CANNOT_PRMOTE_L1: "无法提升 1 级节点。",
   NOTICE_CANNOT_DEMOTE: "无法降级节点。没有可依附的前置同级节点。",
+  NOTICE_SELECT_NODE_CONTAINING_LINK: "请选择包含链接的节点。",
+  NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT: "无法降级：未找到可接收此节点的同级节点。",
+  NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING: "无法降级：没有可附加的有效同级节点。",
+  NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED: "无法降级：不允许跨侧降级。",
   NOTICE_CANNOT_MOVE_AUTO_LAYOUT_DISABLED: "禁用自动布局时无法移动节点。请先启用自动布局。",
   NOTICE_BRANCH_WIDTH_MANUAL_OVERRIDE: "分支粗细未更新，因为部分分支粗细已被手动修改。",
+  NOTICE_CANNOT_CHANGE_MASTER_ROOT: "主根节点不能被转换。",
+  NOTICE_SUBMAP_ROOT_ADDED: "已启用子图根节点。",
+  NOTICE_SUBMAP_ROOT_REMOVED: "已移除子图根节点。其子节点将按上级根节点布局重排。",
+  CONFIRM_REMOVE_SUBMAP_ROOT: "要将此子图根节点恢复为普通节点吗？\n\n它将失去本地布局元数据，并且其子节点将按父级根节点的布局逻辑重排。",
 
   // Action labels (display only)
   ACTION_LABEL_ADD: "添加子节点",
@@ -20271,6 +20292,7 @@ addLocale("zh", {
   ACTION_LABEL_DOCK_UNDOCK: "停靠/取消停靠",
   ACTION_LABEL_HIDE: "停靠 & 隐藏",
   ACTION_LABEL_REARRANGE: "重排导图",
+  ACTION_LABEL_TOGGLE_SUBMAP_ROOT: "开始/结束子图根节点",
 
   // Tooltips (shared)
   PIN_TOOLTIP_PINNED: "此元素已锁定。点击解锁所选元素的位置。",
@@ -20299,6 +20321,8 @@ addLocale("zh", {
   TOOLTIP_FOLD_ALL: "递归折叠/展开分支",
   TOOLTIP_IMPORT_OUTLINE: "从链接文件中导入小标题作为子节点数据",
   TOOLTIP_RESET_TO_DEFAULT: "恢复默认",
+  TOOLTIP_SUBMAP_ROOT_ADD: "从所选节点开始子图",
+  TOOLTIP_SUBMAP_ROOT_REMOVE: "将子图根节点恢复为普通节点",
 
   // Buttons and labels
   DOCK_TITLE: "MindMap Builder",
@@ -20398,6 +20422,8 @@ addLocale("zh", {
   DESC_LAYOUT_INDICATOR_OPACITY: "折叠指示符的不透明度（0-100）。",
   CONTAINER_PADDING: "容器内边距",
   DESC_LAYOUT_CONTAINER_PADDING: "使用边框样式时的内边距。",
+  MAX_SEGMENT_LENGTH: "边界线精度",
+  DESC_LAYOUT_BOUNDARY_LINE_PRECISION: "边界平滑精度。值越小越精细（30 = 精细），值越大越粗略（200 = 粗略）。",
   MANUAL_GAP_MULTIPLIER: "手动布局间距倍数",
   DESC_LAYOUT_MANUAL_GAP: "禁用自动布局时添加节点的间距倍数。",
   MANUAL_JITTER_RANGE: "手动布局抖动范围",
@@ -20441,7 +20467,7 @@ const VALUE_SETS = Object.freeze({
     none: 0,
   }),
   FONT_SCALE: Object.freeze(["Use scene fontsize", "Fibonacci Scale", "Normal Scale"]),
-  GROWTH: Object.freeze(["Radial", "Right-facing", "Left-facing", "Right-Left"]),
+  GROWTH: Object.freeze(["Radial", "Right-facing", "Left-facing", "Right-Left", "Up-facing", "Down-facing", "Up-Down"]),
   ZOOM: Object.freeze(["Low", "Medium", "High"]),
   ARROW: Object.freeze(["curved", "straight"]),
   BRANCH_SCALE: Object.freeze(["Hierarchical", "Uniform"]),
@@ -20609,6 +20635,12 @@ const LAYOUT_METADATA = {
     def: 10, min: 0, max: 50, step: 2,
     desc: t("DESC_LAYOUT_CONTAINER_PADDING"),
     name: t("CONTAINER_PADDING"),
+  },
+  MAX_SEGMENT_LENGTH: {
+    section: "SECTION_VISUALS",
+    def: 80, min: 30, max: 200, step: 10,
+    desc: t("DESC_LAYOUT_BOUNDARY_LINE_PRECISION"),
+    name: t("MAX_SEGMENT_LENGTH"),
   },
 
   // --- Manual Mode ---
@@ -20830,6 +20862,7 @@ const ACTION_FOLD = "Fold/Unfold Branch";
 const ACTION_FOLD_L1 = "Fold/Unfold to Level 1";
 const ACTION_FOLD_ALL = "Fold/Unfold Branch Recursively";
 const ACTION_TOGGLE_BOUNDARY = "Toggle Boundary";
+const ACTION_TOGGLE_SUBMAP_ROOT = "Toggle Submap Root";
 
 const ACTION_DOCK_UNDOCK = "Dock/Undock";
 const ACTION_HIDE = "Dock & hide";
@@ -20865,6 +20898,7 @@ const ACTION_LABEL_KEYS = {
   [ACTION_FOLD_L1]: "ACTION_LABEL_FOLD_L1",
   [ACTION_FOLD_ALL]: "ACTION_LABEL_FOLD_ALL",
   [ACTION_TOGGLE_BOUNDARY]: "TOOLTIP_TOGGLE_BOUNDARY",
+  [ACTION_TOGGLE_SUBMAP_ROOT]: "ACTION_LABEL_TOGGLE_SUBMAP_ROOT",
   [ACTION_DOCK_UNDOCK]: "ACTION_LABEL_DOCK_UNDOCK",
   [ACTION_HIDE]: "ACTION_LABEL_HIDE",
   [ACTION_REARRANGE]: "ACTION_LABEL_REARRANGE",
@@ -20902,6 +20936,7 @@ const DEFAULT_HOTKEYS = [
   { action: ACTION_PIN, code: "KeyP", modifiers: ["Alt"], scope: SCOPE.input, isInputOnly: false },
   { action: ACTION_BOX, code: "KeyB", modifiers: ["Alt"], scope: SCOPE.input, isInputOnly: false },
   { action: ACTION_TOGGLE_BOUNDARY, code: "KeyB", modifiers: ["Alt", "Shift"], scope: SCOPE.input, inputOnly: false },
+  { action: ACTION_TOGGLE_SUBMAP_ROOT, code: "KeyJ", modifiers: ["Alt"], scope: SCOPE.input, isInputOnly: false },
   { action: ACTION_TOGGLE_GROUP, code: "KeyG", modifiers: ["Alt"], scope: SCOPE.input, isInputOnly: false },
 
   // Clipboard (Alt to distinguish from text editing)
@@ -21405,6 +21440,163 @@ const getHierarchy = (el, allElements, elementById = null, parentMap = null) => 
     depth++;
   }
   return { depth, l1AncestorId: l1Id, rootId };
+};
+
+/**
+ * Returns the nearest configuration root for the selected node.
+ * - Additional roots (`isAdditionalRoot`) act as local configuration roots.
+ * - If none is found on the path, the master root is returned.
+ */
+const getSettingsRootNode = (el, allElements, elementById = null, parentMap = null) => {
+  if (!el) return null;
+
+  let curr = getBoundaryHost([el]) ?? el;
+  let last = curr;
+  const visited = new Set();
+
+  while (curr && !visited.has(curr.id)) {
+    visited.add(curr.id);
+    last = curr;
+
+    if (curr.customData?.isAdditionalRoot === true) {
+      return curr;
+    }
+
+    const p = getParentNode(curr.id, allElements, parentMap);
+    if (!p) {
+      return curr; // master root
+    }
+    curr = p;
+  }
+
+  return last;
+};
+
+/**
+ * Returns depth from a specific ancestor.
+ * If the ancestor is not found, it safely falls back to absolute hierarchy depth.
+ */
+const getDepthFromAncestor = (nodeId, ancestorId, allElements, parentMap = null) => {
+  const byId = buildElementMap(allElements);
+  let curr = byId.get(nodeId);
+  if (!curr) return 0;
+
+  let depth = 0;
+  const visited = new Set();
+  while (curr && !visited.has(curr.id)) {
+    if (curr.id === ancestorId) return depth;
+    visited.add(curr.id);
+    curr = getParentNode(curr.id, allElements, parentMap);
+    depth++;
+  }
+
+  const fallbackNode = byId.get(nodeId);
+  return fallbackNode ? getHierarchy(fallbackNode, allElements, byId, parentMap).depth : 0;
+};
+
+const MAP_ROOT_CUSTOMDATA_KEYS = [
+  "isAdditionalRoot",
+  "growthMode",
+  "autoLayoutDisabled",
+  "arrowType",
+  "fontsizeScale",
+  "multicolor",
+  "boxChildren",
+  "roundedCorners",
+  "maxWrapWidth",
+  "isSolidArrow",
+  "centerText",
+  "fillSweep",
+  "branchScale",
+  "baseStrokeWidth",
+  "layoutSettings",
+];
+
+const inferDirectionalGrowthMode = (node, parent, sourceRoot = null, sourceMode = null) => {
+  if (!node || !parent) return "Right-facing";
+
+  const mode = sourceMode || sourceRoot?.customData?.growthMode || currentModalGrowthMode;
+  const nodeCenter = { x: node.x + node.width / 2, y: node.y + node.height / 2 };
+
+  const ref = sourceRoot
+    ? { x: sourceRoot.x + sourceRoot.width / 2, y: sourceRoot.y + sourceRoot.height / 2 }
+    : { x: parent.x + parent.width / 2, y: parent.y + parent.height / 2 };
+
+  // Single-direction maps inherit their direction directly.
+  if (mode === "Up-facing") return "Up-facing";
+  if (mode === "Down-facing") return "Down-facing";
+  if (mode === "Right-facing") return "Right-facing";
+  if (mode === "Left-facing") return "Left-facing";
+
+  // Dual-axis directional map: infer by vertical side relative to map root.
+  if (mode === "Up-Down") {
+    return nodeCenter.y < ref.y ? "Up-facing" : "Down-facing";
+  }
+
+  // Right-Left and Radial maps: infer by horizontal side relative to map root.
+  if (mode === "Right-Left" || mode === "Radial") {
+    return nodeCenter.x >= ref.x ? "Right-facing" : "Left-facing";
+  }
+
+  // Fallback to geometric heuristic.
+  const dx = nodeCenter.x - ref.x;
+  const dy = nodeCenter.y - ref.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? "Right-facing" : "Left-facing";
+  }
+  return dy >= 0 ? "Down-facing" : "Up-facing";
+};
+
+const getRootConfigForNode = (rootNode) => {
+  const cd = rootNode?.customData ?? {};
+  const defaultLayout = layoutSettings || {};
+  return {
+    growthMode: cd?.growthMode || currentModalGrowthMode,
+    autoLayoutDisabled: cd?.autoLayoutDisabled === true,
+    arrowType: cd?.arrowType ?? arrowType,
+    fontsizeScale: cd?.fontsizeScale ?? fontsizeScale,
+    multicolor: typeof cd?.multicolor === "boolean" ? cd.multicolor : multicolor,
+    boxChildren: typeof cd?.boxChildren === "boolean" ? cd.boxChildren : boxChildren,
+    roundedCorners: typeof cd?.roundedCorners === "boolean" ? cd.roundedCorners : roundedCorners,
+    maxWrapWidth: typeof cd?.maxWrapWidth === "number" ? cd.maxWrapWidth : maxWidth,
+    isSolidArrow: typeof cd?.isSolidArrow === "boolean" ? cd.isSolidArrow : isSolidArrow,
+    centerText: typeof cd?.centerText === "boolean" ? cd.centerText : centerText,
+    fillSweep: typeof cd?.fillSweep === "boolean" ? cd.fillSweep : fillSweep,
+    branchScale: cd?.branchScale ?? branchScale,
+    baseStrokeWidth: typeof cd?.baseStrokeWidth === "number" ? cd.baseStrokeWidth : baseStrokeWidth,
+    layoutSettings: JSON.parse(JSON.stringify(cd?.layoutSettings ?? defaultLayout)),
+  };
+};
+
+/**
+ * Temporarily applies map/root settings for layout calculations, then restores globals.
+ * This allows nested additional roots to layout with their own strategy.
+ */
+const withRootLayoutContext = (rootNode, fn) => {
+  const previous = {
+    growthMode: currentModalGrowthMode,
+    arrowType,
+    centerText,
+    fillSweep,
+    layoutSettings: layoutSettings,
+  };
+
+  const cfg = getRootConfigForNode(rootNode);
+  currentModalGrowthMode = cfg.growthMode;
+  arrowType = cfg.arrowType;
+  centerText = cfg.centerText;
+  fillSweep = cfg.fillSweep;
+  layoutSettings = JSON.parse(JSON.stringify(cfg.layoutSettings));
+
+  try {
+    return fn(cfg);
+  } finally {
+    currentModalGrowthMode = previous.growthMode;
+    arrowType = previous.arrowType;
+    centerText = previous.centerText;
+    fillSweep = previous.fillSweep;
+    layoutSettings = previous.layoutSettings;
+  }
 };
 
 const getAngleFromCenter = (center, point) => {
@@ -22185,6 +22377,56 @@ const getSubtreeHeight = (nodeId, allElements, childrenByParent, heightCache, el
   return totalHeight;
 };
 
+const getSubtreeWidth = (nodeId, allElements, childrenByParent, widthCache, elementById) => {
+  if (widthCache?.has(nodeId)) return widthCache.get(nodeId);
+
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  if (!node) return 0;
+
+  if (node.customData?.isFolded) {
+    const foldedWidth = node.width;
+    if (widthCache) widthCache.set(nodeId, foldedWidth);
+    return foldedWidth;
+  }
+
+  const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+  const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
+
+  let totalWidth = 0;
+
+  if (unpinnedChildren.length === 0) {
+    totalWidth = node.width;
+  } else {
+    let childrenWidth = 0;
+    unpinnedChildren.forEach((child, index) => {
+      childrenWidth += getSubtreeWidth(child.id, allElements, childrenByParent, widthCache, elementById);
+      if (index < unpinnedChildren.length - 1) {
+        const childNode = elementById?.get(child.id) ?? allElements.find((el) => el.id === child.id);
+
+        // Check if child behaves as a leaf (ignoring pinned descendants)
+        const grandChildren = childrenByParent?.get(child.id) ?? getChildrenNodes(child.id, allElements);
+        const hasUnpinnedGrandChildren = grandChildren.some(gc => !gc.customData?.isPinned);
+
+        const fontSize = childNode.fontSize ?? 20;
+        // For vertical layouts, we reuse GAP_Y as the horizontal sibling gap to maintain proportion
+        const gap = !hasUnpinnedGrandChildren ? Math.round(fontSize * layoutSettings.GAP_MULTIPLIER) : layoutSettings.GAP_Y;
+        childrenWidth += gap;
+      }
+    });
+    totalWidth = Math.max(node.width, childrenWidth);
+  }
+
+  // Feature: Boundary Spacing
+  // If the node has a visual boundary, add padding to the total subtree height
+  // The boundary adds 15px padding on all sides (see updateNodeBoundary), so we add 2*15=30px
+  if (node.customData?.boundaryId) {
+    totalWidth += 30;
+  }
+
+  if (widthCache) widthCache.set(nodeId, totalWidth);
+  return totalWidth;
+};
+
 /**
  * Determines if an element is part of the mindmap structure.
  */
@@ -22322,10 +22564,26 @@ const updateNodeBoundary = (node, allElements, rootId) => {
 
   if (branchElements.length === 0) return;
 
+  const root = allElements.find(el => el.id === rootId);
+  const growthMode = root?.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalBoundaryMode = growthMode === "Up-facing" || growthMode === "Down-facing" || growthMode === "Up-Down";
+
   const padding = 15;
-  let allPoints = [];
+  let allPoints =[];
 
   branchElements.forEach(el => {
+    if (isVerticalBoundaryMode && el.type === "arrow" && Array.isArray(el.points) && el.points.length > 0) {
+      el.points.forEach(([px, py]) => {
+        const x = el.x + px;
+        const y = el.y + py;
+        allPoints.push([x - padding, y - padding]);
+        allPoints.push([x + padding, y - padding]);
+        allPoints.push([x + padding, y + padding]);
+        allPoints.push([x - padding, y + padding]);
+      });
+      return;
+    }
+
     const x1 = el.x - padding;
     const y1 = el.y - padding;
     const x2 = el.x + el.width + padding;
@@ -22341,7 +22599,28 @@ const updateNodeBoundary = (node, allElements, rootId) => {
 
   if (hullPoints.length < 3) return;
 
+  // Subdivide long segments to tame the bezier curve over-extension
+  const subdividedPoints =[];
+  const MAX_SEGMENT_LENGTH = layoutSettings.MAX_SEGMENT_LENGTH ?? LAYOUT_METADATA.MAX_SEGMENT_LENGTH.def;
+  for (let i = 0; i < hullPoints.length; i++) {
+    const p1 = hullPoints[i];
+    const p2 = hullPoints[(i + 1) % hullPoints.length];
+    subdividedPoints.push(p1);
+    
+    const dist = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    if (dist > MAX_SEGMENT_LENGTH) {
+      const steps = Math.ceil(dist / MAX_SEGMENT_LENGTH);
+      for (let j = 1; j < steps; j++) {
+        subdividedPoints.push([
+          p1[0] + (p2[0] - p1[0]) * (j / steps),
+          p1[1] + (p2[1] - p1[1]) * (j / steps)
+        ]);
+      }
+    }
+  }
+
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  // Calculate bounding box using the original hull points
   hullPoints.forEach(p => {
     if (p[0] < minX) minX = p[0];
     if (p[1] < minY) minY = p[1];
@@ -22361,7 +22640,8 @@ const updateNodeBoundary = (node, allElements, rootId) => {
   boundaryEl.width = w;
   boundaryEl.height = h;
 
-  const normalizedPoints = hullPoints.map(p => [p[0] - minX, p[1] - minY]);
+  // Use the newly subdivided points for the final path
+  const normalizedPoints = subdividedPoints.map(p => [p[0] - minX, p[1] - minY]);
   normalizedPoints.push([normalizedPoints[0][0], normalizedPoints[0][1]]); // Close loop
   boundaryEl.points = normalizedPoints;
 
@@ -22374,7 +22654,7 @@ const updateNodeBoundary = (node, allElements, rootId) => {
          boundaryEl.groupIds = [node.groupIds[0]];
      }
   } else {
-     boundaryEl.groupIds = [];
+     boundaryEl.groupIds =[];
   }
 };
 
@@ -22396,12 +22676,20 @@ const addEmbeddableNode = ({px = 0, py = 0, url, depth}) => {
 const updateRootNodeCustomData = async (data, sel) => {
   if (!sel) sel = getMindmapNodeFromSelection();
   if (sel) {
-    const info = getHierarchy(sel, ea.getViewElements());
-    ea.copyViewElementsToEAforEditing(ea.getViewElements().filter((e) => e.id === info.rootId));
-    ea.addAppendUpdateCustomData(info.rootId, { ...data });
+    const allElements = ea.getViewElements();
+    const settingsRoot = getSettingsRootNode(sel, allElements);
+    if (!settingsRoot) return null;
+
+    ea.copyViewElementsToEAforEditing(allElements.filter((e) => e.id === settingsRoot.id));
+    ea.addAppendUpdateCustomData(settingsRoot.id, { ...data });
     await addElementsToView({ captureUpdate: "NEVER" });
     updateUI();
-    return info;
+    const info = getHierarchy(settingsRoot, ea.getViewElements());
+    return {
+      ...info,
+      rootId: settingsRoot.id,
+      settingsRootId: settingsRoot.id,
+    };
   }
   return null;
 }
@@ -22518,60 +22806,240 @@ const addUpdateArrowLabel = (arrow, text) => {
 }
 
 const configureArrow = (context) => {
-  const {arrowId, isChildRight, startId, endId, coordinates, isRadial} = context;
+  const {arrowId, isChildRight, isChildBelow, startId, endId, coordinates, isRadial, layoutDirection} = context;
   const {sX, sY, eX, eY} = coordinates;
 
-  // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
-  // In Radial mode, bind to the center (0.5) of the root node
-  const startRatio = isRadial ? 0.50001 : (isChildRight ? 0.9999 : 0.0001);
-  const endRatio = isChildRight ? 0.0001 : 0.9999;
-  const centerYRatio = 0.5001;
-
   const eaArrow = ea.getElement(arrowId);
+  const isVertical = layoutDirection === "vertical";
 
-  eaArrow.startBinding = {
-    ...eaArrow.startBinding,
-    elementId: startId,
-    mode: "orbit",
-    fixedPoint: [startRatio, centerYRatio]
-  };
+  if (isVertical) {
+    // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
+    // In Radial mode, bind to the center (0.5) of the root node
+    const startRatio = isRadial ? 0.50001 : (isChildBelow ? 0.9999 : 0.0001);
+    const endRatio = isChildBelow ? 0.0001 : 0.9999;
+    const centerRatio = 0.5001;
 
-  eaArrow.endBinding = {
-    ...eaArrow.endBinding,
-    elementId: endId,
-    mode: "orbit",
-    fixedPoint: [endRatio, centerYRatio]
-  };
+    eaArrow.startBinding = {
+      ...eaArrow.startBinding,
+      elementId: startId,
+      mode: "orbit",
+      fixedPoint: [centerRatio, startRatio]
+    };
 
-  eaArrow.x = sX;
-  eaArrow.y = sY;
+    eaArrow.endBinding = {
+      ...eaArrow.endBinding,
+      elementId: endId,
+      mode: "orbit",
+      fixedPoint: [centerRatio, endRatio]
+    };
 
-  const dx = eX - sX;
-  const dy = eY - sY;
+    eaArrow.x = sX;
+    eaArrow.y = sY;
 
-  if (arrowType === "straight") {
-    eaArrow.roundness = null;
-    eaArrow.points = [
-      [0, 0],
-      [dx, dy],
-    ];
-  } else {
-    eaArrow.roundness = { type: 2 };
-    if (isRadial) {
+    const dx = eX - sX;
+    const dy = eY - sY;
+
+    if (arrowType === "straight") {
+      eaArrow.roundness = null;
       eaArrow.points = [
         [0, 0],
-        [dx * 2 / 3, dy * 0.75],
         [dx, dy]
       ];
     } else {
+      eaArrow.roundness = { type: 2 };
+      if (isRadial) {
+        // Swapped coefficients for vertical curve: Y progresses faster than X initially
+        eaArrow.points = [
+          [0, 0],[dx * 0.75, dy * 2 / 3],
+          [dx, dy]
+        ];
+      } else {
+        // Swapped coefficients for vertical curve: Y progresses faster than X initially
+        // This ensures lines shoot out vertically first before fanning out horizontally
+        eaArrow.points = [
+          [0, 0],[dx * 0.25, dy / 3],[dx * 0.75, dy * 2 / 3],
+          [dx, dy]
+        ];
+      }
+    }
+  } else {
+    // Standard horizontal logic
+    // Configure Binding Points (using .0001/.9999 to avoid jumping effect)
+    // In Radial mode, bind to the center (0.5) of the root node
+    const startRatio = isRadial ? 0.50001 : (isChildRight ? 0.9999 : 0.0001);
+    const endRatio = isChildRight ? 0.0001 : 0.9999;
+    const centerYRatio = 0.5001;
+
+    eaArrow.startBinding = {
+      ...eaArrow.startBinding,
+      elementId: startId,
+      mode: "orbit",
+      fixedPoint: [startRatio, centerYRatio]
+    };
+
+    eaArrow.endBinding = {
+      ...eaArrow.endBinding,
+      elementId: endId,
+      mode: "orbit",
+      fixedPoint: [endRatio, centerYRatio]
+    };
+
+    eaArrow.x = sX;
+    eaArrow.y = sY;
+
+    const dx = eX - sX;
+    const dy = eY - sY;
+
+    if (arrowType === "straight") {
+      eaArrow.roundness = null;
       eaArrow.points = [
-        [0, 0],
-        [dx / 3, dy * 0.25],
-        [dx * 2 / 3, dy * 0.75],
-        [dx, dy]
+        [0, 0],[dx, dy]
       ];
+    } else {
+      eaArrow.roundness = { type: 2 };
+      if (isRadial) {
+        eaArrow.points = [
+          [0, 0],
+          [dx * 2 / 3, dy * 0.75],[dx, dy]
+        ];
+      } else {
+        // Standard horizontal curve: X progresses faster than Y initially
+        eaArrow.points = [
+          [0, 0],[dx / 3, dy * 0.25],
+          [dx * 2 / 3, dy * 0.75],[dx, dy]
+        ];
+      }
     }
   }
+};
+
+/**
+ * Layout entrypoint for nodes marked as additional roots.
+ * The node position itself is controlled by the parent/root layout pass.
+ * Only its descendants are laid out using this node's local root settings.
+ */
+const layoutChildrenAsAdditionalRoot = (nodeId, allElements, hasGlobalFolds, childrenByParent, heightCache, widthCache, elementById, mustHonorMindmapOrder = false, parentMap = null) => {
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  if (!node || node.customData?.isAdditionalRoot !== true) return false;
+
+  const l1Nodes = getChildrenNodes(nodeId, allElements);
+  if (l1Nodes.length === 0) return false;
+
+  // Apply local submap settings for this subtree only.
+  withRootLayoutContext(node, (cfg) => {
+    const localHeightCache = heightCache ?? new Map();
+    const localWidthCache = widthCache ?? new Map();
+    const eaNode = ea.getElement(nodeId);
+    if (!eaNode) return;
+
+    const rootBox = getNodeBox(eaNode, allElements);
+    const rootCenter = {
+      x: rootBox.minX + rootBox.width / 2,
+      y: rootBox.minY + rootBox.height / 2,
+    };
+
+    const mode = cfg.growthMode;
+    const layoutContext = {
+      allElements,
+      rootId: nodeId,
+      rootBox,
+      rootCenter,
+      hasGlobalFolds,
+      mode,
+      childrenByParent,
+      heightCache: localHeightCache,
+      widthCache: localWidthCache,
+      elementById,
+      parentMap,
+    };
+
+    // If order is not explicitly locked by an operation, sync to visual sequence.
+    if (!mustHonorMindmapOrder) {
+      sortL1NodesBasedOnVisualSequence(l1Nodes, mode, rootCenter);
+    }
+
+    if (mode === "Radial") {
+      layoutL1Nodes(l1Nodes, {
+        sortMethod: "radial",
+        centerAngle: null,
+        gapMultiplier: layoutSettings.GAP_MULTIPLIER_RADIAL,
+        fillSweep: cfg.fillSweep,
+      }, layoutContext, mustHonorMindmapOrder);
+      return;
+    }
+
+    if (["Right-facing", "Left-facing", "Right-Left"].includes(mode)) {
+      const leftNodes = [];
+      const rightNodes = [];
+
+      if (mode === "Right-Left") {
+        l1Nodes.forEach((child) => {
+          const childCX = child.x + child.width / 2;
+          if (childCX > rootCenter.x) rightNodes.push(child);
+          else leftNodes.push(child);
+        });
+
+        // If all children are on one side (e.g. after fresh conversion), balance using order.
+        if ((leftNodes.length === 0 || rightNodes.length === 0) && l1Nodes.length > 1) {
+          leftNodes.length = 0;
+          rightNodes.length = 0;
+          const splitIdx = Math.ceil(l1Nodes.length / 2);
+          l1Nodes.forEach((child, i) => {
+            if (i < splitIdx) rightNodes.push(child);
+            else leftNodes.push(child);
+          });
+        }
+      } else if (mode === "Left-facing") {
+        l1Nodes.forEach((child) => leftNodes.push(child));
+      } else {
+        l1Nodes.forEach((child) => rightNodes.push(child));
+      }
+
+      if (rightNodes.length > 0) {
+        layoutL1Nodes(rightNodes, { sortMethod: "vertical", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+      }
+      if (leftNodes.length > 0) {
+        layoutL1Nodes(leftNodes, { sortMethod: "vertical", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+      }
+      return;
+    }
+
+    const upNodes = [];
+    const downNodes = [];
+
+    if (mode === "Up-Down") {
+      l1Nodes.forEach((child) => {
+        const childCY = child.y + child.height / 2;
+        if (childCY > rootCenter.y) downNodes.push(child);
+        else upNodes.push(child);
+      });
+
+      if ((upNodes.length === 0 || downNodes.length === 0) && l1Nodes.length > 1) {
+        upNodes.length = 0;
+        downNodes.length = 0;
+        const splitIdx = Math.ceil(l1Nodes.length / 2);
+        l1Nodes.forEach((child, i) => {
+          if (i < splitIdx) downNodes.push(child);
+          else upNodes.push(child);
+        });
+      }
+    } else if (mode === "Up-facing") {
+      l1Nodes.forEach((child) => upNodes.push(child));
+    } else {
+      l1Nodes.forEach((child) => downNodes.push(child));
+    }
+
+    layoutContext.widthCache = new Map();
+
+    if (downNodes.length > 0) {
+      layoutL1Nodes(downNodes, { sortMethod: "horizontal", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+    }
+    if (upNodes.length > 0) {
+      layoutL1Nodes(upNodes, { sortMethod: "horizontal", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+    }
+  });
+
+  return true;
 };
 
 const layoutSubtree = (nodeId, targetX, targetCenterY, side, allElements, hasGlobalFolds, childrenByParent, heightCache, elementById, mustHonorMindmapOrder = false, rootId, parentMap = null) => {
@@ -22620,6 +23088,17 @@ const layoutSubtree = (nodeId, targetX, targetCenterY, side, allElements, hasGlo
   }
 
   const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+
+  // Additional roots are laid out as independent local maps for their descendants.
+  // The additional-root node itself stays positioned by the parent layout pass.
+  if (node.customData?.isAdditionalRoot === true) {
+    layoutChildrenAsAdditionalRoot(nodeId, allElements, hasGlobalFolds, childrenByParent, heightCache, null, elementById, mustHonorMindmapOrder, parentMap);
+    if (node.customData?.boundaryId) {
+      updateNodeBoundary(node, ea.getElements(), rootId);
+    }
+    return;
+  }
+
   const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
   const pinnedChildren = children.filter(child => child.customData?.isPinned);
 
@@ -22728,7 +23207,7 @@ const layoutSubtree = (nodeId, targetX, targetCenterY, side, allElements, hasGlo
   }
 };
 
-const updateL1Arrow = (node, context) => {
+const updateL1Arrow = (node, context, layoutDirection = "horizontal") => {
   const { rootId, rootCenter, mode } = context;
 
   const arrow = ea.getElements().find(
@@ -22744,22 +23223,209 @@ const updateL1Arrow = (node, context) => {
     
     if (!childNode || !rootNode) return;
 
-    const childCenterX = childNode.x + childNode.width / 2;
-    const isChildRight = childCenterX > rootCenter.x;
     const isRadial = mode === "Radial";
 
-    // In Radial mode, start arrow from the center of the root node
-    const sX = isRadial ? rootCenter.x : (isChildRight ? rootNode.x + rootNode.width : rootNode.x);
-    const sY = rootCenter.y;
-    
-    const eX = isChildRight ? childNode.x : childNode.x + childNode.width;
-    const eY = childNode.y + childNode.height / 2;
+    if (layoutDirection === "vertical") {
+      const childCenterY = childNode.y + childNode.height / 2;
+      const isChildBelow = childCenterY > rootCenter.y;
 
-    configureArrow({
-      arrowId: arrow.id, isChildRight, startId: rootId, endId: node.id,
-      coordinates: {sX, sY, eX, eY},
-      isRadial
+      // In Radial mode, start arrow from the center of the root node
+      const sX = rootCenter.x;
+      const sY = isRadial ? rootCenter.y : (isChildBelow ? rootNode.y + rootNode.height : rootNode.y);
+      
+      const eX = childNode.x + childNode.width / 2;
+      const eY = isChildBelow ? childNode.y : childNode.y + childNode.height;
+
+      configureArrow({
+        arrowId: arrow.id, isChildBelow, startId: rootId, endId: node.id,
+        coordinates: {sX, sY, eX, eY},
+        isRadial, layoutDirection
+      });
+    } else {
+      const childCenterX = childNode.x + childNode.width / 2;
+      const isChildRight = childCenterX > rootCenter.x;
+
+      // In Radial mode, start arrow from the center of the root node
+      const sX = isRadial ? rootCenter.x : (isChildRight ? rootNode.x + rootNode.width : rootNode.x);
+      const sY = rootCenter.y;
+      
+      const eX = isChildRight ? childNode.x : childNode.x + childNode.width;
+      const eY = childNode.y + childNode.height / 2;
+
+      configureArrow({
+        arrowId: arrow.id, isChildRight, startId: rootId, endId: node.id,
+        coordinates: {sX, sY, eX, eY},
+        isRadial, layoutDirection
+      });
+    }
+  }
+};
+
+const layoutSubtreeVertical = (nodeId, targetCenterX, targetY, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder = false, rootId, parentMap = null) => {
+  const node = elementById?.get(nodeId) ?? allElements.find((el) => el.id === nodeId);
+  const eaNode = ea.getElement(nodeId);
+
+  const isPinned = node.customData?.isPinned === true;
+
+  if (!isPinned) {
+    eaNode.x = targetCenterX - node.width / 2;
+    eaNode.y = side === 1 ? targetY : targetY - node.height;
+  }
+
+  if (node.customData?.isFolded) return;
+
+  const currentXCenter = eaNode.x + node.width / 2;
+  const currentY = eaNode.y;
+
+  let effectiveSide = side;
+  const parent = getParentNode(nodeId, allElements, parentMap);
+
+  if (parent) {
+    const parentCenterY = parent.y + parent.height / 2;
+    const nodeCenterY = currentY + node.height / 2;
+    effectiveSide = nodeCenterY >= parentCenterY ? 1 : -1;
+  }
+
+  // Handle Fold Indicator
+  if (node.customData?.foldIndicatorId) {
+    const ind = ea.getElement(node.customData.foldIndicatorId);
+    if(ind) {
+      ind.x = eaNode.x + eaNode.width / 2 - ind.width / 2;
+      if (effectiveSide === 1) {
+          ind.y = eaNode.y + eaNode.height + layoutSettings.INDICATOR_OFFSET;
+          ind.textAlign = "center";
+      } else {
+          ind.y = eaNode.y - layoutSettings.INDICATOR_OFFSET - ind.height;
+          ind.textAlign = "center";
+      }
+    }
+  }
+
+  const textElement = ea.getBoundTextElement(eaNode).eaElement;
+  if (textElement && !centerText && textElement.textAlign !== "center") {
+    // In vertical mode, nodes usually look best centered, but we enforce it here
+    textElement.textAlign = "center";
+  }
+
+  const children = childrenByParent?.get(nodeId) ?? getChildrenNodes(nodeId, allElements);
+
+  // Additional roots are laid out as independent local maps for their descendants.
+  // The additional-root node itself stays positioned by the parent layout pass.
+  if (node.customData?.isAdditionalRoot === true) {
+    layoutChildrenAsAdditionalRoot(nodeId, allElements, hasGlobalFolds, childrenByParent, null, widthCache, elementById, mustHonorMindmapOrder, parentMap);
+    if (node.customData?.boundaryId) {
+      updateNodeBoundary(node, ea.getElements(), rootId);
+    }
+    return;
+  }
+
+  const unpinnedChildren = children.filter(child => !child.customData?.isPinned);
+  const pinnedChildren = children.filter(child => child.customData?.isPinned);
+
+  if (unpinnedChildren.length > 0) {
+    // SORTING LOGIC:
+    // If mustHonorMindmapOrder is true: Explicitly sort by mindmapOrder to enforce the manual change.
+    // If mustHonorMindmapOrder is false: Fallback to visual X-position to keep map strictly ordered by position (auto-layout).
+    unpinnedChildren.sort((a, b) => {
+      if (mustHonorMindmapOrder) {
+        return getMindmapOrder(a) - getMindmapOrder(b);
+      }
+      const dx = a.x - b.x;
+      if (dx !== 0) return dx;
+      return String(a.id).localeCompare(String(b.id));
     });
+
+    // Only update mindmapOrder to match visual reality if we are NOT in a manual sort operation
+    if (!mustHonorMindmapOrder) {
+      unpinnedChildren.forEach((child, i) => {
+        if (getMindmapOrder(child) !== i) {
+          ea.addAppendUpdateCustomData(child.id, { mindmapOrder: i });
+        }
+      });
+    }
+
+    const subtreeWidth = getSubtreeWidth(nodeId, allElements, childrenByParent, widthCache, elementById);
+    let currentX = currentXCenter - subtreeWidth / 2;
+    // Primary layout gap used for Parent-Child spacing (vertical)
+    const dynamicGapPrimary = layoutSettings.GAP_X;
+
+    unpinnedChildren.forEach((child) => {
+      const childW = getSubtreeWidth(child.id, allElements, childrenByParent, widthCache, elementById);
+
+      layoutSubtreeVertical(
+        child.id,
+        currentX + childW / 2,
+        effectiveSide === 1 ? currentY + node.height + dynamicGapPrimary : currentY - dynamicGapPrimary,
+        effectiveSide,
+        allElements,
+        hasGlobalFolds,
+        childrenByParent,
+        widthCache,
+        elementById,
+        mustHonorMindmapOrder,
+        rootId,
+        parentMap,
+      );
+
+      const childNode = elementById?.get(child.id) ?? allElements.find((el) => el.id === child.id);
+
+      const grandChildren = childrenByParent?.get(child.id) ?? getChildrenNodes(child.id, allElements);
+      const hasUnpinnedGrandChildren = grandChildren.some(gc => !gc.customData?.isPinned);
+
+      const fontSize = childNode.fontSize ?? 20;
+      // Reusing GAP_Y for the cross-axis (sibling) gap to maintain spacing proportionality
+      const gap = !hasUnpinnedGrandChildren ? Math.round(fontSize * layoutSettings.GAP_MULTIPLIER) : layoutSettings.GAP_Y;
+
+      currentX += childW + gap;
+    });
+  }
+
+  pinnedChildren.forEach(child => layoutSubtreeVertical(
+    child.id,
+    child.x + child.width / 2,
+    child.y + (effectiveSide === 1 ? 0 : child.height),
+    effectiveSide,
+    allElements,
+    hasGlobalFolds,
+    childrenByParent,
+    widthCache,
+    elementById,
+    mustHonorMindmapOrder,
+    rootId,
+    parentMap,
+  ));
+
+  // Update Arrows
+  children.forEach(child => {
+    const arrow = allElements.find(
+      (a) =>
+        a.type === "arrow" &&
+        a.customData?.isBranch &&
+        a.startBinding?.elementId === nodeId &&
+        a.endBinding?.elementId === child.id,
+    );
+
+    if (arrow) {
+      const eaChild = ea.getElement(child.id);
+      const childCenterY = eaChild.y + eaChild.height / 2;
+      const parentCenterY = currentY + node.height / 2;
+      const isChildBelow = childCenterY > parentCenterY;
+
+      const sX = currentXCenter;
+      const sY = isChildBelow ? currentY + node.height : currentY;
+      
+      const eX = eaChild.x + eaChild.width / 2;
+      const eY = isChildBelow ? eaChild.y : eaChild.y + eaChild.height;
+
+      configureArrow({
+        arrowId: arrow.id, isChildBelow, startId:node.id, endId: child.id,
+        coordinates: {sX, sY, eX, eY}, layoutDirection: "vertical"
+      });
+    }
+  });
+
+  if (node.customData?.boundaryId) {
+     updateNodeBoundary(node, ea.getElements(), rootId);
   }
 };
 
@@ -22959,6 +23625,75 @@ const verticalL1Distribution = (nodes, context, l1Metrics, totalSubtreeHeight, i
   });
 };
 
+const horizontalL1Distribution = (nodes, context, l1Metrics, totalSubtreeWidth, isTopSide, centerAngle, gapMultiplier, mustHonorMindmapOrder = false) => {
+  const { allElements, rootBox, rootCenter, hasGlobalFolds, childrenByParent, widthCache, elementById, rootId, parentMap } = context;
+  const count = nodes.length;
+
+  // --- HORIZONTAL DIRECTIONAL LAYOUT (UP/DOWN) ---
+  const totalContentWidth = totalSubtreeWidth + (count - 1) * layoutSettings.GAP_Y;
+  const radiusFromWidth = totalContentWidth / layoutSettings.DIRECTIONAL_ARC_SPAN_RADIANS;
+  
+  // Notice axis swaps: Radius Y calculates based on Width
+  const radiusX = Math.max(Math.round(rootBox.width * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusFromWidth) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+  const radiusY = Math.max(Math.round(rootBox.height * layoutSettings.ROOT_RADIUS_FACTOR), layoutSettings.MIN_RADIUS, radiusX * 0.2) + count * layoutSettings.RADIUS_PADDING_PER_NODE;
+
+  const totalThetaDeg = (totalContentWidth / radiusX) * (180 / Math.PI);
+  // Reversing the angle spread depending on side to maintain visual reading flow
+  let currentAngle = isTopSide ? centerAngle - totalThetaDeg / 2 : centerAngle + totalThetaDeg / 2;
+
+  nodes.forEach((node, i) => {
+    const nodeWidth = l1Metrics[i];
+    const isPinned = node.customData?.isPinned === true;
+    const side = isTopSide ? -1 : 1;
+
+    const getAngularInfo = (targetNode, width) => {
+      const angleRad = Math.atan2((targetNode.y + targetNode.height / 2) - rootCenter.y, (targetNode.x + targetNode.width / 2) - rootCenter.x);
+      const angleDeg = angleRad * (180 / Math.PI);
+      const normAngle = angleDeg < 0 ? angleDeg + 360 : angleDeg;
+      const spanDeg = (width / radiusX) * (180 / Math.PI);
+      return { center: normAngle, span: spanDeg, start: normAngle - spanDeg / 2, end: normAngle + spanDeg / 2 };
+    };
+
+    const effectiveGap = layoutSettings.GAP_Y * gapMultiplier;
+    const gapSpanDeg = (effectiveGap / radiusX) * (180 / Math.PI);
+    const nodeSpanDeg = (nodeWidth / radiusX) * (180 / Math.PI);
+
+    if (isPinned) {
+      layoutSubtreeVertical(node.id, node.x + node.width / 2, node.y, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder, rootId, parentMap);
+      const info = getAngularInfo(node, nodeWidth);
+      if (isTopSide) {
+        if (currentAngle < info.start - gapSpanDeg) currentAngle = info.start - gapSpanDeg;
+      } else {
+        if (currentAngle > info.end + gapSpanDeg) currentAngle = info.end + gapSpanDeg;
+      }
+    } else {
+      const nextPinned = nodes.slice(i + 1).find(n => n.customData?.isPinned);
+      if (nextPinned) {
+        const nextInfo = getAngularInfo(nextPinned, getSubtreeWidth(nextPinned.id, allElements, childrenByParent, widthCache, elementById));
+        if (isTopSide) {
+           if (currentAngle + nodeSpanDeg > nextInfo.start - gapSpanDeg) currentAngle = nextInfo.start - gapSpanDeg - nodeSpanDeg;
+        } else {
+           if (currentAngle - nodeSpanDeg < nextInfo.end + gapSpanDeg) currentAngle = nextInfo.end + gapSpanDeg + nodeSpanDeg;
+        }
+      }
+
+      let angleDeg = isTopSide ? currentAngle + nodeSpanDeg / 2 : currentAngle - nodeSpanDeg / 2;
+      currentAngle = isTopSide ? currentAngle + (nodeSpanDeg + gapSpanDeg) : currentAngle - (nodeSpanDeg + gapSpanDeg);
+
+      const angleRad = angleDeg * (Math.PI / 180);
+      const tCX = rootCenter.x + radiusX * Math.cos(angleRad);
+      const tCY = rootCenter.y + radiusY * Math.sin(angleRad);
+      layoutSubtreeVertical(node.id, tCX, tCY, side, allElements, hasGlobalFolds, childrenByParent, widthCache, elementById, mustHonorMindmapOrder, rootId, parentMap);
+    }
+
+    if (node.customData?.mindmapNew) {
+      ea.addAppendUpdateCustomData(node.id, { mindmapNew: undefined });
+    }
+    updateL1Arrow(node, context, "vertical");
+    if (groupBranches) applyRecursiveGrouping(node.id, allElements);
+  });
+};
+
 /**
  * Unified layout function for Level 1 nodes.
  * Uses a Vertical Ellipse for Radial mode. Ensures nodes are distributed across
@@ -22967,20 +23702,26 @@ const verticalL1Distribution = (nodes, context, l1Metrics, totalSubtreeHeight, i
  */
 const layoutL1Nodes = (nodes, options, context, mustHonorMindmapOrder = false) => {
   if (nodes.length === 0) return false;
-  const { allElements, childrenByParent, heightCache, elementById } = context;
+  const { allElements, childrenByParent, heightCache, widthCache, elementById } = context;
   const { sortMethod, centerAngle, gapMultiplier } = options;
 
   // SORTING: Respect the established mindmapOrder (0..N)
   nodes.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
 
-  const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
-  const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
-
-  const isLeftSide = sortMethod === "vertical" && Math.abs((centerAngle ?? 0) - 270) < 1;
-
   if (sortMethod === "radial") {
+    const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
+    const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
     radialL1Distribution(nodes, context, l1Metrics, totalSubtreeHeight, options, mustHonorMindmapOrder);
+  } else if (sortMethod === "horizontal") {
+    const l1Metrics = nodes.map(node => getSubtreeWidth(node.id, allElements, childrenByParent, widthCache, elementById));
+    const totalSubtreeWidth = l1Metrics.reduce((sum, w) => sum + w, 0);
+    // 270 degrees represents the Top (Up-facing), 90 degrees represents the Bottom (Down-facing)
+    const isTopSide = Math.abs((centerAngle ?? 0) - 270) < 1;
+    horizontalL1Distribution(nodes, context, l1Metrics, totalSubtreeWidth, isTopSide, centerAngle, gapMultiplier, mustHonorMindmapOrder);
   } else {
+    const l1Metrics = nodes.map(node => getSubtreeHeight(node.id, allElements, childrenByParent, heightCache, elementById));
+    const totalSubtreeHeight = l1Metrics.reduce((sum, h) => sum + h, 0);
+    const isLeftSide = sortMethod === "vertical" && Math.abs((centerAngle ?? 0) - 270) < 1;
     verticalL1Distribution(nodes, context, l1Metrics, totalSubtreeHeight, isLeftSide, centerAngle, gapMultiplier, mustHonorMindmapOrder);
   }
   
@@ -22997,6 +23738,7 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
   if (l1Nodes.length === 0) return false;
 
   let orderChanged = false;
+  const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mode);
 
   /** 
    * Helper to sort by Reading Order: Right-side Top-to-Bottom, then Left-side Top-to-Bottom.
@@ -23005,10 +23747,22 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
   const sortByReadingOrder = (a, b) => {
     const aCX = a.x + a.width / 2;
     const bCX = b.x + b.width / 2;
-    const aIsR = aCX > rootCenter.x;
-    const bIsR = bCX > rootCenter.x;
-    if (aIsR !== bIsR) return aIsR ? -1 : 1; 
-    return a.y - b.y; 
+    const aCY = a.y + a.height / 2;
+    const bCY = b.y + b.height / 2;
+
+    if (isVerticalMode) {
+       // Vertical modes: Sort bottom-side (Left->Right) then top-side (Left->Right)
+       const aIsBottom = aCY > rootCenter.y;
+       const bIsBottom = bCY > rootCenter.y;
+       if (aIsBottom !== bIsBottom) return aIsBottom ? -1 : 1; 
+       return aCX - bCX; 
+    } else {
+       // Horizontal modes: Sort right-side (Top->Bottom) then left-side (Top->Bottom)
+       const aIsR = aCX > rootCenter.x;
+       const bIsR = bCX > rootCenter.x;
+       if (aIsR !== bIsR) return aIsR ? -1 : 1; 
+       return a.y - b.y; 
+    }
   };
 
   /** Helper to sort by Angle: Clockwise around the root center. */
@@ -23030,9 +23784,9 @@ const sortL1NodesBasedOnVisualSequence = (l1Nodes, mode, rootCenter) => {
     }
   });
 
+  // New nodes always need an update since they lack established order or have a temp one
   newNodes.forEach((node, i) => {
     const newOrder = existingNodes.length + i;
-    // New nodes always need an update since they lack established order or have a temp one
     ea.addAppendUpdateCustomData(node.id, { mindmapOrder: newOrder });
     orderChanged = true;
   });
@@ -23054,131 +23808,169 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
   if (!selectedElement) return;
 
   const run = async (allElements, mindmapIds, root, doVisualSort, sharedSets, mustHonorMindmapOrder = false) => {
-    const oldMode = root.customData?.growthMode;
-    const newMode = currentModalGrowthMode;
-    
-    // Track if any meaningful changes occur
-    let orderChanged = false;
-    let modeChanged = false;
-    let visualChange = false;
-    
-    // Snapshot positions
-    const originalPositions = new Map();
-    allElements.forEach(el => {
-      originalPositions.set(el.id, { x: el.x, y: el.y });
-    });
-
-    const elementById = buildElementMap(allElements);
-    const parentMap = buildParentMap(allElements, elementById);
-    const childrenByParent = buildChildrenMap(allElements, elementById);
-    const heightCache = new Map();
-
-    const branchIds = new Set(mindmapIds);
-    const groupToNodes = buildGroupToNodes(branchIds, allElements);
-
-    const hasGlobalFolds = allElements.some(el => el.customData?.isFolded === true);
-    const l1Nodes = getChildrenNodes(rootId, allElements);
-    if (l1Nodes.length === 0) return { structuralChange: false, visualChange: false };
-
-    if (groupBranches || forceUngroup) {
-      mindmapIds.forEach((id) => {
-        const el = ea.getElement(id);
-        if (el && el.groupIds) {
-          el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allElements, rootId));
-        }
+    return withRootLayoutContext(root, () => {
+      const oldMode = root.customData?.growthMode;
+      const newMode = root.customData?.growthMode || currentModalGrowthMode;
+      
+      // Track if any meaningful changes occur
+      let orderChanged = false;
+      let modeChanged = false;
+      let visualChange = false;
+      
+      // Snapshot positions
+      const originalPositions = new Map();
+      allElements.forEach(el => {
+        originalPositions.set(el.id, { x: el.x, y: el.y });
       });
-    }
 
-    const rootBox = getNodeBox(root, allElements);
-    const rootCenter = { x: rootBox.minX + rootBox.width / 2, y: rootBox.minY + rootBox.height / 2 };
+      const elementById = buildElementMap(allElements);
+      const parentMap = buildParentMap(allElements, elementById);
+      const childrenByParent = buildChildrenMap(allElements, elementById);
 
-    const layoutContext = {
-      allElements,
-      rootId,
-      rootBox,
-      rootCenter,
-      hasGlobalFolds,
-      mode: newMode,
-      childrenByParent,
-      heightCache,
-      elementById,
-      parentMap,
-    };
+      const heightCache = new Map();
+      const widthCache = new Map();
 
-    const isModeSwitch = mustHonorMindmapOrder || (oldMode && oldMode !== newMode);
+      const branchIds = new Set(mindmapIds);
+      const groupToNodes = buildGroupToNodes(branchIds, allElements);
 
-    if (!isModeSwitch && doVisualSort && !mustHonorMindmapOrder) {
-      orderChanged = sortL1NodesBasedOnVisualSequence(l1Nodes, newMode, rootCenter);
-    } else if (!mustHonorMindmapOrder) {
-      if (oldMode !== newMode) {
-        ea.addAppendUpdateCustomData(rootId, { growthMode: newMode });
-        modeChanged = true;
+      const hasGlobalFolds = allElements.some(el => el.customData?.isFolded === true);
+      const l1Nodes = getChildrenNodes(rootId, allElements);
+      if (l1Nodes.length === 0) return { structuralChange: false, visualChange: false };
+
+      if (groupBranches || forceUngroup) {
+        mindmapIds.forEach((id) => {
+          const el = ea.getElement(id);
+          if (el && el.groupIds) {
+            el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allElements, rootId));
+          }
+        });
       }
-    }
 
-    if (newMode === "Radial") {
-      layoutL1Nodes(l1Nodes, {
-        sortMethod: "radial",
-        centerAngle: null,
-        gapMultiplier: layoutSettings.GAP_MULTIPLIER_RADIAL,
-        fillSweep: root.customData?.fillSweep ?? fillSweep,
-      }, layoutContext, mustHonorMindmapOrder);
-    } else {
-      const leftNodes = [];
-      const rightNodes = [];
+      const rootBox = getNodeBox(root, allElements);
+      const rootCenter = { x: rootBox.minX + rootBox.width / 2, y: rootBox.minY + rootBox.height / 2 };
 
-      if (newMode === "Right-Left") {
-        if (isModeSwitch && !mustHonorMindmapOrder) {
-          const splitIdx = Math.ceil(l1Nodes.length / 2);
-          l1Nodes.forEach((node, i) => {
-            if (i < splitIdx) rightNodes.push(node);
-            else leftNodes.push(node);
-          });
+      const layoutContext = {
+        allElements,
+        rootId,
+        rootBox,
+        rootCenter,
+        hasGlobalFolds,
+        mode: newMode,
+        childrenByParent,
+        heightCache,
+        widthCache,
+        elementById,
+        parentMap,
+      };
+
+      const isModeSwitch = mustHonorMindmapOrder || (oldMode && oldMode !== newMode);
+
+      if (!isModeSwitch && doVisualSort && !mustHonorMindmapOrder) {
+        orderChanged = sortL1NodesBasedOnVisualSequence(l1Nodes, newMode, rootCenter);
+      } else if (!mustHonorMindmapOrder) {
+        if (oldMode !== newMode) {
+          ea.addAppendUpdateCustomData(rootId, { growthMode: newMode });
+          modeChanged = true;
+        }
+      }
+
+      if (newMode === "Radial") {
+        layoutL1Nodes(l1Nodes, {
+          sortMethod: "radial",
+          centerAngle: null,
+          gapMultiplier: layoutSettings.GAP_MULTIPLIER_RADIAL,
+          fillSweep: root.customData?.fillSweep ?? fillSweep,
+        }, layoutContext, mustHonorMindmapOrder);
+      } else if (["Right-facing", "Left-facing", "Right-Left"].includes(newMode)) {
+        const leftNodes = [];
+        const rightNodes =[];
+
+        if (newMode === "Right-Left") {
+          if (isModeSwitch && !mustHonorMindmapOrder) {
+            const splitIdx = Math.ceil(l1Nodes.length / 2);
+            l1Nodes.forEach((node, i) => {
+              if (i < splitIdx) rightNodes.push(node);
+              else leftNodes.push(node);
+            });
+          } else {
+            l1Nodes.forEach((node) => {
+              const nodeCX = node.x + node.width / 2;
+              if (nodeCX > rootCenter.x) rightNodes.push(node);
+              else leftNodes.push(node);
+            });
+          }
+        } else if (newMode === "Left-facing") {
+          l1Nodes.forEach(node => leftNodes.push(node));
         } else {
-          l1Nodes.forEach((node) => {
-            const nodeCX = node.x + node.width / 2;
-            if (nodeCX > rootCenter.x) rightNodes.push(node);
-            else leftNodes.push(node);
-          });
+          l1Nodes.forEach(node => rightNodes.push(node));
         }
-      } else if (newMode === "Left-facing") {
-        l1Nodes.forEach(node => leftNodes.push(node));
-      } else {
-        l1Nodes.forEach(node => rightNodes.push(node));
+
+        if (rightNodes.length > 0) {
+          layoutL1Nodes(rightNodes, { sortMethod: "vertical", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+        }
+        if (leftNodes.length > 0) {
+          layoutL1Nodes(leftNodes, { sortMethod: "vertical", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+        }
+      } else if (["Up-facing", "Down-facing", "Up-Down"].includes(newMode)) {
+        const upNodes =[];
+        const downNodes =[];
+
+        if (newMode === "Up-Down") {
+          if (isModeSwitch && !mustHonorMindmapOrder) {
+            const splitIdx = Math.ceil(l1Nodes.length / 2);
+            l1Nodes.forEach((node, i) => {
+              if (i < splitIdx) downNodes.push(node);
+              else upNodes.push(node);
+            });
+          } else {
+            l1Nodes.forEach((node) => {
+              const nodeCY = node.y + node.height / 2;
+              if (nodeCY > rootCenter.y) downNodes.push(node);
+              else upNodes.push(node);
+            });
+          }
+        } else if (newMode === "Up-facing") {
+          l1Nodes.forEach(node => upNodes.push(node));
+        } else {
+          l1Nodes.forEach(node => downNodes.push(node));
+        }
+
+        // Initialize cache required for vertical mode width tracking
+        layoutContext.widthCache = new Map();
+        
+        if (downNodes.length > 0) {
+          layoutL1Nodes(downNodes, { sortMethod: "horizontal", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+        }
+        if (upNodes.length > 0) {
+          layoutL1Nodes(upNodes, { sortMethod: "horizontal", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+        }
       }
 
-      if (rightNodes.length > 0) {
-        layoutL1Nodes(rightNodes, { sortMethod: "vertical", centerAngle: 90, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
+      const { mindmapIdsSet, crosslinkIdSet, decorationIdSet } = sharedSets;
+
+      moveCrossLinks(ea.getElements(), originalPositions);
+      moveDecorations(ea.getElements(), originalPositions, groupToNodes, rootId, elementById, parentMap);
+
+      ea.getElements().filter(el => !mindmapIdsSet.has(el.id) && !crosslinkIdSet.has(el.id) && !decorationIdSet.has(el.id)).forEach(el => {
+        delete ea.elementsDict[el.id];
+      });
+
+      // Detect Visual Changes
+      for (const el of ea.getElements()) {
+        const oldPos = originalPositions.get(el.id);
+        if (oldPos) {
+          if (Math.abs(el.x - oldPos.x) > 0.01 || Math.abs(el.y - oldPos.y) > 0.01) {
+            visualChange = true;
+            break;
+          }
+        }
       }
-      if (leftNodes.length > 0) {
-        layoutL1Nodes(leftNodes, { sortMethod: "vertical", centerAngle: 270, gapMultiplier: layoutSettings.GAP_MULTIPLIER_DIRECTIONAL }, layoutContext, mustHonorMindmapOrder);
-      }
-    }
 
-    const { mindmapIdsSet, crosslinkIdSet, decorationIdSet } = sharedSets;
-
-    moveCrossLinks(ea.getElements(), originalPositions);
-    moveDecorations(ea.getElements(), originalPositions, groupToNodes, rootId, elementById, parentMap);
-
-    ea.getElements().filter(el => !mindmapIdsSet.has(el.id) && !crosslinkIdSet.has(el.id) && !decorationIdSet.has(el.id)).forEach(el => {
-      delete ea.elementsDict[el.id];
+      return {
+        structuralChange: orderChanged || modeChanged,
+        visualChange
+      };
     });
-
-    // Detect Visual Changes
-    for (const el of ea.getElements()) {
-      const oldPos = originalPositions.get(el.id);
-      if (oldPos) {
-        if (Math.abs(el.x - oldPos.x) > 0.01 || Math.abs(el.y - oldPos.y) > 0.01) {
-          visualChange = true;
-          break;
-        }
-      }
-    }
-
-    return {
-      structuralChange: orderChanged || modeChanged,
-      visualChange
-    };
   };
 
   const viewElements = ea.getViewElements();
@@ -23394,16 +24186,20 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
   const defaultNodeColor = ea.getCM(st.viewBackgroundColor).invert().stringHEX({alpha: false});
 
   let depth = 0, nodeColor = defaultNodeColor, rootId, nextSiblingOrder = 0;
+  let settingsRoot = null;
+  let rootCfgForAdd = null;
   if (parent) {
     const siblings = getChildrenNodes(parent.id, allElements);
     nextSiblingOrder = Math.max(0, ...siblings.map(getMindmapOrder)) + 1;
-    const info = getHierarchy(parent, allElements);
-    depth = info.depth + 1;
-    rootId = info.rootId;
-    const rootEl = allElements.find((e) => e.id === rootId);
+    settingsRoot = getSettingsRootNode(parent, allElements) || allElements.find((e) => e.id === getHierarchy(parent, allElements).rootId);
+    rootId = settingsRoot?.id;
+    rootCfgForAdd = getRootConfigForNode(settingsRoot);
+    const parentDepthFromSettingsRoot = getDepthFromAncestor(parent.id, rootId, allElements);
+    depth = parentDepthFromSettingsRoot + 1;
+    const rootEl = settingsRoot;
 
     if (depth === 1) {
-      if (multicolor) {
+      if (rootCfgForAdd.multicolor) {
         const existingColors = getChildrenNodes(parent.id, allElements).map((n) => n.strokeColor);
         nodeColor = getDynamicColor(existingColors);
       } else {
@@ -23423,13 +24219,14 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     }
   }
 
-  const fontScale = getFontScale(fontsizeScale);
+  const fontScale = getFontScale(rootCfgForAdd?.fontsizeScale ?? fontsizeScale);
   if (!isBatchMode) ea.clear();
   ea.style.fontFamily = st.currentItemFontFamily;
   ea.style.fontSize = fontScale[Math.min(depth, fontScale.length - 1)];
-  ea.style.roundness = roundedCorners ? { type: 3 } : null;
+  ea.style.roundness = (rootCfgForAdd?.roundedCorners ?? roundedCorners) ? { type: 3 } : null;
 
-  let curMaxW = depth === 0 ? Math.max(400, maxWidth) : maxWidth;
+  const effectiveMaxWrap = rootCfgForAdd?.maxWrapWidth ?? maxWidth;
+  let curMaxW = depth === 0 ? Math.max(400, effectiveMaxWrap) : effectiveMaxWrap;
   const metrics = ea.measureText(renderLinksToText(text));
   const shouldWrap = metrics.width > curMaxW;
   if (shouldWrap) {
@@ -23476,7 +24273,7 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     ea.style.strokeColor = nodeColor;
     const rootEl = allElements.find((e) => e.id === rootId);
     const rootBox = getNodeBox(rootEl, allElements);
-    const mode = rootEl.customData?.growthMode || currentModalGrowthMode;
+    const mode = rootCfgForAdd?.growthMode || rootEl.customData?.growthMode || currentModalGrowthMode;
     const rootCenter = {
       x: rootBox.minX + rootBox.width / 2,
       y: rootBox.minY + rootBox.height / 2,
@@ -23485,11 +24282,13 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     const parentBox = getNodeBox(parent, allElements);
     
     // Determine direction for initial offset to prevent visual jumping
-    let targetSide = 1; // 1 = Right, -1 = Left
+    const isVerticalMode = ["Up-facing", "Down-facing", "Up-Down"].includes(mode);
+
+    let targetSide = 1; // 1 = Right/Down, -1 = Left/Up
     if (depth === 1) {
-      if (mode === "Left-facing") targetSide = -1;
-      else if (mode === "Right-facing") targetSide = 1;
-      else if (mode === "Right-Left") {
+      if (mode === "Left-facing" || mode === "Up-facing") targetSide = -1;
+      else if (mode === "Right-facing" || mode === "Down-facing") targetSide = 1;
+      else if (mode === "Right-Left" || mode === "Up-Down") {
          const siblings = getChildrenNodes(parent.id, allElements);
          const idx = siblings.length; // Index of the new node being added
          if (idx < 2) targetSide = 1;
@@ -23497,52 +24296,95 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
          else targetSide = idx % 2 === 0 ? 1 : -1;
       } else {
         // Default to parent side or Right for Radial/Fallback layouts
-        const parentCenterX = parentBox.minX + parentBox.width / 2;
-        targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+        if (isVerticalMode) {
+          const parentCenterY = parentBox.minY + parentBox.height / 2;
+          targetSide = parentCenterY > rootCenter.y ? 1 : -1;
+        } else {
+          const parentCenterX = parentBox.minX + parentBox.width / 2;
+          targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+        }
       }
     } else {
        // Deep nodes follow parent's side
-       const parentCenterX = parentBox.minX + parentBox.width / 2;
-       targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+       if (isVerticalMode) {
+          const parentCenterY = parentBox.minY + parentBox.height / 2;
+          targetSide = parentCenterY > rootCenter.y ? 1 : -1;
+       } else {
+          const parentCenterX = parentBox.minX + parentBox.width / 2;
+          targetSide = parentCenterX > rootCenter.x ? 1 : -1;
+       }
     }
 
     let side = targetSide;
+    let px = parentBox.minX, py = parentBox.minY;
 
-    const offset = (mode === "Radial" || side === 1)
-      ? rootBox.width * 2
-      : -rootBox.width;
-      
-    let px = parentBox.minX + offset,
+    if (isVerticalMode) {
+      const offset = side === 1 ? rootBox.height * 2 : -rootBox.height;
+      px = parentBox.minX + parentBox.width / 2 - (shouldWrap ? curMaxW : metrics.width) / 2;
+      py = parentBox.minY + offset;
+
+      // If pos is provided (e.g. from Add Sibling), override placement.
+      // This maintains the "same side" logic because the originator's X is used.
+      if (!autoLayoutDisabled && pos) {
+        px = pos.x; py = pos.y;
+        side = (py + metrics.height / 2 > rootCenter.y) ? 1 : -1;
+      } else if (!autoLayoutDisabled) {
+        // Ensure new node is placed below existing siblings to preserve visual order
+        const siblings = getChildrenNodes(parent.id, allElements);
+        if (siblings.length > 0) {
+          const sortedSiblings = siblings.sort((a, b) => a.x - b.x);
+          const lastSibling = sortedSiblings[sortedSiblings.length - 1];
+          const lastSiblingBox = getNodeBox(lastSibling, allElements);
+          px = lastSiblingBox.minX + lastSiblingBox.width + layoutSettings.GAP_Y; 
+          py = parentBox.minY + (side === 1 ? parentBox.height + layoutSettings.GAP_X : -layoutSettings.GAP_X - metrics.height);
+        }
+      } else if (autoLayoutDisabled) {
+        const manualGapY = Math.round(parentBox.height * layoutSettings.MANUAL_GAP_MULTIPLIER);
+        const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        px = parentBox.minX + parentBox.width / 2 - metrics.width / 2 + jitterX;
+        py = side === 1 
+          ? parentBox.minY + parentBox.height + manualGapY + jitterY
+          : parentBox.minY - manualGapY - metrics.height + jitterY;
+      }
+    } else {
+      const offset = (mode === "Radial" || side === 1) ? rootBox.width * 2 : -rootBox.width;
+      px = parentBox.minX + offset;
       py = parentBox.minY;
 
-    // If pos is provided (e.g. from Add Sibling), override placement.
-    // This maintains the "same side" logic because the originator's X is used.
-    if (!autoLayoutDisabled && pos) {
-      px = pos.x;
-      py = pos.y;
-      // Recalculate side based on provided position relative to root
-      side = (px + (shouldWrap ? curMaxW : metrics.width) / 2 > rootCenter.x) ? 1 : -1;
-    } else if (!autoLayoutDisabled) { // Ensure new node is placed below existing siblings to preserve visual order
-      const siblings = getChildrenNodes(parent.id, allElements);
-      if (siblings.length > 0) {
-        const sortedSiblings = siblings.sort((a, b) => a.y - b.y);
-        const lastSibling = sortedSiblings[sortedSiblings.length - 1];
-        const lastSiblingBox = getNodeBox(lastSibling, allElements);
-        py = lastSiblingBox.minY + lastSiblingBox.height + layoutSettings.GAP_Y;
+      // If pos is provided (e.g. from Add Sibling), override placement.
+      if (!autoLayoutDisabled && pos) {
+        px = pos.x; py = pos.y;
+        side = (px + (shouldWrap ? curMaxW : metrics.width) / 2 > rootCenter.x) ? 1 : -1;
+      } else if (!autoLayoutDisabled) {
+        // Ensure new node is placed below existing siblings to preserve visual order
+        const siblings = getChildrenNodes(parent.id, allElements);
+        if (siblings.length > 0) {
+          const sortedSiblings = siblings.sort((a, b) => a.y - b.y);
+          const lastSibling = sortedSiblings[sortedSiblings.length - 1];
+          const lastSiblingBox = getNodeBox(lastSibling, allElements);
+          py = lastSiblingBox.minY + lastSiblingBox.height + layoutSettings.GAP_Y;
+        }
+      } else if (autoLayoutDisabled) {
+        const manualGapX = Math.round(parentBox.width * layoutSettings.MANUAL_GAP_MULTIPLIER);
+        const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
+        const nodeW = shouldWrap ? curMaxW : metrics.width;
+        px = side === 1
+          ? parentBox.minX + parentBox.width + manualGapX + jitterX
+          : parentBox.minX - manualGapX - nodeW + jitterX;
+        py = parentBox.minY + parentBox.height / 2 - metrics.height / 2 + jitterY;
       }
-    } else if (autoLayoutDisabled) {
-      const manualGapX = Math.round(parentBox.width * layoutSettings.MANUAL_GAP_MULTIPLIER);
-      const jitterX = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
-      const jitterY = (Math.random() - 0.5) * layoutSettings.MANUAL_JITTER_RANGE;
-      const nodeW = shouldWrap ? curMaxW : metrics.width;
-      px = side === 1
-        ? parentBox.minX + parentBox.width + manualGapX + jitterX
-        : parentBox.minX - manualGapX - nodeW + jitterX;
-      py = parentBox.minY + parentBox.height / 2 - metrics.height / 2 + jitterY;
     }
-    const textAlign = centerText
-      ? "center"
-      : side === 1 ? "left" : "right";
+
+    const effectiveCenterText = rootCfgForAdd?.centerText ?? centerText;
+    const effectiveBoxChildren = rootCfgForAdd?.boxChildren ?? boxChildren;
+    const effectiveArrowType = rootCfgForAdd?.arrowType ?? arrowType;
+    const effectiveIsSolidArrow = rootCfgForAdd?.isSolidArrow ?? isSolidArrow;
+    const effectiveBranchScale = rootCfgForAdd?.branchScale ?? branchScale;
+    const effectiveBaseStrokeWidth = rootCfgForAdd?.baseStrokeWidth ?? baseStrokeWidth;
+
+    const textAlign = effectiveCenterText ? "center" : (isVerticalMode ? "center" : (side === 1 ? "left" : "right"));
 
     if (imageInfo?.isImagePath) {
       newNodeId = await addImage({
@@ -23567,10 +24409,10 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
       const el = ea.getElement(newNodeId);
       if (side === -1 && !autoLayoutDisabled) el.x = px - el.width;
     } else {
-      ea.style.strokeWidth = getStrokeWidthForDepth(depth);
+      ea.style.strokeWidth = calculateStrokeWidth(depth, effectiveBaseStrokeWidth, effectiveBranchScale);
       ea.style.roughness = getAppState().currentItemRoughness;
       newNodeId = ea.addText(px, py, text, {
-        box: boxChildren ? "rectangle" : false,
+        box: effectiveBoxChildren ? "rectangle" : false,
         textAlign,
         textVerticalAlign: "middle",
         width: shouldWrap ? curMaxW : undefined,
@@ -23606,9 +24448,9 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
       ea.addAppendUpdateCustomData(parent.id, { mindmapOrder: 0 });
     }
 
-    ea.style.strokeWidth = getStrokeWidthForDepth(depth);
+    ea.style.strokeWidth = calculateStrokeWidth(depth, effectiveBaseStrokeWidth, effectiveBranchScale);
     ea.style.roughness = getAppState().currentItemRoughness;
-    ea.style.strokeStyle = isSolidArrow ? "solid" : getAppState().currentItemStrokeStyle;
+    ea.style.strokeStyle = effectiveIsSolidArrow ? "solid" : getAppState().currentItemStrokeStyle;
     
     // Initial arrow creation (placeholder points)
     const startPoint = [parentBox.minX + parentBox.width / 2, parentBox.minY + parentBox.height / 2];
@@ -23621,7 +24463,7 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     const eaArrow = ea.getElement(arrowId);
     
     // Initialize Roundness based on arrow type
-    if(arrowType === "curved") {
+     if(effectiveArrowType === "curved") {
        eaArrow.roundness = { type: 2 };
     } else {
        eaArrow.roundness = null;
@@ -23757,7 +24599,7 @@ const importOutline = async () => {
   
   const sel = getMindmapNodeFromSelection();
   if (!sel) {
-    new Notice("Select a node containing a link.");
+    new Notice(t("NOTICE_SELECT_NODE_CONTAINING_LINK"));
     return;
   }
 
@@ -24638,6 +25480,17 @@ const updateSubtreeColor = (nodeId, oldColor, newColor, allElements) => {
   const eaNode = ea.getElement(nodeId);
   eaNode.strokeColor = newColor;
 
+  // Update boundary color to match if the node has one
+  if (node.customData?.boundaryId) {
+    const boundaryEl = allElements.find(e => e.id === node.customData.boundaryId);
+    if (boundaryEl) {
+      if (!ea.getElement(boundaryEl.id)) ea.copyViewElementsToEAforEditing([boundaryEl]);
+      const eaBoundary = ea.getElement(boundaryEl.id);
+      eaBoundary.strokeColor = newColor;
+      eaBoundary.backgroundColor = newColor;
+    }
+  }
+
   // Update incoming arrow (Ontology/Connector)
   const incomingArrow = allElements.find(
     (a) => a.type === "arrow" &&
@@ -24657,14 +25510,96 @@ const updateSubtreeColor = (nodeId, oldColor, newColor, allElements) => {
   });
 };
 
+/**
+ * Toggles whether the selected node acts as an additional local root (submap root).
+ * - Master root (no incoming isBranch connector) cannot be converted.
+ * - Enabling submap root copies current map settings and assigns a directional growth mode
+ *   inferred from the node position relative to its parent.
+ * - Disabling submap root removes local layout metadata so descendants follow parent-root logic.
+ */
+const toggleSubmapRoot = async () => {
+  if (!ea.targetView) return;
+  const sel = getMindmapNodeFromSelection();
+  if (!sel) return;
+
+  const allElements = ea.getViewElements();
+  const parent = getParentNode(sel.id, allElements);
+
+  // Master root is the unique no-parent root and must remain a root.
+  if (!parent) {
+    new Notice(t("NOTICE_CANNOT_CHANGE_MASTER_ROOT"));
+    return;
+  }
+
+  const isAdditionalRoot = sel.customData?.isAdditionalRoot === true;
+
+  ea.copyViewElementsToEAforEditing([sel]);
+
+  if (isAdditionalRoot) {
+    const ok = await utils.suggester(
+      ["Yes", "No"],
+      [true, false],
+      t("CONFIRM_REMOVE_SUBMAP_ROOT"),
+    );
+    if (!ok) {
+      return;
+    }
+
+    const clearData = {};
+    MAP_ROOT_CUSTOMDATA_KEYS.forEach((key) => {
+      clearData[key] = undefined;
+    });
+    ea.addAppendUpdateCustomData(sel.id, clearData);
+  } else {
+    const sourceRoot = getSettingsRootNode(parent, allElements) || parent;
+    const sourceCfg = getRootConfigForNode(sourceRoot);
+    const inferredMode = inferDirectionalGrowthMode(sel, parent, sourceRoot, sourceCfg.growthMode);
+
+    ea.addAppendUpdateCustomData(sel.id, {
+      isAdditionalRoot: true,
+      growthMode: inferredMode,
+      autoLayoutDisabled: sourceCfg.autoLayoutDisabled,
+      arrowType: sourceCfg.arrowType,
+      fontsizeScale: sourceCfg.fontsizeScale,
+      multicolor: sourceCfg.multicolor,
+      boxChildren: sourceCfg.boxChildren,
+      roundedCorners: sourceCfg.roundedCorners,
+      maxWrapWidth: sourceCfg.maxWrapWidth,
+      isSolidArrow: sourceCfg.isSolidArrow,
+      centerText: sourceCfg.centerText,
+      fillSweep: sourceCfg.fillSweep,
+      branchScale: sourceCfg.branchScale,
+      baseStrokeWidth: sourceCfg.baseStrokeWidth,
+      layoutSettings: JSON.parse(JSON.stringify(sourceCfg.layoutSettings)),
+    });
+  }
+
+  await addElementsToView({ captureUpdate: "EVENTUALLY" });
+  const info = getHierarchy(sel, ea.getViewElements());
+  await triggerGlobalLayout(info.rootId);
+
+  new Notice(t(isAdditionalRoot ? "NOTICE_SUBMAP_ROOT_REMOVED" : "NOTICE_SUBMAP_ROOT_ADDED"));
+  updateUI();
+};
+
 const changeNodeOrder = async (key) => {
   if (!ea.targetView) return;
   const allElements = ea.getViewElements();
   const current = getMindmapNodeFromSelection();
   if (!current) return;
+
+  const parent = getParentNode(current.id, allElements);
+  if (!parent) {
+    new Notice(t("NOTICE_CANNOT_MOVE_ROOT"));
+    return;
+  }
   
   const info = getHierarchy(current, allElements);
-  const root = allElements.find((e) => e.id === info.rootId);
+  const currentSettingsRoot = getSettingsRootNode(current, allElements);
+  const root = (current.customData?.isAdditionalRoot === true)
+    ? (getSettingsRootNode(parent, allElements) || currentSettingsRoot || allElements.find((e) => e.id === info.rootId))
+    : (currentSettingsRoot || allElements.find((e) => e.id === info.rootId));
+  if (!root) return;
   
   const rootFontScale = root.customData?.fontsizeScale ?? fontsizeScale;
   const rootBaseWidth = root.customData?.baseStrokeWidth ?? baseStrokeWidth;
@@ -24683,30 +25618,28 @@ const changeNodeOrder = async (key) => {
     new Notice(t("NOTICE_CANNOT_MOVE_PINNED"));
     return; // cannot reorder pinned nodes
   }
-  
-  const parent = getParentNode(current.id, allElements);
-  if (!parent) return;
 
   const rootCenter = root.x + root.width / 2;
   const curCenter = current.x + current.width / 2;
-  const isInRight = curCenter > rootCenter;
-  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
-
-  // ---------------------------------------------------------
-  // Feature: L1 Node Side Swap (Right-Left Map Exclusively)
-  // ---------------------------------------------------------
-  const isRightLeft = (mapMode === "Right-Left");
-  const isRadial = (mapMode === "Radial");
-  const isLeftFacing = (mapMode === "Left-facing");
+  const rootCenterY = root.y + root.height / 2;
+  const curCenterY = current.y + current.height / 2;
   
-  if (parent.id === root.id && isRightLeft) {
-     const moveRight = !isInRight && key === "ArrowRight"; // Left Node -> Right Side
-     const moveLeft = isInRight && key === "ArrowLeft";    // Right Node -> Left Side
+  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalMode =["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
+  const isRadial = (mapMode === "Radial");
 
-     if (moveRight || moveLeft) {
+  const isInPositive = isVerticalMode ? (curCenterY > rootCenterY) : (curCenter > rootCenter);
+
+  // ---------------------------------------------------------
+  // Feature: L1 Node Side Swap 
+  // ---------------------------------------------------------
+  if (parent.id === root.id && ((!isVerticalMode && mapMode === "Right-Left") || (isVerticalMode && mapMode === "Up-Down"))) {
+     const movePos = isVerticalMode ? (!isInPositive && key === "ArrowDown") : (!isInPositive && key === "ArrowRight"); // Negative Side -> Positive Side
+     const moveNeg = isVerticalMode ? (isInPositive && key === "ArrowUp")   : (isInPositive && key === "ArrowLeft");    // Positive Side -> Negative Side
+
+     if (movePos || moveNeg) {
         // Calculate Delta to mirror across root center
-        // TargetX = RootX + (RootX - CurX) => Delta = 2 * (RootX - CurX)
-        const deltaX = 2 * (rootCenter - curCenter);
+        const delta = isVerticalMode ? 2 * (rootCenterY - curCenterY) : 2 * (rootCenter - curCenter);
         
         // Gather all elements in branch + decorations
         const branchIds = getBranchElementIds(current.id, allElements);
@@ -24728,7 +25661,8 @@ const changeNodeOrder = async (key) => {
         ea.copyViewElementsToEAforEditing(arr);
         arr.forEach(el => {
             const eaEl = ea.getElement(el.id);
-            eaEl.x += deltaX;
+            if (isVerticalMode) eaEl.y += delta;
+            else eaEl.x += delta;
         });
         
         await addElementsToView({ captureUpdate: "EVENTUALLY" });
@@ -24739,13 +25673,17 @@ const changeNodeOrder = async (key) => {
      }
   }
 
-  // 1. Structural Promotion (Left/Right Arrows moving "Inward")
-  // Selected node must be rewired to parent of current parent (Grandparent)
-  const isPromote = (isInRight && key === "ArrowLeft") || (!isInRight && key === "ArrowRight");
-  const isDemote = (isInRight && key === "ArrowRight") || (!isInRight && key === "ArrowLeft");
+  // 1. Structural Promotion / Demotion
+  const isPromote = isVerticalMode
+      ? ((isInPositive && key === "ArrowUp") || (!isInPositive && key === "ArrowDown"))
+      : ((isInPositive && key === "ArrowLeft") || (!isInPositive && key === "ArrowRight"));
+      
+  const isDemote = isVerticalMode
+      ? ((isInPositive && key === "ArrowDown") || (!isInPositive && key === "ArrowUp"))
+      : ((isInPositive && key === "ArrowRight") || (!isInPositive && key === "ArrowLeft"));
   
   if (isPromote) {
-    if (parent.id === root.id) return; // Cannot promote L1 nodes (they are already attached to root)
+    if (parent.id === root.id && root.customData?.isAdditionalRoot !== true) return; // Cannot promote L1 nodes under master map root
     
     const grandParent = getParentNode(parent.id, allElements);
     if (!grandParent) return;
@@ -24761,9 +25699,12 @@ const changeNodeOrder = async (key) => {
     if (arrow) {
       reconnectArrow(parent, grandParent, arrow, "start");
       const parentOrder = getMindmapOrder(parent);
+      const promoteTargetRoot = parent.customData?.isAdditionalRoot === true
+        ? (getSettingsRootNode(grandParent, allElements) || root)
+        : root;
       ea.copyViewElementsToEAforEditing([current]);
       ea.addAppendUpdateCustomData(current.id, {
-        mindmapOrder: isRadial && !isInRight ? parentOrder - 0.5 : parentOrder + 0.5 
+        mindmapOrder: isRadial && !isInPositive ? parentOrder - 0.5 : parentOrder + 0.5
       });
       const parentInfo = getHierarchy(parent, allElements);
       
@@ -24773,13 +25714,16 @@ const changeNodeOrder = async (key) => {
       // If we are promoting to Level 1 (Child of Root), give it a fresh color if multicolor is on.
       // Otherwise, it keeps the parent's color (which is now its sibling).
       if (grandParent.id === root.id && rootMulticolor) {
-         const existingL1Colors = getChildrenNodes(root.id, allElements).map(n => n.strokeColor);
-         const newColor = getDynamicColor(existingL1Colors);
+         let newColor = current.customData?.previousL1Color;
+         if (!newColor) {
+             const existingL1Colors = getChildrenNodes(root.id, allElements).map(n => n.strokeColor);
+             newColor = getDynamicColor(existingL1Colors);
+         }
          updateSubtreeColor(current.id, current.strokeColor, newColor, allElements);
       }
 
       await addElementsToView({ captureUpdate: "EVENTUALLY" });
-      triggerGlobalLayout(root.id, false, true);
+      triggerGlobalLayout(promoteTargetRoot.id, false, true);
       return;
     }
   }
@@ -24792,28 +25736,31 @@ const changeNodeOrder = async (key) => {
     siblings.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
     
     if (siblings.length < 2) {
-      new Notice("Cannot demote: No sibling found to accept this node.");
+      new Notice(t("NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT"));
       return;
     }
     
     const currentIndex = siblings.findIndex(s => s.id === current.id);
+    const mirrorBehavior = (isRadial && !isInPositive);
     
-    // Determine visual direction based on layout mode
-    const mirrorBehavior = (isInRight && isRadial) || !isRadial;
+    let targetIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
     
-    // Attempt to move to sibling ABOVE first
-    // Normal: Above is index-1. Radial Left: Above is index+1
-    let targetIndex = mirrorBehavior ? currentIndex - 1 : currentIndex + 1;
-    
-    // Fallback: If no sibling above, move to sibling BELOW
+    // Prevent out-of-bounds demotion
     if (targetIndex < 0 || targetIndex >= siblings.length) {
-      targetIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
+      new Notice(t("NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING"));
+      return;
     }
     
-    // Safety check
-    if (targetIndex < 0 || targetIndex >= siblings.length) return;
-    
     const newParent = siblings[targetIndex];
+    
+    // Prevent cross-side demotion for L1 nodes
+    if (parent.id === root.id) {
+       const targetIsPos = isVerticalMode ? (newParent.y + newParent.height/2 > rootCenterY) : (newParent.x + newParent.width/2 > rootCenter);
+       if (targetIsPos !== isInPositive) {
+         new Notice(t("NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED"));
+          return;
+       }
+    }
     
     // Find the arrow to update structural binding
     const arrow = allElements.find(
@@ -24827,11 +25774,19 @@ const changeNodeOrder = async (key) => {
       reconnectArrow(parent, newParent, arrow, "start");
       // Determine new order: Append as last child of new parent
       const newParentChildren = getChildrenNodes(newParent.id, allElements);
-      const nextOrder = newParentChildren.length > 0 
-        ? Math.max(...newParentChildren.map(getMindmapOrder)) + 1 
-        : 0;
+      const nextOrder = newParentChildren.length > 0 ? Math.max(...newParentChildren.map(getMindmapOrder)) + 1 : 0;
+      
       ea.copyViewElementsToEAforEditing([current]);
-      ea.addAppendUpdateCustomData(current.id, { mindmapOrder: nextOrder });
+      
+      // Store previous L1 color if we are demoting from L1
+      if (parent.id === root.id) {
+          ea.addAppendUpdateCustomData(current.id, { 
+              mindmapOrder: nextOrder,
+              previousL1Color: current.strokeColor
+          });
+      } else {
+          ea.addAppendUpdateCustomData(current.id, { mindmapOrder: nextOrder });
+      }
       
       // New depth is Parent's Depth + 2 (Child of Sibling)
       const parentInfo = getHierarchy(parent, allElements);
@@ -24853,8 +25808,11 @@ const changeNodeOrder = async (key) => {
     return;
   }
 
-  // 2. Sibling Reordering (Up/Down Arrows)
-  if (key === "ArrowUp" || key === "ArrowDown") {
+  // 2. Sibling Reordering (Up/Down/Left/Right Arrows)
+  const isReorderPos = isVerticalMode ? (key === "ArrowRight") : (key === "ArrowDown");
+  const isReorderNeg = isVerticalMode ? (key === "ArrowLeft") : (key === "ArrowUp");
+
+  if (isReorderPos || isReorderNeg) {
     const siblings = getChildrenNodes(parent.id, allElements);
     if (siblings.length < 2) return;
 
@@ -24865,19 +25823,39 @@ const changeNodeOrder = async (key) => {
     if (currentIndex === -1) return;
 
     let swapIndex = -1;
-    const mirrorBehavior = (isInRight && isRadial) || !isRadial;
     
-    // Logic: 
-    // Radial Left: List is Bottom-to-Top (Clockwise). Up = Index+1 (Next).
-    // All Others: List is Top-to-Bottom. Up = Index-1 (Prev).
-    if (key === "ArrowUp") {
-      swapIndex = mirrorBehavior ? currentIndex - 1 : currentIndex + 1;
+    if (isVerticalMode) {
+       // Up/Down facing uses Left/Right keys for siblings
+       if (key === "ArrowRight") swapIndex = currentIndex + 1;
+       if (key === "ArrowLeft") swapIndex = currentIndex - 1;
     } else {
-      swapIndex = mirrorBehavior ? currentIndex + 1 : currentIndex - 1;
+       // Radial Left flips the interpretation of Up/Down since it generates from Bottom to Top
+       if (isRadial && !isInPositive) {
+         if (key === "ArrowUp") swapIndex = currentIndex + 1;
+         if (key === "ArrowDown") swapIndex = currentIndex - 1;
+       } else {
+         if (key === "ArrowDown") swapIndex = currentIndex + 1;
+         if (key === "ArrowUp") swapIndex = currentIndex - 1;
+       }
+    }
+
+    // Apply circular wrapping for Radial mode (Level 1 nodes only)
+    if (isRadial && parent.id === root.id) {
+       swapIndex = (swapIndex + siblings.length) % siblings.length;
     }
 
     // Boundary checks
     if (swapIndex >= 0 && swapIndex < siblings.length) {
+      const swapNode = siblings[swapIndex];
+      
+      // Prevent cross-side swapping for L1 nodes (Except for Radial maps, where we just wrapped)
+      if (parent.id === root.id && !isRadial) {
+         const swapIsPos = isVerticalMode ? (swapNode.y + swapNode.height/2 > rootCenterY) : (swapNode.x + swapNode.width/2 > rootCenter);
+         if (swapIsPos !== isInPositive) {
+            return; // Silently block cross-side reordering
+         }
+      }
+
       // Re-normalize all orders to clean integers to prevent drift
       ea.copyViewElementsToEAforEditing(siblings);
       
@@ -24913,8 +25891,16 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
   if (!current) return;
 
   const info = getHierarchy(current, allElements);
-  const root = allElements.find((e) => e.id === info.rootId);
+  const parent = getParentNode(current.id, allElements);
+  const currentSettingsRoot = getSettingsRootNode(current, allElements);
+  const root = (current.customData?.isAdditionalRoot === true && parent)
+    ? (getSettingsRootNode(parent, allElements) || currentSettingsRoot || allElements.find((e) => e.id === info.rootId))
+    : (currentSettingsRoot || allElements.find((e) => e.id === info.rootId));
+  if (!root) return;
   const rootCenter = { x: root.x + root.width / 2, y: root.y + root.height / 2 };
+
+  const mapMode = root.customData?.growthMode || currentModalGrowthMode;
+  const isVerticalLayout = ["Up-facing", "Down-facing", "Up-Down"].includes(mapMode);
 
   if (current.id === root.id) {
     if (current.customData?.isFolded) {
@@ -24926,48 +25912,50 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     if (children.length) {
       // Sort by order/index first to establish the visual list sequence
       sortChildrenStable(children);
-
       let targetChild = null;
 
-      if (key === "ArrowUp") {
-        // First sibling (Visual Top, usually Index 0)
-        targetChild = children[0];
-      } else if (key === "ArrowDown") {
-        // Last sibling (Visual Bottom, usually Index N)
-        targetChild = children[children.length - 1];
-      } else {
-        // Left/Right Logic
-        // Calculate relative positions
-        const childrenWithPos = children.map(c => {
-          const cCenter = { x: c.x + c.width / 2, y: c.y + c.height / 2 };
-          return {
+      if (isVerticalLayout) {
+        if (key === "ArrowLeft") targetChild = children[0];
+        else if (key === "ArrowRight") targetChild = children[children.length - 1];
+        else {
+          // Left/Right Logic
+          // Calculate relative positions
+          const childrenWithPos = children.map(c => ({
             node: c,
-            dx: cCenter.x - rootCenter.x,
-            dy: Math.abs(cCenter.y - rootCenter.y) // distance from horizontal centerline
-          };
-        });
+            dx: Math.abs((c.x + c.width/2) - rootCenter.x), // distance from vertical centerline
+            dy: (c.y + c.height/2) - rootCenter.y 
+          }));
 
-        if (key === "ArrowRight") {
-          // Find nodes to the right (dx > 0)
-          const rightNodes = childrenWithPos.filter(c => c.dx > 0);
-          if (rightNodes.length > 0) {
-            // Find the one closest to the middle (min dy)
-            rightNodes.sort((a, b) => a.dy - b.dy);
-            targetChild = rightNodes[0].node;
-          } else {
-            // Fallback if no nodes on right (e.g. Left-facing layout), select first in list
-            targetChild = children[0];
+          if (key === "ArrowDown") {
+            // Find nodes below (dy > 0)
+            const downNodes = childrenWithPos.filter(c => c.dy > 0).sort((a,b)=>a.dx - b.dx);
+            targetChild = downNodes.length > 0 ? downNodes[0].node : children[0];
+          } else if (key === "ArrowUp") {
+             // Find nodes above (dy < 0)
+            const upNodes = childrenWithPos.filter(c => c.dy < 0).sort((a,b)=>a.dx - b.dx);
+            targetChild = upNodes.length > 0 ? upNodes[0].node : children[children.length - 1];
           }
-        } else if (key === "ArrowLeft") {
-          // Find nodes to the left (dx < 0)
-          const leftNodes = childrenWithPos.filter(c => c.dx < 0);
-          if (leftNodes.length > 0) {
-            // Find the one closest to the middle (min dy)
-            leftNodes.sort((a, b) => a.dy - b.dy);
-            targetChild = leftNodes[0].node;
-          } else {
-            // Fallback if no nodes on left (e.g. Right-facing layout), select last in list
-            targetChild = children[children.length - 1];
+        }
+      } else {
+        if (key === "ArrowUp") targetChild = children[0];
+        else if (key === "ArrowDown") targetChild = children[children.length - 1];
+        else {
+          // Left/Right Logic
+          // Calculate relative positions
+          const childrenWithPos = children.map(c => ({
+            node: c,
+            dx: (c.x + c.width/2) - rootCenter.x,
+            dy: Math.abs((c.y + c.height/2) - rootCenter.y) // distance from horizontal centerline
+          }));
+
+          if (key === "ArrowRight") {
+            // Find nodes to the right (dx > 0)
+            const rightNodes = childrenWithPos.filter(c => c.dx > 0).sort((a,b)=>a.dy - b.dy);
+            targetChild = rightNodes.length > 0 ? rightNodes[0].node : children[0];
+          } else if (key === "ArrowLeft") {
+            // Find nodes to the left (dx < 0)
+            const leftNodes = childrenWithPos.filter(c => c.dx < 0).sort((a,b)=>a.dy - b.dy);
+            targetChild = leftNodes.length > 0 ? leftNodes[0].node : children[children.length - 1];
           }
         }
       }
@@ -24981,10 +25969,20 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     return;
   }
 
-  if (key === "ArrowLeft" || key === "ArrowRight") {
+  const isHierarchyNav = isVerticalLayout ? (key === "ArrowUp" || key === "ArrowDown") : (key === "ArrowLeft" || key === "ArrowRight");
+  const isSiblingNav = isVerticalLayout ? (key === "ArrowLeft" || key === "ArrowRight") : (key === "ArrowUp" || key === "ArrowDown");
+
+  if (isHierarchyNav) {
     const curCenter = { x: current.x + current.width / 2, y: current.y + current.height / 2 };
-    const isInRight = curCenter.x > rootCenter.x;
-    const goIn = (key === "ArrowLeft" && isInRight) || (key === "ArrowRight" && !isInRight);
+    const isInPositive = isVerticalLayout ? (curCenter.y > rootCenter.y) : (curCenter.x > rootCenter.x);
+    
+    let goIn = false;
+    if (isVerticalLayout) {
+        goIn = (key === "ArrowUp" && isInPositive) || (key === "ArrowDown" && !isInPositive);
+    } else {
+        goIn = (key === "ArrowLeft" && isInPositive) || (key === "ArrowRight" && !isInPositive);
+    }
+
     if (goIn) {
       selectNodeInView(getParentNode(current.id, allElements));
     } else {
@@ -24995,7 +25993,7 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
       const ch = getChildrenNodes(current.id, allElements).sort((a, b) => (a.customData?.mindmapOrder ?? 100) - (b.customData?.mindmapOrder ?? 100));
       if (ch.length) selectNodeInView(ch[0]);
     }
-  } else if (key === "ArrowUp" || key === "ArrowDown") {
+  } else if (isSiblingNav) {
     const parent = getParentNode(current.id, allElements);
     if (!parent) return;
 
@@ -25015,24 +26013,19 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     const idx = siblings.findIndex((s) => s.id === current.id);
     const startIndex = (idx === -1 ? 0 : idx); // Start at 0 if current isn't found
 
-    const mapMode = root.customData?.growthMode || currentModalGrowthMode;
-    const currentIsLeftwardBranch = (current.x + current.width / 2) < (parent.x + parent.width / 2);
-    
+    const currentIsNegativeBranch = isVerticalLayout 
+         ? (current.y + current.height/2) < (parent.y + parent.height/2)
+         : (current.x + current.width/2) < (parent.x + parent.width/2);
+
     // Reverse up/down for left-facing branches in directional modes
-
     let navigateForward; // true for next sibling (clockwise), false for previous (counter-clockwise)
-    if (currentIsLeftwardBranch) {
-        navigateForward = (key === "ArrowUp"); // Reversed: Up moves forward, Down moves backward
+    if (isVerticalLayout) {
+      navigateForward = currentIsNegativeBranch ? (key === "ArrowRight") : (key === "ArrowLeft");
     } else {
-        navigateForward = (key === "ArrowDown"); // Normal: Down moves forward, Up moves backward
+      navigateForward = currentIsNegativeBranch ? (key === "ArrowUp") : (key === "ArrowDown");
     }
 
-    let nIdx;
-    if (navigateForward) {
-        nIdx = (startIndex + 1) % siblings.length;
-    } else {
-        nIdx = (startIndex - 1 + siblings.length) % siblings.length;
-    }
+    let nIdx = navigateForward ? (startIndex + 1) % siblings.length : (startIndex - 1 + siblings.length) % siblings.length;
     selectNodeInView(siblings[nIdx]);
   }
 
@@ -25045,12 +26038,13 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
  */
 const refreshMapLayout = async (sel) => {
   if (!ea.targetView) return;
-  if (autoLayoutDisabled) return;
   if (!sel) sel = getMindmapNodeFromSelection();
   if (sel) {
-    const info = getHierarchy(sel, ea.getViewElements());
-    if (!info || !info.rootId) return;
-    await triggerGlobalLayout(info.rootId);
+    const allElements = ea.getViewElements();
+    const settingsRoot = getSettingsRootNode(sel, allElements);
+    if (!settingsRoot) return;
+    if (settingsRoot.customData?.autoLayoutDisabled === true) return;
+    await triggerGlobalLayout(settingsRoot.id);
   }
 };
 
@@ -25526,6 +26520,7 @@ let colorToggle, widthSlider, centerToggle;
 let fillSweepToggleSetting, fillSweepToggle;
 let pinBtn, refreshBtn, cutBtn, copyBtn, boxBtn, dockBtn, editBtn;
 let toggleGroupBtn, zoomBtn, focusBtn, boundaryBtn;
+let submapRootBtn;
 let foldBtnL0, foldBtnL1, foldBtnAll;
 let floatingGroupBtn, floatingBoxBtn, floatingZoomBtn;
 let panelExpandBtn, importOutlineBtn;
@@ -25636,6 +26631,7 @@ const disableUI = () => {
   setButtonDisabled(zoomBtn, true);
   setButtonDisabled(focusBtn, true);
   setButtonDisabled(boundaryBtn, true);
+  setButtonDisabled(submapRootBtn, true);
   setButtonDisabled(floatingGroupBtn, true);
   setButtonDisabled(floatingBoxBtn, true);
   setButtonDisabled(floatingZoomBtn, true);
@@ -25659,9 +26655,11 @@ const updateUI = (sel) => {
     disableTabEvents = true;
 
     const info = getHierarchy(sel, all);
-    const isRootSelected = info.rootId === sel.id;
-    const root = all.find((e) => e.id === info.rootId);
+    const isMasterRootSelected = info.rootId === sel.id;
+    const root = getSettingsRootNode(sel, all) || all.find((e) => e.id === info.rootId);
     const isPinned = sel.customData?.isPinned === true;
+    const isAdditionalRoot = sel.customData?.isAdditionalRoot === true;
+    const isMasterRoot = !getParentNode(sel.id, all);
     const isEditing = editingNodeId && editingNodeId === sel.id;
     const branchIds = getBranchElementIds(sel.id, all);
     const children = getChildrenNodes(sel.id, all);
@@ -25676,6 +26674,13 @@ const updateUI = (sel) => {
         `${isPinned ? t("PIN_TOOLTIP_PINNED") : t("PIN_TOOLTIP_UNPINNED")} ${getActionHotkeyString(ACTION_PIN)}`,
       );
       setButtonDisabled(pinBtn, false);
+    }
+
+    if (submapRootBtn) {
+      submapRootBtn.setIcon(isAdditionalRoot ? "map-pin-minus-inside" : "map-pin-plus-inside");
+      const submapTooltip = isAdditionalRoot ? t("TOOLTIP_SUBMAP_ROOT_REMOVE") : t("TOOLTIP_SUBMAP_ROOT_ADD");
+      submapRootBtn.setTooltip(`${submapTooltip} ${getActionHotkeyString(ACTION_TOGGLE_SUBMAP_ROOT)}`);
+      setButtonDisabled(submapRootBtn, isMasterRoot);
     }
 
     if (editBtn) {
@@ -25712,13 +26717,16 @@ const updateUI = (sel) => {
     setButtonDisabled(zoomBtn, false);
     setButtonDisabled(focusBtn, false);
     setButtonDisabled(floatingZoomBtn, false);
-    setButtonDisabled(boundaryBtn, isRootSelected);
-    setButtonDisabled(cutBtn, isRootSelected);
+    if (boundaryBtn) {
+      boundaryBtn.setIcon(sel.customData?.boundaryId ? "cloud-off" : "cloud");
+    }
+    setButtonDisabled(boundaryBtn, isMasterRootSelected);
+    setButtonDisabled(cutBtn, isMasterRootSelected);
     setButtonDisabled(copyBtn, false);
     setButtonDisabled(importOutlineBtn, !isLinkedFile);
 
     // NEW: Load settings from root customData if they exist, otherwise keep current global
-    const cd = root.customData;
+    const cd = root?.customData ?? {};
     
     const mapStrategy = cd?.growthMode;
     if (typeof mapStrategy === "string" && mapStrategy !== currentModalGrowthMode && GROWTH_TYPES.includes(mapStrategy)) {
@@ -26406,6 +27414,11 @@ class LayoutConfigModal extends ea.FloatingModal {
     this.display();
   }
 
+  onClose() {
+    if (this.updateTimer) clearTimeout(this.updateTimer);
+    this.onUpdate(this.settings);
+  }
+
   triggerUpdate() {
     if (this.updateTimer) clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
@@ -26559,7 +27572,7 @@ const renderInput = (container, isFloating = false) => {
   }, 200);
   container.empty();
 
-  pinBtn = refreshBtn = dockBtn = inputEl = ontologyEl = null;
+  pinBtn = submapRootBtn = refreshBtn = dockBtn = inputEl = ontologyEl = null;
   foldBtnL0 = foldBtnL1 = foldBtnAll = null;
   boundaryBtn = panelExpandBtn = null;
   floatingGroupBtn = floatingBoxBtn = floatingZoomBtn = null;
@@ -26776,6 +27789,13 @@ const renderInput = (container, isFloating = false) => {
   }, true);
 
   addButton((btn) => {
+    submapRootBtn = btn;
+    btn.setIcon("map-pin-plus-inside");
+    btn.extraSettingsEl.setAttr("action", ACTION_TOGGLE_SUBMAP_ROOT);
+    btn.onClick(() => performAction(ACTION_TOGGLE_SUBMAP_ROOT));
+  }, true);
+
+  addButton((btn) => {
     foldBtnL0 = btn;
     btn.setIcon("wifi-low");
     btn.setTooltip(`${t("TOOLTIP_FOLD_BRANCH")} ${getActionHotkeyString(ACTION_FOLD)}`);
@@ -26943,7 +27963,10 @@ const renderBody = (contentEl) => {
           const sel = getMindmapNodeFromSelection();
           if (!sel) return;
           await updateRootNodeCustomData({ layoutSettings: newSettings }, sel);
-          await refreshMapLayout(sel);
+          const allElements = ea.getViewElements();
+          const hierarchy = getHierarchy(sel, allElements);
+          const masterRoot = allElements.find((el) => el.id === hierarchy.rootId) ?? sel;
+          await refreshMapLayout(masterRoot);
         });
         modal.open();
       })
@@ -27748,6 +28771,8 @@ const addSibling = async (event, insertAfter=true) => {
     const info = getHierarchy(selectedForSibling, allElementsForSibling);
     const root = allElementsForSibling.find(el => el.id === info.rootId);
     const parentOfSelected = getParentNode(selectedForSibling.id, allElementsForSibling);
+    const rootMode = root.customData?.growthMode || currentModalGrowthMode;
+    const isVertical =["Up-facing", "Down-facing", "Up-Down"].includes(rootMode);
     
     // If parent exists, add to that parent (Sibling). 
     // If no parent (Root was selected), add to selected (Child).
@@ -27755,8 +28780,8 @@ const addSibling = async (event, insertAfter=true) => {
     
     // Default position: slightly lower to ensure correct Y-sort order in directional maps
     let pos = {
-      x: selectedForSibling.x,
-      y: selectedForSibling.y + (insertAfter ? selectedForSibling.height : 0) + dir,
+      x: selectedForSibling.x + (isVertical && insertAfter ? selectedForSibling.width : 0) + (isVertical ? dir : 0),
+      y: selectedForSibling.y + (!isVertical && insertAfter ? selectedForSibling.height : 0) + (!isVertical ? dir : 0),
     };
 
     // Specific logic for Radial L1 nodes:
@@ -27809,6 +28834,10 @@ const performAction = async (action, event) => {
 
     case ACTION_PIN:
       await togglePin();
+      break;
+
+    case ACTION_TOGGLE_SUBMAP_ROOT:
+      await toggleSubmapRoot();
       break;
 
     case ACTION_BOX:
@@ -27945,15 +28974,20 @@ const performAction = async (action, event) => {
           }
           if (!handledRecent && sel) {
             const parent = getParentNode(sel.id, allElements);
-            const siblings = parent ? getChildrenNodes(parent.id, allElements) : [];
+            const siblings = parent ? getChildrenNodes(parent.id, allElements) :[];
 
             if (siblings.length > 1) {
-              await navigateMap({key: "ArrowDown", zoom: false, focus: false});
+              // Iterates forward continuously in logical index order, 
+              // ignoring spatial/directional orientation bindings like ArrowDown
+              siblings.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
+              const idx = siblings.findIndex(s => s.id === sel.id);
+              const nextIdx = (idx + 1) % siblings.length;
+              selectNodeInView(siblings[nextIdx]);
             }
             else {
               const children = getChildrenNodes(sel.id, allElements);
               if (children.length > 0) {
-                sortChildrenStable(children);
+                children.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
                 selectNodeInView(children[0]);
               }
               else if (parent) {
@@ -28010,6 +29044,791 @@ const performAction = async (action, event) => {
       break;
   }
 };
+
+// ---------------------------------------------------------------------------
+// 11. Public Puppeteering API (minimal-impact wrappers)
+// ---------------------------------------------------------------------------
+(() => {
+  const MMError = {
+    NOT_READY: "NOT_READY",
+    NO_VIEW: "NO_VIEW",
+    INVALID_VIEW: "INVALID_VIEW",
+    INVALID_NODE: "INVALID_NODE",
+    NO_SELECTION: "NO_SELECTION",
+    NO_ROOT: "NO_ROOT",
+    AUTO_LAYOUT_DISABLED: "AUTO_LAYOUT_DISABLED",
+    INVALID_ACTION: "INVALID_ACTION",
+    INVALID_ARGUMENT: "INVALID_ARGUMENT",
+    OPERATION_FAILED: "OPERATION_FAILED",
+  };
+
+  const mmOk = (data) => ({ ok: true, data });
+  const mmErr = (code, message, details) => ({
+    ok: false,
+    error: details === undefined ? { code, message } : { code, message, details },
+  });
+
+  const requireView = () => {
+    if (!ea.targetView) return mmErr(MMError.NO_VIEW, "No active ExcalidrawView");
+    return null;
+  };
+
+  const findNodeById = (nodeId) => {
+    const all = ea.getViewElements();
+    return all.find((el) => el.id === nodeId);
+  };
+
+  const resolveNode = (nodeId) => {
+    const viewErr = requireView();
+    if (viewErr) return viewErr;
+
+    if (nodeId) {
+      const node = findNodeById(nodeId);
+      if (!node) return mmErr(MMError.INVALID_NODE, `Node not found: ${nodeId}`);
+      return mmOk(node);
+    }
+
+    const sel = getMindmapNodeFromSelection();
+    if (!sel) return mmErr(MMError.NO_SELECTION, "No mindmap node selected");
+    return mmOk(sel);
+  };
+
+  const getNodeOntology = (node, allElements) => {
+    const incomingArrow = allElements.find(
+      (a) => a.type === "arrow" && a.customData?.isBranch && a.endBinding?.elementId === node.id,
+    );
+    return incomingArrow
+      ? (ea.getBoundTextElement(incomingArrow, true)?.sceneElement?.rawText || "")
+      : "";
+  };
+
+  const getMasterRoots = () => {
+    const all = ea.getViewElements();
+    const branchArrows = all.filter(
+      (a) =>
+        a.type === "arrow" &&
+        a.customData?.isBranch &&
+        a.startBinding?.elementId &&
+        a.endBinding?.elementId,
+    );
+
+    const parentIds = new Set();
+    const childIds = new Set();
+    branchArrows.forEach((a) => {
+      parentIds.add(a.startBinding.elementId);
+      childIds.add(a.endBinding.elementId);
+    });
+
+    const candidateIds = new Set([...parentIds, ...childIds]);
+    return Array.from(candidateIds).filter((id) => {
+      if (childIds.has(id)) return false;
+      const el = all.find((e) => e.id === id);
+      if (!el) return false;
+      return el.customData?.isAdditionalRoot !== true;
+    });
+  };
+
+  const extractMapConfig = (rootNode) => ({
+    growthMode: rootNode.customData?.growthMode || currentModalGrowthMode,
+    autoLayoutDisabled: rootNode.customData?.autoLayoutDisabled === true,
+    arrowType: rootNode.customData?.arrowType ?? arrowType,
+    fontsizeScale: rootNode.customData?.fontsizeScale ?? fontsizeScale,
+    multicolor: typeof rootNode.customData?.multicolor === "boolean" ? rootNode.customData.multicolor : multicolor,
+    boxChildren: typeof rootNode.customData?.boxChildren === "boolean" ? rootNode.customData.boxChildren : boxChildren,
+    roundedCorners: typeof rootNode.customData?.roundedCorners === "boolean" ? rootNode.customData.roundedCorners : roundedCorners,
+    maxWrapWidth: typeof rootNode.customData?.maxWrapWidth === "number" ? rootNode.customData.maxWrapWidth : maxWidth,
+    isSolidArrow: typeof rootNode.customData?.isSolidArrow === "boolean" ? rootNode.customData.isSolidArrow : isSolidArrow,
+    centerText: typeof rootNode.customData?.centerText === "boolean" ? rootNode.customData.centerText : centerText,
+    fillSweep: typeof rootNode.customData?.fillSweep === "boolean" ? rootNode.customData.fillSweep : fillSweep,
+    branchScale: rootNode.customData?.branchScale ?? branchScale,
+    baseStrokeWidth:
+      typeof rootNode.customData?.baseStrokeWidth === "number" ? rootNode.customData.baseStrokeWidth : baseStrokeWidth,
+    layoutSettings: JSON.parse(JSON.stringify(rootNode.customData?.layoutSettings ?? layoutSettings)),
+  });
+
+  const API_ACTIONS = {
+    ADD: ACTION_ADD,
+    ADD_SIBLING_AFTER: ACTION_ADD_SIBLING_AFTER,
+    ADD_SIBLING_BEFORE: ACTION_ADD_SIBLING_BEFORE,
+    ADD_FOLLOW: ACTION_ADD_FOLLOW,
+    ADD_FOLLOW_FOCUS: ACTION_ADD_FOLLOW_FOCUS,
+    ADD_FOLLOW_ZOOM: ACTION_ADD_FOLLOW_ZOOM,
+    EDIT: ACTION_EDIT,
+    PIN: ACTION_PIN,
+    BOX: ACTION_BOX,
+    TOGGLE_BOUNDARY: ACTION_TOGGLE_BOUNDARY,
+    TOGGLE_SUBMAP_ROOT: ACTION_TOGGLE_SUBMAP_ROOT,
+    TOGGLE_GROUP: ACTION_TOGGLE_GROUP,
+    FOLD: ACTION_FOLD,
+    FOLD_L1: ACTION_FOLD_L1,
+    FOLD_ALL: ACTION_FOLD_ALL,
+    COPY: ACTION_COPY,
+    CUT: ACTION_CUT,
+    PASTE: ACTION_PASTE,
+    ZOOM: ACTION_ZOOM,
+    FOCUS: ACTION_FOCUS,
+    NAVIGATE: ACTION_NAVIGATE,
+    NAVIGATE_ZOOM: ACTION_NAVIGATE_ZOOM,
+    NAVIGATE_FOCUS: ACTION_NAVIGATE_FOCUS,
+    SORT_ORDER: ACTION_SORT_ORDER,
+    REARRANGE: ACTION_REARRANGE,
+    DOCK_UNDOCK: ACTION_DOCK_UNDOCK,
+    HIDE: ACTION_HIDE,
+    UNDO: ACTION_UNDO,
+    REDO_Z: ACTION_REDO_Z,
+    REDO_Y: ACTION_REDO_Y,
+  };
+
+  const API_ERROR_DOC = {
+    [MMError.NOT_READY]: "MindMapBuilder runtime is not initialized",
+    [MMError.NO_VIEW]: "No active ExcalidrawView is set",
+    [MMError.INVALID_VIEW]: "The provided view is missing or not an ExcalidrawView",
+    [MMError.INVALID_NODE]: "The provided node id does not exist in the active view",
+    [MMError.NO_SELECTION]: "No mindmap node is currently selected",
+    [MMError.NO_ROOT]: "Unable to resolve a root/settings root for the selected node",
+    [MMError.AUTO_LAYOUT_DISABLED]: "The map has auto-layout disabled",
+    [MMError.INVALID_ACTION]: "The provided action is unknown",
+    [MMError.INVALID_ARGUMENT]: "One or more arguments are invalid",
+    [MMError.OPERATION_FAILED]: "The underlying operation failed at runtime",
+  };
+
+  const API_METHOD_SPEC = {
+    ready: {
+      summary: "Returns whether the API runtime is initialized",
+      params: [],
+      returns: "boolean",
+    },
+    listMethods: {
+      summary: "Returns the list of public method names",
+      params: [],
+      returns: "MMResult<{methods:string[]}>",
+    },
+    getErrorCodes: {
+      summary: "Returns known error codes and their meaning",
+      params: [],
+      returns: "MMResult<{errors:Record<string,string>}>",
+    },
+    spec: {
+      summary: "Returns machine-readable API metadata for agents",
+      params: [],
+      returns: "MMResult<{version:string,actions:string[],errors:Record<string,string>,methods:object}>",
+    },
+    help: {
+      summary: "Returns method docs for one method or the full API",
+      params: [
+        { name: "method", type: "string", required: false },
+        { name: "format", type: "string", required: false, enum: ["object", "text"] },
+      ],
+      returns: "MMResult<object|string>",
+    },
+    validate: {
+      summary: "Validates arguments against the API method contract",
+      params: [
+        { name: "method", type: "string", required: true },
+        { name: "args", type: "any", required: false },
+      ],
+      returns: "MMResult<{valid:boolean,errors:string[],normalizedArgs:object}>",
+    },
+    getCapabilities: {
+      summary: "Returns available actions and methods",
+      params: [],
+      returns: "{actions:string[],methods:string[]}",
+    },
+    setView: {
+      summary: "Sets the active ExcalidrawView context",
+      params: [{ name: "view", type: "object", required: true }],
+      returns: "MMResult<{view:ExcalidrawView|null,filePath:string|null}>",
+    },
+    getView: {
+      summary: "Gets the current ExcalidrawView and filepath",
+      params: [],
+      returns: "MMResult<{view:ExcalidrawView|null,filePath:string|null}>",
+    },
+    getSelection: {
+      summary: "Returns selected node id and selected element ids",
+      params: [],
+      returns: "MMResult<{nodeId:string|null,elementIds:string[]}>",
+    },
+    selectNode: {
+      summary: "Selects a node by id or current selected node when omitted",
+      params: [{ name: "nodeId", type: "string", required: false }],
+      returns: "MMResult<{nodeId:string}>",
+    },
+    getMindMapRoots: {
+      summary: "Returns top-level mindmap root node ids",
+      params: [],
+      returns: "MMResult<{rootIds:string[]}>",
+    },
+    getMapInfo: {
+      summary: "Returns hierarchy info for a node or current selection",
+      params: [{ name: "nodeId", type: "string", required: false }],
+      returns: "MMResult<{nodeId:string,rootId:string,settingsRootId:string,depth:number}>",
+    },
+    getNodeText: {
+      summary: "Returns node text and ontology",
+      params: [{ name: "nodeId", type: "string", required: false }],
+      returns: "MMResult<{nodeId:string,text:string,ontology:string}>",
+    },
+    performAction: {
+      summary: "Runs one built-in mindmap action",
+      params: [
+        { name: "action", type: "string", required: true, enum: Object.values(API_ACTIONS) },
+        { name: "event", type: "object", required: false },
+      ],
+      returns: "Promise<MMResult<void>>",
+    },
+    refreshMapLayout: {
+      summary: "Refreshes map layout from the selected node or provided node id",
+      params: [{ name: "nodeId", type: "string", required: false }],
+      returns: "Promise<MMResult<{rootId:string}>>",
+    },
+    addNode: {
+      summary: "Adds a node under selected node or a provided parent",
+      params: [
+        { name: "text", type: "string", required: true },
+        { name: "parentId", type: "string", required: false },
+        { name: "ontology", type: "string", required: false },
+        { name: "follow", type: "boolean", required: false },
+        { name: "position", type: "string", required: false },
+      ],
+      returns: "Promise<MMResult<{nodeId:string,arrowId:string|undefined,rootId:string}>>",
+    },
+    importMarkdown: {
+      summary: "Imports markdown bullet hierarchy into map",
+      params: [
+        { name: "markdown", type: "string", required: true },
+        { name: "parentId", type: "string", required: false },
+      ],
+      returns: "Promise<MMResult<{addedNodeIds:string[],rootId:string|null}>>",
+    },
+    exportMarkdown: {
+      summary: "Exports selected branch to markdown through clipboard",
+      params: [
+        { name: "nodeId", type: "string", required: false },
+        { name: "cut", type: "boolean", required: false },
+      ],
+      returns: "Promise<MMResult<{markdown:string}>>",
+    },
+    toggleSubmapRoot: {
+      summary: "Toggles or forces additional-root state on node",
+      params: [
+        { name: "nodeId", type: "string", required: false },
+        { name: "enabled", type: "boolean", required: false },
+      ],
+      returns: "Promise<MMResult<{nodeId:string,enabled:boolean}>>",
+    },
+    getMapConfig: {
+      summary: "Returns effective map config for node/root",
+      params: [{ name: "nodeId", type: "string", required: false }],
+      returns: "MMResult<{rootId:string,settingsRootId:string,config:object}>",
+    },
+    setMapConfig: {
+      summary: "Patches map config and optionally relayouts",
+      params: [
+        { name: "patch", type: "object", required: true },
+        { name: "nodeId", type: "string", required: false },
+        { name: "relayout", type: "boolean", required: false },
+      ],
+      returns: "Promise<MMResult<{rootId:string,settingsRootId:string}>>",
+    },
+    getBranchElementIds: {
+      summary: "Returns branch element ids with optional decorations/crosslinks",
+      params: [
+        { name: "nodeId", type: "string", required: true },
+        { name: "includeDecorations", type: "boolean", required: false },
+        { name: "includeCrosslinks", type: "boolean", required: false },
+      ],
+      returns: "MMResult<{ids:string[]}>",
+    },
+    getProjectElementIds: {
+      summary: "Returns all project element ids for a root",
+      params: [{ name: "rootId", type: "string", required: true }],
+      returns: "MMResult<{ids:string[]}>",
+    },
+    getElementIdsByRole: {
+      summary: "Returns role-based element id groups for a root",
+      params: [{ name: "rootId", type: "string", required: true }],
+      returns: "MMResult<{nodes:string[],branchArrows:string[],crossLinks:string[],boundaries:string[],decorations:string[],boundTexts:string[]}>",
+    },
+  };
+
+  const cloneJSON = (value) => JSON.parse(JSON.stringify(value));
+
+  const normalizeValidationArgs = (method, args) => {
+    const spec = API_METHOD_SPEC[method];
+    if (!spec) return null;
+    if (args === undefined || args === null) return {};
+    if (Array.isArray(args)) {
+      const out = {};
+      spec.params.forEach((p, idx) => {
+        if (idx < args.length) out[p.name] = args[idx];
+      });
+      return out;
+    }
+    if (typeof args === "object") return { ...args };
+    if (spec.params.length === 1) return { [spec.params[0].name]: args };
+    return null;
+  };
+
+  const isTypeMatch = (value, type) => {
+    if (type === "any") return true;
+    if (type === "array") return Array.isArray(value);
+    if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value);
+    return typeof value === type;
+  };
+
+  const validateMethodArgs = (method, args) => {
+    const spec = API_METHOD_SPEC[method];
+    if (!spec) {
+      return { valid: false, errors: [`Unknown method: ${method}`], normalizedArgs: {} };
+    }
+
+    const normalizedArgs = normalizeValidationArgs(method, args);
+    if (normalizedArgs === null) {
+      return {
+        valid: false,
+        errors: ["Arguments must be an object, an array of positional values, or a single value for single-parameter methods"],
+        normalizedArgs: {},
+      };
+    }
+
+    const errors = [];
+    spec.params.forEach((p) => {
+      const v = normalizedArgs[p.name];
+      if (p.required && (v === undefined || v === null || (p.type === "string" && v === ""))) {
+        errors.push(`Missing required parameter: ${p.name}`);
+        return;
+      }
+      if (v !== undefined && v !== null && !isTypeMatch(v, p.type)) {
+        errors.push(`Invalid type for ${p.name}: expected ${p.type}, got ${Array.isArray(v) ? "array" : typeof v}`);
+      }
+      if (p.enum && v !== undefined && v !== null && !p.enum.includes(v)) {
+        errors.push(`Invalid value for ${p.name}: ${v}`);
+      }
+    });
+
+    return { valid: errors.length === 0, errors, normalizedArgs };
+  };
+
+  const buildHelpText = (methodName, doc) => {
+    const params = doc.params.map((p) => {
+      const req = p.required ? "required" : "optional";
+      const enumValues = p.enum ? ` | enum: ${p.enum.join(", ")}` : "";
+      return `- ${p.name}: ${p.type} (${req})${enumValues}`;
+    });
+    const paramsText = params.length ? params.join("\n") : "- (none)";
+    return [
+      `${methodName}`,
+      `${doc.summary}`,
+      "Parameters:",
+      paramsText,
+      `Returns: ${doc.returns}`,
+    ].join("\n");
+  };
+
+  const API = {
+    version: "1.0.0",
+    Actions: Object.freeze(API_ACTIONS),
+    Errors: Object.freeze(MMError),
+
+    ready: () => !!ea,
+
+    listMethods: () => mmOk({ methods: Object.keys(API_METHOD_SPEC) }),
+
+    getErrorCodes: () => mmOk({ errors: cloneJSON(API_ERROR_DOC) }),
+
+    spec: () =>
+      mmOk({
+        version: API.version,
+        actions: Object.values(API_ACTIONS),
+        errors: cloneJSON(API_ERROR_DOC),
+        methods: cloneJSON(API_METHOD_SPEC),
+      }),
+
+    help: (method, format = "object") => {
+      if (method !== undefined && (typeof method !== "string" || method.trim() === "")) {
+        return mmErr(MMError.INVALID_ARGUMENT, "help expects method to be a non-empty string when provided");
+      }
+      if (!["object", "text"].includes(format)) {
+        return mmErr(MMError.INVALID_ARGUMENT, "help format must be 'object' or 'text'");
+      }
+
+      if (!method) {
+        if (format === "text") {
+          const lines = Object.keys(API_METHOD_SPEC).map((name) => `${name}: ${API_METHOD_SPEC[name].summary}`);
+          return mmOk([`MindMapBuilder API v${API.version}`, ...lines].join("\n"));
+        }
+        return mmOk({
+          version: API.version,
+          methods: cloneJSON(API_METHOD_SPEC),
+          actions: Object.values(API_ACTIONS),
+          errors: cloneJSON(API_ERROR_DOC),
+        });
+      }
+
+      const doc = API_METHOD_SPEC[method];
+      if (!doc) {
+        return mmErr(MMError.INVALID_ARGUMENT, `Unknown method: ${method}`);
+      }
+
+      if (format === "text") return mmOk(buildHelpText(method, doc));
+      return mmOk({ method, ...cloneJSON(doc) });
+    },
+
+    validate: (method, args) => {
+      if (typeof method !== "string" || method.trim() === "") {
+        return mmErr(MMError.INVALID_ARGUMENT, "validate requires a method name");
+      }
+      const result = validateMethodArgs(method, args);
+      return mmOk(result);
+    },
+
+    getCapabilities: () => ({
+      actions: Object.values(API_ACTIONS),
+      methods: Object.keys(API),
+    }),
+
+    setView: (view) => {
+      if (!view) return mmErr(MMError.INVALID_VIEW, "setView expects an ExcalidrawView object");
+
+      const isValid =
+        (ea.isExcalidrawView && ea.isExcalidrawView(view)) ||
+        (typeof view.getViewType === "function" && view.getViewType() === "excalidraw");
+
+      if (!isValid) return mmErr(MMError.INVALID_VIEW, "setView expects an ExcalidrawView object");
+
+      try {
+        ea.setView(view);
+        ea.clear();
+        ensureNodeSelected();
+        updateUI();
+        return mmOk({ view: ea.targetView, filePath: ea.targetView?.file?.path || null });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "Failed to set view", e);
+      }
+    },
+
+    getView: () => mmOk({ view: ea.targetView || null, filePath: ea.targetView?.file?.path || null }),
+
+    getSelection: () => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      return mmOk({
+        nodeId: getMindmapNodeFromSelection()?.id || null,
+        elementIds: ea.getViewSelectedElements().map((e) => e.id),
+      });
+    },
+
+    selectNode: (nodeId) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      selectNodeInView(nodeRes.data);
+      updateUI(nodeRes.data);
+      return mmOk({ nodeId: nodeRes.data.id });
+    },
+
+    getMindMapRoots: () => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      return mmOk({ rootIds: getMasterRoots() });
+    },
+
+    getMapInfo: (nodeId) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      const node = nodeRes.data;
+      const all = ea.getViewElements();
+      const info = getHierarchy(node, all);
+      const settingsRoot = getSettingsRootNode(node, all);
+      return mmOk({
+        nodeId: node.id,
+        rootId: info.rootId,
+        settingsRootId: settingsRoot?.id || info.rootId,
+        depth: info.depth,
+      });
+    },
+
+    getNodeText: (nodeId) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      const node = nodeRes.data;
+      const all = ea.getViewElements();
+      return mmOk({
+        nodeId: node.id,
+        text: getTextFromNode(all, node, true, true),
+        ontology: getNodeOntology(node, all),
+      });
+    },
+
+    performAction: async (action, event = {}) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (!action || !Object.values(API_ACTIONS).includes(action)) {
+        return mmErr(MMError.INVALID_ACTION, `Unknown action: ${action}`);
+      }
+      try {
+        await performAction(action, event);
+        return mmOk(undefined);
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "performAction failed", e);
+      }
+    },
+
+    refreshMapLayout: async (nodeId) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+
+      let sel = null;
+      if (nodeId) {
+        const node = findNodeById(nodeId);
+        if (!node) return mmErr(MMError.INVALID_NODE, `Node not found: ${nodeId}`);
+        sel = node;
+      }
+
+      try {
+        await refreshMapLayout(sel);
+        const target = sel || getMindmapNodeFromSelection();
+        if (!target) return mmErr(MMError.NO_SELECTION, "No selected node for layout refresh");
+        const info = getHierarchy(target, ea.getViewElements());
+        return mmOk({ rootId: info.rootId });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "refreshMapLayout failed", e);
+      }
+    },
+
+    addNode: async ({ text, parentId, ontology, follow = false, position } = {}) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (!text || typeof text !== "string") {
+        return mmErr(MMError.INVALID_ARGUMENT, "addNode requires non-empty text");
+      }
+
+      if (parentId) {
+        const parent = findNodeById(parentId);
+        if (!parent) return mmErr(MMError.INVALID_NODE, `Parent node not found: ${parentId}`);
+        selectNodeInView(parent);
+      }
+
+      try {
+        const node = await addNode(text, follow, false, null, null, position || null, ontology ?? null);
+        if (!node) return mmErr(MMError.OPERATION_FAILED, "Failed to create node");
+
+        const all = ea.getViewElements();
+        const info = getHierarchy(node, all);
+        const arrow = all.find(
+          (a) => a.type === "arrow" && a.customData?.isBranch && a.endBinding?.elementId === node.id,
+        );
+        return mmOk({ nodeId: node.id, arrowId: arrow?.id, rootId: info.rootId });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "addNode failed", e);
+      }
+    },
+
+    importMarkdown: async ({ markdown, parentId } = {}) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (typeof markdown !== "string" || markdown.trim() === "") {
+        return mmErr(MMError.INVALID_ARGUMENT, "importMarkdown requires a non-empty markdown string");
+      }
+
+      if (parentId) {
+        const parent = findNodeById(parentId);
+        if (!parent) return mmErr(MMError.INVALID_NODE, `Parent node not found: ${parentId}`);
+        selectNodeInView(parent);
+      }
+
+      const beforeIds = new Set(ea.getViewElements().map((e) => e.id));
+      try {
+        await importTextToMap(markdown);
+        const after = ea.getViewElements();
+        const addedNodeIds = after
+          .filter((e) => !beforeIds.has(e.id) && e.type !== "arrow" && !e.customData?.isBoundary)
+          .map((e) => e.id);
+
+        let rootId = null;
+        if (parentId) {
+          const parent = after.find((e) => e.id === parentId);
+          rootId = parent ? getHierarchy(parent, after).rootId : null;
+        } else if (addedNodeIds.length > 0) {
+          const n = after.find((e) => e.id === addedNodeIds[0]);
+          rootId = n ? getHierarchy(n, after).rootId : null;
+        }
+
+        return mmOk({ addedNodeIds, rootId });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "importMarkdown failed", e);
+      }
+    },
+
+    exportMarkdown: async ({ nodeId, cut = false } = {}) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+
+      if (nodeId) {
+        const node = findNodeById(nodeId);
+        if (!node) return mmErr(MMError.INVALID_NODE, `Node not found: ${nodeId}`);
+        selectNodeInView(node);
+      }
+
+      try {
+        await copyMapAsText(!!cut);
+        let markdown = "";
+        try {
+          markdown = await navigator.clipboard.readText();
+        } catch (clipErr) {
+          return mmErr(MMError.OPERATION_FAILED, "Export succeeded but clipboard read failed", clipErr);
+        }
+        return mmOk({ markdown });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "exportMarkdown failed", e);
+      }
+    },
+
+    toggleSubmapRoot: async ({ nodeId, enabled } = {}) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      const node = nodeRes.data;
+
+      const current = node.customData?.isAdditionalRoot === true;
+      if (typeof enabled === "boolean" && enabled === current) {
+        return mmOk({ nodeId: node.id, enabled: current });
+      }
+
+      selectNodeInView(node);
+      try {
+        await toggleSubmapRoot();
+        const updated = findNodeById(node.id);
+        return mmOk({ nodeId: node.id, enabled: updated?.customData?.isAdditionalRoot === true });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "toggleSubmapRoot failed", e);
+      }
+    },
+
+    getMapConfig: (nodeId) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      const node = nodeRes.data;
+      const all = ea.getViewElements();
+      const info = getHierarchy(node, all);
+      const settingsRoot = getSettingsRootNode(node, all);
+      if (!settingsRoot) return mmErr(MMError.NO_ROOT, "Could not resolve settings root");
+
+      return mmOk({
+        rootId: info.rootId,
+        settingsRootId: settingsRoot.id,
+        config: extractMapConfig(settingsRoot),
+      });
+    },
+
+    setMapConfig: async ({ patch, nodeId, relayout = true } = {}) => {
+      const nodeRes = resolveNode(nodeId);
+      if (!nodeRes.ok) return nodeRes;
+      const node = nodeRes.data;
+      if (!patch || typeof patch !== "object") {
+        return mmErr(MMError.INVALID_ARGUMENT, "setMapConfig requires a patch object");
+      }
+
+      try {
+        selectNodeInView(node);
+        const info = await updateRootNodeCustomData({ ...patch }, node);
+        if (!info) return mmErr(MMError.OPERATION_FAILED, "Failed to update map config");
+        if (relayout) await refreshMapLayout(node);
+        return mmOk({ rootId: info.rootId, settingsRootId: info.settingsRootId });
+      } catch (e) {
+        return mmErr(MMError.OPERATION_FAILED, "setMapConfig failed", e);
+      }
+    },
+
+    getBranchElementIds: ({ nodeId, includeDecorations = true, includeCrosslinks = true } = {}) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (!nodeId) return mmErr(MMError.INVALID_ARGUMENT, "getBranchElementIds requires nodeId");
+
+      const node = findNodeById(nodeId);
+      if (!node) return mmErr(MMError.INVALID_NODE, `Node not found: ${nodeId}`);
+
+      const all = ea.getViewElements();
+      let ids = getBranchElementIds(nodeId, all);
+      if (includeDecorations || includeCrosslinks) {
+        const info = getHierarchy(node, all);
+        const extras = getDecorationAndCrossLinkIdsForBranches(ids, all, info.rootId);
+        if (!includeDecorations || !includeCrosslinks) {
+          const extraEls = extras.map((id) => all.find((e) => e.id === id)).filter(Boolean);
+          const filteredExtra = extraEls.filter((e) => {
+            if (e.type === "arrow") return includeCrosslinks;
+            return includeDecorations;
+          });
+          ids = ids.concat(filteredExtra.map((e) => e.id));
+        } else {
+          ids = ids.concat(extras);
+        }
+      }
+      return mmOk({ ids: Array.from(new Set(ids)) });
+    },
+
+    getProjectElementIds: (rootId) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (!rootId) return mmErr(MMError.INVALID_ARGUMENT, "getProjectElementIds requires rootId");
+
+      const all = ea.getViewElements();
+      const root = all.find((e) => e.id === rootId);
+      if (!root) return mmErr(MMError.INVALID_NODE, `Root not found: ${rootId}`);
+
+      const project = getMindmapProjectElements(rootId, all);
+      return mmOk({ ids: project.map((e) => e.id) });
+    },
+
+    getElementIdsByRole: (rootId) => {
+      const viewErr = requireView();
+      if (viewErr) return viewErr;
+      if (!rootId) return mmErr(MMError.INVALID_ARGUMENT, "getElementIdsByRole requires rootId");
+
+      const all = ea.getViewElements();
+      const root = all.find((e) => e.id === rootId);
+      if (!root) return mmErr(MMError.INVALID_NODE, `Root not found: ${rootId}`);
+
+      const branchIds = getBranchElementIds(rootId, all);
+      const decorationAndCrossLinkIds = getDecorationAndCrossLinkIdsForBranches(branchIds, all, rootId);
+      const project = getMindmapProjectElements(rootId, all);
+
+      const nodes = branchIds
+        .map((id) => all.find((e) => e.id === id))
+        .filter((e) => e && e.type !== "arrow" && !e.customData?.isBoundary)
+        .map((e) => e.id);
+
+      const boundaries = project.filter((e) => e.customData?.isBoundary).map((e) => e.id);
+      const branchArrows = project.filter((e) => e.type === "arrow" && e.customData?.isBranch).map((e) => e.id);
+      const crossLinks = project.filter((e) => e.type === "arrow" && !e.customData?.isBranch).map((e) => e.id);
+
+      const boundTexts = project
+        .filter((e) => e.type === "text")
+        .filter((t) => {
+          if (t.containerId) return true;
+          return project.some((el) => el.boundElements?.some((be) => be.id === t.id));
+        })
+        .map((e) => e.id);
+
+      const decorationSet = new Set(decorationAndCrossLinkIds);
+      const roleSet = new Set([...nodes, ...boundaries, ...branchArrows, ...crossLinks, ...boundTexts]);
+      const decorations = project
+        .filter((e) => decorationSet.has(e.id) || (!roleSet.has(e.id) && !branchIds.includes(e.id)))
+        .filter((e) => !crossLinks.includes(e.id) && !boundaries.includes(e.id))
+        .map((e) => e.id);
+
+      return mmOk({
+        nodes: Array.from(new Set(nodes)),
+        branchArrows: Array.from(new Set(branchArrows)),
+        crossLinks: Array.from(new Set(crossLinks)),
+        boundaries: Array.from(new Set(boundaries)),
+        decorations: Array.from(new Set(decorations)),
+        boundTexts: Array.from(new Set(boundTexts)),
+      });
+    },
+  };
+
+  window.MindMapBuilder = API;
+})();
 
 let uiUpdateTimer = null;
 
