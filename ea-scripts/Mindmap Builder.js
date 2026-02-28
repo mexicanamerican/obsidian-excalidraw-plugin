@@ -150,6 +150,10 @@ const STRINGS = {
     NOTICE_CANNOT_MOVE_ROOT: "Cannot move the root node.",
     NOTICE_CANNOT_PRMOTE_L1: "Cannot promote Level 1 nodes.",
     NOTICE_CANNOT_DEMOTE: "Cannot demote node. No previous sibling to attach to.",
+    NOTICE_SELECT_NODE_CONTAINING_LINK: "Select a node containing a link.",
+    NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT: "Cannot demote: No sibling found to accept this node.",
+    NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING: "Cannot demote: No valid sibling to attach to.",
+    NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED: "Cannot demote: Cross-side demotion is not allowed.",
     NOTICE_CANNOT_MOVE_AUTO_LAYOUT_DISABLED: "Cannot move nodes when Auto-Layout is disabled. Enable Auto-Layout first.",
     NOTICE_BRANCH_WIDTH_MANUAL_OVERRIDE: "Branch width were not updated because some branch widths were manually modified.",
 
@@ -363,6 +367,10 @@ addLocale("zh", {
   NOTICE_CANNOT_MOVE_ROOT: "无法移动根节点。",
   NOTICE_CANNOT_PRMOTE_L1: "无法提升 1 级节点。",
   NOTICE_CANNOT_DEMOTE: "无法降级节点。没有可依附的前置同级节点。",
+  NOTICE_SELECT_NODE_CONTAINING_LINK: "请选择包含链接的节点。",
+  NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT: "无法降级：未找到可接收此节点的同级节点。",
+  NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING: "无法降级：没有可附加的有效同级节点。",
+  NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED: "无法降级：不允许跨侧降级。",
   NOTICE_CANNOT_MOVE_AUTO_LAYOUT_DISABLED: "禁用自动布局时无法移动节点。请先启用自动布局。",
   NOTICE_BRANCH_WIDTH_MANUAL_OVERRIDE: "分支粗细未更新，因为部分分支粗细已被手动修改。",
 
@@ -4339,7 +4347,7 @@ const importOutline = async () => {
   
   const sel = getMindmapNodeFromSelection();
   if (!sel) {
-    new Notice("Select a node containing a link.");
+    new Notice(t("NOTICE_SELECT_NODE_CONTAINING_LINK"));
     return;
   }
 
@@ -5394,7 +5402,7 @@ const changeNodeOrder = async (key) => {
     siblings.sort((a, b) => getMindmapOrder(a) - getMindmapOrder(b));
     
     if (siblings.length < 2) {
-      new Notice("Cannot demote: No sibling found to accept this node.");
+      new Notice(t("NOTICE_CANNOT_DEMOTE_NO_SIBLING_TO_ACCEPT"));
       return;
     }
     
@@ -5405,7 +5413,7 @@ const changeNodeOrder = async (key) => {
     
     // Prevent out-of-bounds demotion
     if (targetIndex < 0 || targetIndex >= siblings.length) {
-      new Notice("Cannot demote: No valid sibling to attach to.");
+      new Notice(t("NOTICE_CANNOT_DEMOTE_NO_VALID_SIBLING"));
       return;
     }
     
@@ -5415,7 +5423,7 @@ const changeNodeOrder = async (key) => {
     if (parent.id === root.id) {
        const targetIsPos = isVerticalMode ? (newParent.y + newParent.height/2 > rootCenterY) : (newParent.x + newParent.width/2 > rootCenter);
        if (targetIsPos !== isInPositive) {
-          new Notice("Cannot demote: Cross-side demotion is not allowed.");
+         new Notice(t("NOTICE_CANNOT_DEMOTE_CROSS_SIDE_NOT_ALLOWED"));
           return;
        }
     }
