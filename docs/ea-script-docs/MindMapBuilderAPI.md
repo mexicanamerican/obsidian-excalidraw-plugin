@@ -1,6 +1,6 @@
 # MindMap Builder API
 
-This page documents how **Mind Map Builder** works internally and how to automate it through `window.MindMapBuilder`.
+This page documents how **Mind Map Builder** works internally and how to automate it through `window.MindMapBuilderAPI`.
 
 ## Why this API exists
 
@@ -27,7 +27,7 @@ Most operations run through existing Mind Map Builder internals (action dispatch
 ## API entry point
 
 ```js
-const mmb = window.MindMapBuilder;
+const mmb = window.MindMapBuilderAPI;
 ```
 
 The API is available while Mind Map Builder is active.
@@ -55,8 +55,8 @@ Because Mind Map Builder is minified in distribution, rely on runtime introspect
 ## Quick start
 
 ```js
-const mmb = window.MindMapBuilder;
-if (!mmb?.ready()) throw new Error("MindMapBuilder not ready");
+const mmb = window.MindMapBuilderAPI;
+if (!mmb?.ready()) throw new Error("MindMapBuilderAPI not ready");
 
 const methods = mmb.listMethods();
 console.log(methods);
@@ -120,7 +120,7 @@ Returns node text and ontology (derived from incoming branch metadata text).
 ### Actions and layout
 
 #### `performAction(action: string, event?: object): Promise<MMResult<void>>`
-Executes one built-in action from `MindMapBuilder.Actions`.
+Executes one built-in action from `MindMapBuilderAPI.Actions`.
 
 #### `refreshMapLayout(nodeId?: string): Promise<MMResult<{ rootId: string }>>`
 Re-runs map layout for a selected or provided node.
@@ -162,7 +162,7 @@ Returns categorized element IDs for selective styling or export workflows.
 
 ## Actions enum
 
-Use `MindMapBuilder.Actions` constants with `performAction()`.
+Use `MindMapBuilderAPI.Actions` constants with `performAction()`.
 
 Key values include:
 
@@ -182,7 +182,7 @@ Key values include:
 Retrieve full list dynamically via:
 
 ```js
-window.MindMapBuilder.getErrorCodes();
+window.MindMapBuilderAPI.getErrorCodes();
 ```
 
 Common codes:
@@ -211,7 +211,7 @@ if (!ea.targetView) {
   return;
 }
 
-let mmb = window.MindMapBuilder;
+let mmb = window.MindMapBuilderAPI;
 
 if (!mmb) {
   const cmd = Object.keys(app.commands.commands).find(k=>k.match(/.*Mindmap Builder$/));
@@ -226,7 +226,7 @@ if (!mmb) {
     return;
   }
   await sleep(100);
-  mmb = window.MindMapBuilder;
+  mmb = window.MindMapBuilderAPI;
   if (!mmb) {
     console.log("MindMap Builder API not available");
     return;
@@ -246,7 +246,7 @@ console.log(res);
 ### 2) Discover API at runtime
 
 ```js
-const spec = window.MindMapBuilder.spec();
+const spec = window.MindMapBuilderAPI.spec();
 if (spec.ok) {
   console.log(spec.data.version);
   console.log(Object.keys(spec.data.methods));
@@ -256,22 +256,22 @@ if (spec.ok) {
 ### 3) Add nodes then relayout
 
 ```js
-await window.MindMapBuilder.addNode({ text: "Topic A" });
-await window.MindMapBuilder.addNode({ text: "Topic B", follow: true });
-await window.MindMapBuilder.refreshMapLayout();
+await window.MindMapBuilderAPI.addNode({ text: "Topic A" });
+await window.MindMapBuilderAPI.addNode({ text: "Topic B", follow: true });
+await window.MindMapBuilderAPI.refreshMapLayout();
 ```
 
 ### 4) Execute built-in action
 
 ```js
-const { Actions } = window.MindMapBuilder;
-await window.MindMapBuilder.performAction(Actions.FOLD_ALL);
+const { Actions } = window.MindMapBuilderAPI;
+await window.MindMapBuilderAPI.performAction(Actions.FOLD_ALL);
 ```
 
 ### 5) Read node text + ontology
 
 ```js
-const res = window.MindMapBuilder.getNodeText();
+const res = window.MindMapBuilderAPI.getNodeText();
 if (res.ok) {
   console.log(res.data.text, res.data.ontology);
 }
@@ -289,23 +289,23 @@ const md = `
   - Milestones
 `;
 
-await window.MindMapBuilder.importMarkdown({ markdown: md });
+await window.MindMapBuilderAPI.importMarkdown({ markdown: md });
 ```
 
 ### 7) Export a branch to markdown
 
 ```js
-const out = await window.MindMapBuilder.exportMarkdown({ cut: false });
+const out = await window.MindMapBuilderAPI.exportMarkdown({ cut: false });
 if (out.ok) console.log(out.data.markdown);
 ```
 
 ### 8) Get role-based IDs and style with ExcalidrawAutomate
 
 ```js
-const roots = window.MindMapBuilder.getMindMapRoots();
+const roots = window.MindMapBuilderAPI.getMindMapRoots();
 if (!roots.ok || roots.data.rootIds.length === 0) return;
 
-const roles = window.MindMapBuilder.getElementIdsByRole(roots.data.rootIds[0]);
+const roles = window.MindMapBuilderAPI.getElementIdsByRole(roots.data.rootIds[0]);
 if (!roles.ok) return;
 
 // Example: pass roles.data.nodes into your EA styling pipeline
@@ -315,7 +315,7 @@ if (!roles.ok) return;
 
 ```js
 (async()={
-  async function ensureMindMapBuilder() {
+  const ensureMindMapBuilder = async () => {
     const ea = window.ExcalidrawAutomate;
     if (!ea) throw new Error("ExcalidrawAutomate is not available");
 
@@ -330,7 +330,7 @@ if (!roles.ok) return;
       }
     }
 
-    let mmb = window.MindMapBuilder;
+    let mmb = window.MindMapBuilderAPI;
     if (!mmb) {
       const cmd = Object.keys(app.commands.commands).find((k) => /.*Mindmap Builder$/.test(k));
       if (!cmd) throw new Error("MindMap Builder command not found");
@@ -343,7 +343,7 @@ if (!roles.ok) return;
       }
 
       await sleep(120);
-      mmb = window.MindMapBuilder;
+      mmb = window.MindMapBuilderAPI;
       if (!mmb) throw new Error("MindMap Builder API not available after command execution");
     }
 
@@ -353,7 +353,7 @@ if (!roles.ok) return;
     return { ea, mmb };
   }
 
-  function assertOk(result, label) {
+  const assertOk = (result, label) => {
     if (!result?.ok) {
       const message = result?.error?.message || "Unknown error";
       const code = result?.error?.code || "UNKNOWN";
@@ -463,7 +463,7 @@ Reference:
 
 - [ExcalidrawAutomate full library for LLM training.md](../AITrainingData/ExcalidrawAutomate%20full%20library%20for%20LLM%20training.md)
 
-You can use MindMapBuilder to identify target nodes/branches, then use ExcalidrawAutomate to apply detailed transformations.
+You can use MindMapBuilderAPI to identify target nodes/branches, then use ExcalidrawAutomate to apply detailed transformations.
 
 ## Compatibility
 
