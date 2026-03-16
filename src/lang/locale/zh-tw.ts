@@ -95,6 +95,7 @@ export default {
   INSERT_LATEX:
     `插入 LaTeX 公式到當前繪圖中`,
   ENTER_LATEX: "輸入 LaTeX 公式",
+  EDIT_LATEX: "編輯 LaTeX 公式",
   READ_RELEASE_NOTES: "閱讀本外掛的更新說明",
   RUN_OCR: "OCR 整個繪圖：識別塗鴉和圖片裡的文字並複製到剪貼簿和筆記屬性中",
   RERUN_OCR: "重新 OCR 整個繪圖：識別塗鴉和圖片裡的文字並複製到剪貼簿和筆記屬性中",
