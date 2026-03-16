@@ -317,6 +317,17 @@ export declare class ExcalidrawAutomate {
      */
     attachInlineLinkSuggester(inputEl: HTMLInputElement, widthWrapper?: HTMLElement): KeyBlocker;
     /**
+     * Parses text using the target view's ExcalidrawData parser.
+     *
+     * This reuses ExcalidrawData parsing logic directly, including transclusion
+     * resolution, link bracket rendering, and link/url prefixes based on the
+     * target file's frontmatter.
+     *
+     * @param {string} text - Raw text to parse.
+     * @returns {Promise<string | undefined>} Parsed text, or undefined when input/view is unavailable.
+     */
+    parseText(text: string): Promise<string | undefined>;
+    /**
      * Returns the last recorded pointer position on the Excalidraw canvas.
      * @returns {{x:number, y:number}} The last recorded pointer position.
      */
