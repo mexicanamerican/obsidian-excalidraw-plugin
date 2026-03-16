@@ -26,6 +26,11 @@ async function run() {
     return;
   }
   const modal = new ea.FloatingModal(ea.plugin.app);
+  if (modal.bgEl) {
+    modal.containerEl.removeChild(modal.bgEl);
+  }
+  modal.modalEl.style.borderRadius = "6px";
+  modal.contentEl.style.padding = "4px";
   const FULLSCREEN = "Goto fullscreen?";
   let settings = ea.getScriptSettings() || {};
   if(!settings[FULLSCREEN]) {
