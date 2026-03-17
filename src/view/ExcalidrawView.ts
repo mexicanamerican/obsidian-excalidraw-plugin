@@ -2173,10 +2173,12 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
     this.clearEmbeddableNodeIsEditingTimer();
     if (this.activeLoader) {
       this.activeLoader.terminate = true;
+      this.activeLoader.emptyPDFDocsMap();
       this.activeLoader = null;
     }
     if (this.nextLoader) {
       this.nextLoader.terminate = true;
+      this.nextLoader.emptyPDFDocsMap();
       this.nextLoader = null;
     }
     if (this.plugin) {
@@ -2329,6 +2331,16 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
     if (this.semaphores?.wheelTimeout) {
       window.clearTimeout(this.semaphores.wheelTimeout);
       this.semaphores.wheelTimeout = null;
+    }
+    if (this.activeLoader) {
+      this.activeLoader.terminate = true;
+      this.activeLoader.emptyPDFDocsMap();
+      this.activeLoader = null;
+    }
+    if (this.nextLoader) {
+      this.nextLoader.terminate = true;
+      this.nextLoader.emptyPDFDocsMap();
+      this.nextLoader = null;
     }
 
     (process.env.NODE_ENV === 'development') && DEBUGGING && debug(this.onunload,`ExcalidrawView.onunload, completed`);
