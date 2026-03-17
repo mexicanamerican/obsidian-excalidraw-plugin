@@ -1159,3 +1159,8 @@ textarea.excalidraw-wysiwyg, .excalidraw input {
 .excalidraw svg.svg-icon {
   color: var(--icon-fill-color);
 }
+
+
+.is-mobile .excalidraw.excalidraw--mobile .FixedSideContainer.FixedSideContainer_side_top.App-top-bar {
+  margin-top: 1rem
+}

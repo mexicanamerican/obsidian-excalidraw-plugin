@@ -1096,8 +1096,10 @@ export class CommandManager {
         if(checking) return true;
         (async()=>{
           const ea = getEA(view) as ExcalidrawAutomate;
-          const isAnchored = Boolean(el.customData?.isAnchored); 
-          const imgId = await ea.addImage(el.x+el.width/5, el.y+el.height/5, ef.file,!isAnchored, isAnchored);
+          const isAnchored = Boolean(el.customData?.isAnchored);
+          const imgId = ef.pdfPageViewProps
+            ? await ea.addImage(el.x+el.width/5, el.y+el.height/5, el.link?.match(/\[\[([^\]]+)]]/)?.[1] ?? ef.linkParts.original,!isAnchored, isAnchored)
+            : await ea.addImage(el.x+el.width/5, el.y+el.height/5, ef.file,!isAnchored, isAnchored);
           const img = ea.getElement(imgId) as Mutable<ExcalidrawImageElement>;
           img.width = el.width;
           img.height = el.height;

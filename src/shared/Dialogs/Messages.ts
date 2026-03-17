@@ -17,6 +17,11 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 
 <div class="ex-coffee-div"><a href="https://ko-fi.com/zsolt"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com"  height=45></a></div>
 `,
+"2.21.1":`
+## Fixed
+- Duplicate selected image with a different image ID command palette action did not duplicate cropped PDF images.
+
+`,
 "2.21.0":`
 ## New
 - LaTeX editor is now floating [#2684](https://github.com/zsviczian/obsidian-excalidraw-plugin/pull/2684) 🙏[@TravisLEBLANC1](https://github.com/TravisLEBLANC1), [#2698](https://github.com/zsviczian/obsidian-excalidraw-plugin/pull/2698) 🙏[@heinrich26](https://github.com/heinrich26)
