@@ -1,25 +1,33 @@
 import { getIcon } from "obsidian";
 import { PenStyle } from "src/types/penTypes";
-import React, { memo, useEffect, useRef } from "react";
+import React from "react";
 
-const _getIconAsJSX = memo(function _getIconAsJSX({ iconId }: { iconId: string}) {
+const toReactAttributeName = (attributeName: string) => {
+  if (attributeName === "class") return "className";
+  if (attributeName.startsWith("aria-") || attributeName.startsWith("data-")) {
+    return attributeName;
+  }
+
+  return attributeName.replace(/[-:]+([a-z])/g, (_, char: string) => char.toUpperCase());
+};
+
+const getIconAttributes = (icon: SVGSVGElement) =>
+  [...icon.attributes].reduce<Record<string, string>>((attributes, attr) => {
+    attributes[toReactAttributeName(attr.nodeName)] = attr.nodeValue;
+    return attributes;
+  }, {});
+
+export const getIconAsJSX = (iconId: string) => {
   const icon = getIcon(iconId);
   if (!icon) return (<svg className="svg-icon excalidraw-icon-missing"/>);
 
-  const ref = useRef<SVGSVGElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-
-    [...icon.attributes].forEach( attr => {
-      ref.current.setAttribute(attr.nodeName, attr.nodeValue);
-    });
-  });
-  return (<svg ref={ref} dangerouslySetInnerHTML={{__html: icon.innerHTML}} />);
-});
-
-export const getIconAsJSX = (iconId: string) =>
-    (<_getIconAsJSX iconId={iconId}/>);
+  return (
+    <svg
+      {...getIconAttributes(icon as SVGSVGElement)}
+      dangerouslySetInnerHTML={{__html: icon.innerHTML}}
+    />
+  );
+};
 
 export const ICONS = {
   ExportImage: getIconAsJSX("image-down"),

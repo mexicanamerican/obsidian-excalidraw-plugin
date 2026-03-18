@@ -103,7 +103,10 @@ if (!isLib) {
   const plugin_styles = fs.readFileSync("./styles.css", "utf8");
   const styles = excalidraw_styles + plugin_styles;
   cssnano()
-    .process(styles) // Process the CSS
+    .process(styles, {
+      from: path.resolve("styles.css"),
+      to: path.resolve(DIST_FOLDER, "styles.css"),
+    })
     .then(result => {
       fs.writeFileSync(`./${DIST_FOLDER}/styles.css`, result.css);
     })

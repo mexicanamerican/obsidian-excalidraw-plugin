@@ -19,7 +19,9 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 `,
 "2.21.1":`
 ## Fixed
+- Drawing and editor fails to initialize in a new window [#2713](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2713)
 - Duplicate selected image with a different image ID command palette action did not duplicate cropped PDF images.
+- Memory leak issue with PDF import as images.
 
 `,
 "2.21.0":`
