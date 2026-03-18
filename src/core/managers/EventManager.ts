@@ -119,7 +119,9 @@ export class EventManager {
   }
 
   private onLayoutChangeHandler() {
-    getExcalidrawViews(this.app).forEach(excalidrawView=>excalidrawView.refresh());
+    if (this.app.workspace.layoutReady) {
+      getExcalidrawViews(this.app).forEach(excalidrawView=>!!excalidrawView?.refresh && excalidrawView.refresh());
+    }
   }
 
   private onPasteHandler (evt: ClipboardEvent, editor: Editor, info: MarkdownView | MarkdownFileInfo ) {
