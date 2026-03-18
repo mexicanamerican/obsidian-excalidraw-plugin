@@ -1,6 +1,7 @@
 import { ExcalidrawAutomate } from "src/shared/ExcalidrawAutomate";
 import { BinaryFileData, DataURL } from "@zsviczian/excalidraw/types/excalidraw/types";
 import ExcalidrawPlugin from "src/core/main";
+import { getTextMode } from "src/shared/TextMode";
 import {
   ExcalidrawElement,
   ExcalidrawImageElement,
@@ -9,7 +10,7 @@ import {
 } from "@zsviczian/excalidraw/types/element/src/types";
 import { normalizePath, TFile } from "obsidian";
 
-import ExcalidrawView, { getTextMode } from "src/view/ExcalidrawView";
+import type ExcalidrawView from "src/view/ExcalidrawView";
 import {
   GITHUB_RELEASES,
   getCommonBoundingBox,
@@ -942,12 +943,4 @@ export function ensureActiveScriptSettingsObject(
   }
 
   return plugin.settings.scriptEngineSettings[activeScript] as Record<string, ScriptSettingValue>;
-}
-
-export function getLastActiveExcalidrawView(plugin: ExcalidrawPlugin): ExcalidrawView | null {
-  const leaf = plugin.app.workspace.getLeafById(plugin.lastActiveExcalidrawLeafID);
-  if(leaf && leaf.view instanceof ExcalidrawView) {
-    return leaf.view as ExcalidrawView;
-  }
-  return null;
 }

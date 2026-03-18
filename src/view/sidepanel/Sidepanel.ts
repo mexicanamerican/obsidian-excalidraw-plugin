@@ -3,7 +3,7 @@ import { ICON_NAME, VIEW_TYPE_SIDEPANEL } from "src/constants/constants";
 import ExcalidrawPlugin from "src/core/main";
 import { t } from "src/lang/helpers";
 import type { ExcalidrawAutomate } from "src/shared/ExcalidrawAutomate";
-import { getLastActiveExcalidrawView } from "src/utils/excalidrawAutomateUtils";
+import { getLastActiveExcalidrawView } from "src/utils/excalidrawViewLookup";
 import type ExcalidrawView from "src/view/ExcalidrawView";
 import { ExcalidrawSidepanelTab } from "./SidepanelTab";
 

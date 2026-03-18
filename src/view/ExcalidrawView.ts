@@ -59,6 +59,7 @@ import {
 } from "../constants/constants";
 import ExcalidrawPlugin from "../core/main";
 import { ExcalidrawAutomate } from "../shared/ExcalidrawAutomate";
+import { TextMode, getTextMode } from "../shared/TextMode";
 import { ExcalidrawSidepanelView } from "./sidepanel/Sidepanel";
 import { 
   repositionElementsToCursor,
@@ -68,8 +69,7 @@ import {
   getElementsWithLinkMatchingQuery,
   getImagesMatchingQuery,
   getBoundTextElementId,
-  getEmbeddedFileForImageElment
-} from "../utils/excalidrawAutomateUtils";
+} from "../utils/excalidrawViewHelpers";
 import { t } from "../lang/helpers";
 import {
   ExcalidrawData,
@@ -186,11 +186,6 @@ declare module "obsidian" {
 
 type SelectedElementWithLink = { id: string; text: string };
 type SelectedImage = { id: string; fileId: FileId };
-
-export enum TextMode {
-  parsed = "parsed",
-  raw = "raw",
-}
 
 interface WorkspaceItemExt extends WorkspaceItem {
   containerEl: HTMLElement;
@@ -5336,7 +5331,7 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
           try {
             const imagesWithStatus = selectedImages
               .map(el => {
-                const embeddedFile = getEmbeddedFileForImageElment(ea, el);
+                const embeddedFile = this.excalidrawData.getFile(el.fileId);
                 const imageType = getImageType(embeddedFile);
                 if (!embeddedFile || !imageType) return null;
                 return {
@@ -5367,7 +5362,7 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
                 ea.copyViewElementsToEAforEditing(imagesWithStatus.map(img => img.el));
                 imagesWithStatus.forEach(img => {
                   const editableEl = ea.getElement(img.el.id) as Mutable<ExcalidrawImageElement>;
-                  const embeddedFile = getEmbeddedFileForImageElment(ea, editableEl);
+                  const embeddedFile = this.excalidrawData.getFile(editableEl.fileId);
                   const imageType = getImageType(embeddedFile) ?? img.imageType;
                   if (imageType === "svg" || imageType === "excalidraw") {
                     addAppendUpdateCustomData(editableEl, {
@@ -6680,10 +6675,3 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
   }
 }
 
-export function getTextMode(data: string): TextMode {
-  (process.env.NODE_ENV === 'development') && DEBUGGING && debug(getTextMode, "ExcalidrawView.getTextMode", data);
-  const parsed =
-    data.search("excalidraw-plugin: parsed\n") > -1 ||
-    data.search("excalidraw-plugin: locked\n") > -1; //locked for backward compatibility
-  return parsed ? TextMode.parsed : TextMode.raw;
-}

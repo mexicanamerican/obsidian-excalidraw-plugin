@@ -2,6 +2,7 @@ import { Modifier } from "obsidian";
 import { DEVICE } from "src/constants/constants";
 import { t } from "src/lang/helpers";
 import { ExcalidrawSettings } from "src/core/settings";
+export { labelALT, labelCTRL, labelMETA, labelSHIFT } from "src/utils/modifierKeyLabels";
 export type ModifierKeys = {shiftKey:boolean, ctrlKey: boolean, metaKey: boolean, altKey: boolean};
 export type KeyEvent = PointerEvent | MouseEvent | KeyboardEvent | React.DragEvent | React.PointerEvent | React.MouseEvent | ModifierKeys; 
 export type PaneTarget = "active-pane"|"new-pane"|"popout-window"|"new-tab"|"md-properties";
@@ -75,11 +76,6 @@ const processModifiers = (ev: KeyEvent, modifierType: ModifierSetType): WebBrows
   }
   return keySet.defaultAction;
 }
-
-export const labelCTRL = () => DEVICE.isIOS || DEVICE.isMacOS ? "CMD" : "CTRL";
-export const labelALT = () => DEVICE.isIOS || DEVICE.isMacOS ? "OPT" : "ALT";
-export const labelMETA = () => DEVICE.isIOS || DEVICE.isMacOS ? "CTRL" : (DEVICE.isWindows ? "WIN" : "META");
-export const labelSHIFT = () => "SHIFT";
 
 export const isWinCTRLorMacCMD = (e:KeyEvent) => DEVICE.isIOS || DEVICE.isMacOS ? e.metaKey : e.ctrlKey;
 export const isWinALTorMacOPT = (e:KeyEvent) => e.altKey;

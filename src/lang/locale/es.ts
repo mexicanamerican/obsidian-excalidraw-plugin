@@ -4,7 +4,7 @@ import {
   CJK_FONTS,
 } from "src/constants/constants";
 import { TAG_AUTOEXPORT, TAG_MDREADINGMODE, TAG_PDFEXPORT } from "src/constants/constSettingsTags";
-import { labelALT, labelCTRL, labelMETA, labelSHIFT } from "src/utils/modifierkeyHelper";
+import { labelALT, labelCTRL, labelMETA, labelSHIFT } from "src/utils/modifierKeyLabels";
 
 declare const PLUGIN_VERSION:string;
 

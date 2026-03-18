@@ -3,7 +3,8 @@ import { App, FrontMatterCache, MarkdownView, MetadataCache, normalizePath, Noti
 import { BLANK_DRAWING, DARK_BLANK_DRAWING, DEVICE, EXPORT_TYPES, FRONTMATTER, FRONTMATTER_KEYS, JSON_parse, nanoid, VIEW_TYPE_EXCALIDRAW } from "src/constants/constants";
 import { Prompt, templatePromt } from "src/shared/Dialogs/Prompt";
 import { changeThemeOfExcalidrawMD, ExcalidrawData, getMarkdownDrawingSection } from "../../shared/ExcalidrawData";
-import ExcalidrawView, { getTextMode } from "src/view/ExcalidrawView";
+import ExcalidrawView from "src/view/ExcalidrawView";
+import { getTextMode } from "src/shared/TextMode";
 import ExcalidrawPlugin from "src/core/main";
 import { DEBUGGING } from "src/utils/debugHelper";
 import { checkAndCreateFolder, createFileAndAwaitMetacacheUpdate, download, getIMGFilename, getLink, getListOfTemplateFiles, getNewUniqueFilepath } from "src/utils/fileUtils";

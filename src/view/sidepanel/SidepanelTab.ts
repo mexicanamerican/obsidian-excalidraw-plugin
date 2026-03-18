@@ -1,6 +1,6 @@
 import type { CloseableComponent } from "obsidian";
 import type ExcalidrawPlugin from "src/core/main";
-import { getLastActiveExcalidrawView } from "src/utils/excalidrawAutomateUtils";
+import { getLastActiveExcalidrawView } from "src/utils/excalidrawViewLookup";
 import type { SidepanelTab as SidepanelTabType } from "src/types/sidepanelTabTypes";
 import ExcalidrawView from "src/view/ExcalidrawView";
 import { ExcalidrawAutomate } from "src/shared/ExcalidrawAutomate";

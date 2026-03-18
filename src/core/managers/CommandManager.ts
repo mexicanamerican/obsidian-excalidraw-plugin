@@ -18,7 +18,8 @@ import {
   sceneCoordsToViewportCoords,
   fileid,
 } from "../../constants/constants";
-import ExcalidrawView, { TextMode } from "../../view/ExcalidrawView";
+import ExcalidrawView from "../../view/ExcalidrawView";
+import { TextMode } from "../../shared/TextMode";
 import {
   REGEX_LINK,
 } from "../../shared/ExcalidrawData";

@@ -20,7 +20,8 @@ import {
   loadSceneFonts,
 } from "../constants/constants";
 import ExcalidrawPlugin from "../core/main";
-import ExcalidrawView, { TextMode } from "../view/ExcalidrawView";
+import { TextMode } from "./TextMode";
+import type ExcalidrawView from "../view/ExcalidrawView";
 import {
   addAppendUpdateCustomData,
   compress,
