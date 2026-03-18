@@ -19,25 +19,21 @@ import { t } from "../lang/helpers";
 import { tex2dataURL } from "./LaTeX";
 import ExcalidrawPlugin from "../core/main";
 import { blobToBase64, getDataURLFromURL, getMimeType, getPDFDoc, getURLImageExtension, readLocalFileBinary } from "../utils/fileUtils";
+import { errorlog, getDataURL } from "../utils/coreUtils";
+import { getExportTheme, getLinkParts, hasExportTheme, LinkParts } from "../utils/sceneDataUtils";
 import {
-  errorlog,
-  getDataURL,
-  getExportTheme,
+  cropCanvas,
+  getEmbeddedFilenameParts,
+  getExportPadding,
   getFontDataURL,
   getImageSize,
-  getLinkParts,
-  getExportPadding,
   getWithBackground,
   hasExportBackground,
-  hasExportTheme,
-  LinkParts,
-  svgToBase64,
   isMaskFile,
-  getEmbeddedFilenameParts,
-  cropCanvas,
   promiseTry,
   PromisePool,
-} from "../utils/utils";
+  svgToBase64,
+} from "../utils/embeddedAssetUtils";
 import { getMermaidImageElements, getMermaidText, shouldRenderMermaid } from "../utils/mermaidUtils";
 import { mermaidToExcalidraw } from "src/constants/constants";
 import { ImageKey, imageCache } from "./ImageCache";

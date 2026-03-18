@@ -6,7 +6,9 @@ import {
   TFolder,
 } from "obsidian";
 import { Random } from "roughjs/bin/math";
-import { BinaryFileData, DataURL} from "@zsviczian/excalidraw/types/excalidraw/types";
+import { BinaryFileData } from "@zsviczian/excalidraw/types/excalidraw/types";
+export { errorlog, getDataURL } from "./coreUtils";
+import { errorlog, getDataURL } from "./coreUtils";
 import {
   exportToSvg,
   exportToBlob,
@@ -24,7 +26,10 @@ import { getDataURLFromURL, getIMGFilename, getMimeType, getURLImageExtension } 
 import { generateEmbeddableLink } from "./customEmbeddableUtils";
 import { FILENAMEPARTS } from "../types/utilTypes";
 import { Mutable } from "@zsviczian/excalidraw/types/common/src/utility-types";
-import { cleanBlockRef, cleanSectionHeading, getExcalidrawViews, getFileCSSClasses } from "./obsidianUtils";
+import { getExcalidrawViews, getFileCSSClasses } from "./obsidianUtils";
+import { cleanBlockRef, cleanSectionHeading } from "./pathUtils";
+export { addAppendUpdateCustomData } from "./elementCustomDataUtils";
+import { addAppendUpdateCustomData } from "./elementCustomDataUtils";
 import { updateElementLinksToObsidianLinks } from "./excalidrawAutomateUtils";
 import { CropImage } from "../shared/CropImage";
 import opentype from 'opentype.js';
@@ -237,21 +242,6 @@ export function rotatedDimensions (
 ): [number, number, number, number] {
   const bb = getCommonBoundingBox([element]);
   return [bb.minX, bb.minY, bb.maxX - bb.minX, bb.maxY - bb.minY];
-};
-
-export async function getDataURL(
-  file: ArrayBuffer,
-  mimeType: string,
-): Promise<DataURL> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataURL = reader.result as DataURL;
-      resolve(dataURL);
-    };
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(new Blob([new Uint8Array(file)], { type: mimeType }));
-  });
 };
 
 export async function getFontDataURL (
@@ -494,22 +484,6 @@ export async function getImageSize (
     img.onerror = reject;
     img.src = src;
   });
-};
-
-export function addAppendUpdateCustomData (
-  el: Mutable<ExcalidrawElement>,
-  newData: Partial<Record<string, unknown>>
-): ExcalidrawElement {
-  if(!newData) return el;
-  if(!el.customData) el.customData = {};
-  for (const key in newData) {
-    if(typeof newData[key] === "undefined") {
-      delete el.customData[key];
-      continue;
-    }
-    el.customData[key] = newData[key];
-  }
-  return el;
 };
 
 export function scaleLoadedImage (
@@ -970,10 +944,6 @@ export function isImagePartRef (parts: FILENAMEPARTS): boolean {
 export function fragWithHTML (html: string) {
   return createFragment((frag) => (frag.createDiv().innerHTML = html));
 }
-
-export function errorlog (data: {}) {
-  console.error({ plugin: "Excalidraw", ...data });
-};
 
 export async function sleep (ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

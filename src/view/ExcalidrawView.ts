@@ -116,7 +116,8 @@ import {
   calculateUIModeValue,
   getExportInternalLinks,
 } from "../utils/utils";
-import { cleanBlockRef, cleanSectionHeading, closeLeafView, getAttachmentsFolderAndFilePath, getExcalidraAndMarkdowViewsForFile, getLeaf, getParentOfClass, obsidianPDFQuoteWithRef, openLeaf, setExcalidrawView } from "../utils/obsidianUtils";
+import { closeLeafView, getExcalidraAndMarkdowViewsForFile, getLeaf, getParentOfClass, obsidianPDFQuoteWithRef, openLeaf, setExcalidrawView } from "../utils/obsidianUtils";
+import { cleanBlockRef, cleanSectionHeading, getAttachmentsFolderAndFilePath } from "../utils/pathUtils";
 import { splitFolderAndFilename } from "../utils/fileUtils";
 import { GenericInputPrompt, LaTexPrompt, MultiOptionConfirmationPrompt, NewFileActions, Prompt, linkPrompt } from "../shared/Dialogs/Prompt";
 import { ClipboardData, ParsedDataTransferFile } from "@zsviczian/excalidraw/types/excalidraw/clipboard";

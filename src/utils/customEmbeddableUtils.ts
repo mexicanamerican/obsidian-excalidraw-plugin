@@ -2,9 +2,8 @@ import { NonDeletedExcalidrawElement } from "@zsviczian/excalidraw/types/element
 import { AUDIO_TYPES, DEVICE, REG_LINKINDEX_INVALIDCHARS, VIDEO_TYPES } from "src/constants/constants";
 import { ConstructableWorkspaceSplit, getContainerForDocument, getParentOfClass } from "./obsidianUtils";
 import { App, TFile, WorkspaceLeaf, WorkspaceSplit } from "obsidian";
-import { getLinkParts } from "./utils";
+import { getLinkParts } from "./sceneDataUtils";
 import ExcalidrawView from "src/view/ExcalidrawView";
-import { ObsidianCanvasNode } from "src/view/managers/CanvasNodeFactory";
 
 export const createLeaf = (view: ExcalidrawView): {leaf: WorkspaceLeaf, rootSplit: WorkspaceSplit} => {
   const doc = view.ownerDocument;

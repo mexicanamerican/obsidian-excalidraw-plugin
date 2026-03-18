@@ -22,11 +22,10 @@ import {
 import ExcalidrawPlugin from "../core/main";
 import { TextMode } from "./TextMode";
 import type ExcalidrawView from "../view/ExcalidrawView";
+import { addAppendUpdateCustomData } from "../utils/elementCustomDataUtils";
 import {
-  addAppendUpdateCustomData,
   compress,
   decompress,
-  //getBakPath,
   getBinaryFileFromDataURL,
   _getContainerElement,
   getExportTheme,
@@ -38,8 +37,9 @@ import {
   wrapTextAtCharLength,
   arrayToMap,
   compressAsync,
-} from "../utils/utils";
-import { cleanBlockRef, cleanSectionHeading, getAttachmentsFolderAndFilePath, isObsidianThemeDark } from "../utils/obsidianUtils";
+} from "../utils/sceneDataUtils";
+import { isObsidianThemeDark } from "../utils/obsidianUtils";
+import { cleanBlockRef, cleanSectionHeading } from "../utils/pathUtils";
 import {
   ExcalidrawElement,
   ExcalidrawImageElement,

@@ -52,7 +52,8 @@ import {
   decompress,
   getImageSize,
 } from "../../utils/utils";
-import { extractSVGPNGFileName, getActivePDFPageNumberFromPDFView, getAttachmentsFolderAndFilePath, isObsidianThemeDark, mergeMarkdownFiles, setExcalidrawView } from "../../utils/obsidianUtils";
+import { extractSVGPNGFileName, getActivePDFPageNumberFromPDFView, isObsidianThemeDark, mergeMarkdownFiles, setExcalidrawView } from "../../utils/obsidianUtils";
+import { getAttachmentsFolderAndFilePath } from "../../utils/pathUtils";
 import { ExcalidrawElement, ExcalidrawEmbeddableElement, ExcalidrawImageElement, ExcalidrawTextElement, FileId } from "@zsviczian/excalidraw/types/element/src/types";
 import { ReleaseNotes } from "../../shared/Dialogs/ReleaseNotes";
 import { ScriptInstallPrompt } from "../../shared/Dialogs/ScriptInstallPrompt";

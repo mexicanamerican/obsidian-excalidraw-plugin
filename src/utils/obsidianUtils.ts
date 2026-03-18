@@ -6,12 +6,11 @@ import {
   OpenViewState, parseFrontMatterEntry, TextFileView, TFile, View, ViewState, Workspace, WorkspaceLeaf, WorkspaceSplit
 } from "obsidian";
 import ExcalidrawPlugin from "../core/main";
-import { splitFolderAndFilename } from "./fileUtils";
 import { linkClickModifierType, ModifierKeys } from "./modifierkeyHelper";
-import { DEVICE, EXCALIDRAW_PLUGIN, REG_BLOCK_REF_CLEAN, REG_SECTION_REF_CLEAN, VIEW_TYPE_EXCALIDRAW } from "src/constants/constants";
+import { DEVICE, EXCALIDRAW_PLUGIN, VIEW_TYPE_EXCALIDRAW } from "src/constants/constants";
 import yaml from "js-yaml";
 import { debug, DEBUGGING } from "./debugHelper";
-import ExcalidrawView from "src/view/ExcalidrawView";
+import type ExcalidrawView from "src/view/ExcalidrawView";
 
 export const getParentOfClass = (element: Element, cssClass: string):HTMLElement | null => {
   let parent = element.parentElement;
@@ -26,13 +25,13 @@ export const getParentOfClass = (element: Element, cssClass: string):HTMLElement
 };
 
 export function getExcalidrawViews(app: App): ExcalidrawView[] {
-  const leaves = app.workspace.getLeavesOfType(VIEW_TYPE_EXCALIDRAW).filter(l=>l.view instanceof ExcalidrawView);
+  const leaves = app.workspace.getLeavesOfType(VIEW_TYPE_EXCALIDRAW).filter(l => l.view.getViewType?.() === VIEW_TYPE_EXCALIDRAW);
   return leaves.map(l=>l.view as ExcalidrawView);
 }
 
 export function getExcalidraAndMarkdowViewsForFile(app: App, file: TFile): TextFileView[] {
   const leaves = [
-    ...app.workspace.getLeavesOfType(VIEW_TYPE_EXCALIDRAW).filter(l=>l.view instanceof ExcalidrawView),
+    ...app.workspace.getLeavesOfType(VIEW_TYPE_EXCALIDRAW).filter(l => l.view.getViewType?.() === VIEW_TYPE_EXCALIDRAW),
     ...app.workspace.getLeavesOfType("markdown").filter(l=>l.view instanceof MarkdownView)
   ];
   return leaves.map(l=>l.view as TextFileView).filter(v=>v.file === file);
@@ -177,21 +176,6 @@ export const getNewOrAdjacentLeaf = (
   return plugin.app.workspace.createLeafBySplit(leaf);
 };
 
-export const getAttachmentsFolderAndFilePath = async (
-  app: App,
-  activeViewFilePath: string,
-  newFileName: string
-): Promise<{ folder: string; filepath: string; }> => {
-  const { basename, extension } = splitFolderAndFilename(newFileName);
-  const activeViewFile = app.vault.getFileByPath(activeViewFilePath);
-  const attachmentFilePath = await app.vault.getAvailablePathForAttachments(basename, extension, activeViewFile);
-  const { folderpath } = splitFolderAndFilename(attachmentFilePath);
-  return {
-    folder: folderpath,
-    filepath: attachmentFilePath
-  };
-};
-
 export const isObsidianThemeDark = () => document.body.classList.contains("theme-dark");
 
 export type ConstructableWorkspaceSplit = new (ws: Workspace, dir: "horizontal"|"vertical") => WorkspaceSplit;
@@ -204,16 +188,6 @@ export const getContainerForDocument = (doc:Document) => {
   }
   return EXCALIDRAW_PLUGIN.app.workspace.rootSplit;
 };
-
-export const cleanSectionHeading = (heading:string) => {
-  if(!heading) return heading;
-  return heading.replace(REG_SECTION_REF_CLEAN, "").replace(/\s+/g, " ").trim();
-}
-
-export const cleanBlockRef = (blockRef:string) => {
-  if(!blockRef) return blockRef;
-  return blockRef.replace(REG_BLOCK_REF_CLEAN, "").replace(/\s+/g, " ").trim();
-}
 
 //needed for backward compatibility
 export const legacyCleanBlockRef = (blockRef:string) => {

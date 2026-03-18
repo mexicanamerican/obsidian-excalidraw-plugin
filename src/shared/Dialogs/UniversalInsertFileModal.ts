@@ -9,7 +9,7 @@ import { getEA } from "src/core";
 import { InsertPDFModal } from "./InsertPDFModal";
 import {  ExcalidrawImperativeAPI } from "@zsviczian/excalidraw/types/excalidraw/types";
 import { ExcalidrawAutomate } from "src/shared/ExcalidrawAutomate";
-import { cleanSectionHeading } from "src/utils/obsidianUtils";
+import { cleanSectionHeading } from "src/utils/pathUtils";
 import { t } from "src/lang/helpers";
 
 export class UniversalInsertFileModal extends Modal {

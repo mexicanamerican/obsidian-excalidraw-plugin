@@ -49,7 +49,8 @@ import {
   getSVG,
 } from "src/utils/utils";
 import { InlineLinkSuggester } from "./Suggesters/InlineLinkSuggester";
-import { getAttachmentsFolderAndFilePath, getExcalidrawViews, getLeaf, getNewOrAdjacentLeaf, isObsidianThemeDark, mergeMarkdownFiles, openLeaf } from "src/utils/obsidianUtils";
+import { getExcalidrawViews, getLeaf, getNewOrAdjacentLeaf, isObsidianThemeDark, mergeMarkdownFiles, openLeaf } from "src/utils/obsidianUtils";
+import { getAttachmentsFolderAndFilePath } from "src/utils/pathUtils";
 import { AppState, BinaryFileData,  DataURL,  ExcalidrawImperativeAPI, SceneData } from "@zsviczian/excalidraw/types/excalidraw/types";
 import { EmbeddedFile, EmbeddedFilesLoader } from "./EmbeddedFileLoader";
 import { tex2dataURL } from "./LaTeX";
