@@ -23,6 +23,9 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 - Duplicate selected image with a different image ID command palette action did not duplicate cropped PDF images.
 - Memory leak issue with PDF import as images.
 
+## New
+- Put caret at pointer position when clicking on selected text element [#10970](https://github.com/excalidraw/excalidraw/pull/10970)
+
 `,
 "2.21.0":`
 ## New
