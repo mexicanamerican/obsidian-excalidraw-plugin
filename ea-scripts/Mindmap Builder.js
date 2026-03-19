@@ -4928,7 +4928,7 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
   let curMaxW = depth === 0 ? Math.max(400, effectiveMaxWrap) : effectiveMaxWrap;
   
   // --- ADDED AWAIT EA.PARSETEXT AND AWAIT GETADJUSTEDMAXWIDTH ---
-  const renderedText = (await ea.parseText(text)) ?? text;
+  const renderedText = text; //(await ea.parseText(text)) ?? text;
   const metrics = ea.measureText(renderedText);
   const shouldWrap = metrics.width > curMaxW;
   let curMaxH = metrics.height;

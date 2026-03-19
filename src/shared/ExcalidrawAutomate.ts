@@ -89,7 +89,7 @@ import { log } from "../utils/debugHelper";
 import { ExcalidrawLib } from "../types/excalidrawLib";
 import { GlobalPoint } from "@zsviczian/excalidraw/types/math/src/types";
 import { AddImageOptions, ImageInfo, KeyBlocker, ScriptSettingValue, SVGColorInfo } from "src/types/excalidrawAutomateTypes";
-import { _measureText, cloneElement, createPNG, createSVG, ensureActiveScriptSettingsObject, errorMessage, filterColorMap, getEmbeddedFileForImageElment, getLineBox, getTemplate, isColorStringTransparent, isSVGColorInfo, mergeColorMapIntoSVGColorInfo, normalizeBindMode, normalizeFixedPoint, normalizeLinePoints, repositionElementsToCursor, svgColorInfoToColorMap, updateOrAddSVGColorInfo, verifyMinimumPluginVersion } from "src/utils/excalidrawAutomateUtils";
+import { _measureText, cloneElement, createPNG, createSVG, ensureActiveScriptSettingsObject, errorMessage, filterColorMap, getEmbeddedFileForImageElment, getLineBox, getTemplate, isColorStringTransparent, isImageOrPDFTransclusion, isSVGColorInfo, mergeColorMapIntoSVGColorInfo, normalizeBindMode, normalizeFixedPoint, normalizeLinePoints, repositionElementsToCursor, svgColorInfoToColorMap, updateOrAddSVGColorInfo, verifyMinimumPluginVersion } from "src/utils/excalidrawAutomateUtils";
 import { getLastActiveExcalidrawView } from "src/utils/excalidrawViewLookup";
 import { exportToPDF, getMarginValue, getPageDimensions } from "src/utils/exportUtils";
 import { PageDimensions, PageOrientation, PageSize, PDFExportScale, PDFPageProperties, ExportSettings} from "src/types/exportUtilTypes";
@@ -715,6 +715,7 @@ export class ExcalidrawAutomate {
     if(!text) return;
     if (!this.targetView || !this.targetView?._loaded) return;
     if (!this.targetView.excalidrawData) return;
+    if (isImageOrPDFTransclusion(this, text)) return text;
     return await this.targetView.excalidrawData.parseText(text);
   }
 

@@ -14,6 +14,7 @@ import type ExcalidrawView from "src/view/ExcalidrawView";
 import {
   GITHUB_RELEASES,
   getCommonBoundingBox,
+  IMAGE_TYPES,
   restoreElements,
   REG_LINKINDEX_INVALIDCHARS,
   THEME_FILTER,
@@ -151,6 +152,49 @@ export function errorMessage(message: string, source: string):void {
         message: message??"unknown error",
       });
   }
+}
+
+export function isImageOrPDFTransclusion(
+  ea: ExcalidrawAutomate,
+  text: string,
+): boolean {
+  const trimmed = text?.trim();
+  if (!trimmed?.startsWith("![[") || !trimmed.endsWith("]]")) {
+    return false;
+  }
+
+  const content = trimmed.slice(3, -2).trim();
+  if (!content) {
+    return false;
+  }
+
+  const path = content.split("|")[0]?.trim();
+  if (!path) {
+    return false;
+  }
+
+  if (/^[^#]*#page=\d*(&\w*=[^&]+){0,}&rect=\d*,\d*,\d*,\d*/.test(path)) {
+    return true;
+  }
+
+  const [linkPath, subpath] = path.split("#");
+  const extension = linkPath.substring(linkPath.lastIndexOf(".") + 1).toLowerCase();
+  if (IMAGE_TYPES.includes(extension) || extension === "pdf") {
+    return true;
+  }
+
+  const sourcePath = ea.targetView?.file?.path;
+  const file = sourcePath
+    ? ea.plugin.app.metadataCache.getFirstLinkpathDest(linkPath, sourcePath)
+    : null;
+
+  if (!file) {
+    return false;
+  }
+
+  return IMAGE_TYPES.includes(file.extension.toLowerCase())
+    || file.extension.toLowerCase() === "pdf"
+    || (ea.isExcalidrawFile(file) && !!subpath);
 }
 
 export function isColorStringTransparent(color: string): boolean {

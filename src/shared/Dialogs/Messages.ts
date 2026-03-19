@@ -17,6 +17,12 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 
 <div class="ex-coffee-div"><a href="https://ko-fi.com/zsolt"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com"  height=45></a></div>
 `,
+"2.21.2":`
+## Fixed
+- The new ExcalidrawAutomate function \`parseText()\` broke if the text was a transcluded image or PDF document, causing downstream paste issues in MindMap Builder.
+- Fix custom pen sloppiness not being saved to a template drawing [#2715](https://github.com/zsviczian/obsidian-excalidraw-plugin/pull/2715) 🙏[@sreedharsreeram](https://github.com/sreedharsreeram)
+
+`,
 "2.21.1":`
 ## Fixed
 - Drawing and editor fails to initialize in a new window [#2713](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2713)
