@@ -12,7 +12,7 @@ Content structure:
 2. The curated script overview (index-new.md)
 3. Raw source of every *.md script in /ea-scripts (each fenced code block is auto-closed to ensure well-formed aggregation)
 
-Generated on: 2026-03-19T12:13:56.808Z
+Generated on: 2026-03-19T19:47:47.224Z
 
 ---
 
@@ -16953,10 +16953,11 @@ const commitEdit = async () => {
           autoResize: boxChildren ? false : !shouldWrap
       });
 
-      containerToUpdate = boxChildren ? ea.getElement(newNodeId) : null;
+      const newElement = ea.getElement(newNodeId);
+      containerToUpdate = boxChildren ? newElement : null;
 
       // Explicitly overwrite raw, original and text properties to handle links correctly
-      newTextElement = boxChildren ? ea.getElement(containerToUpdate.boundElements[0].id) : containerToUpdate;
+      newTextElement = boxChildren ? ea.getElement(containerToUpdate.boundElements[0].id) : newElement;
       newTextElement.rawText = textInput;
       newTextElement.originalText = renderedText;
       newTextElement.text = finalWrappedText;

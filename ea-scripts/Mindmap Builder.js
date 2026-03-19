@@ -8236,10 +8236,11 @@ const commitEdit = async () => {
           autoResize: boxChildren ? false : !shouldWrap
       });
 
-      containerToUpdate = boxChildren ? ea.getElement(newNodeId) : null;
+      const newElement = ea.getElement(newNodeId);
+      containerToUpdate = boxChildren ? newElement : null;
 
       // Explicitly overwrite raw, original and text properties to handle links correctly
-      newTextElement = boxChildren ? ea.getElement(containerToUpdate.boundElements[0].id) : containerToUpdate;
+      newTextElement = boxChildren ? ea.getElement(containerToUpdate.boundElements[0].id) : newElement;
       newTextElement.rawText = textInput;
       newTextElement.originalText = renderedText;
       newTextElement.text = finalWrappedText;
