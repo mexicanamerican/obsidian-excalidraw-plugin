@@ -1780,8 +1780,8 @@ export declare const STANDARD_PAGE_SIZES: {
         readonly height: 1632;
     };
     readonly Ledger: {
-        readonly width: 1632;
-        readonly height: 1056;
+        readonly width: 1056;
+        readonly height: 1632;
     };
     readonly "HD Screen": {
         readonly width: 1920;
@@ -3255,6 +3255,7 @@ declare class App extends React.Component<AppProps, AppState> {
     hitLinkElement?: NonDeletedExcalidrawElement;
     lastPointerDownEvent: React.PointerEvent<HTMLElement> | null;
     lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null;
+    lastPointerUpIsDoubleClick: boolean;
     lastPointerMoveEvent: PointerEvent | null;
     /** current frame pointer cords */
     lastPointerMoveCoords: {
@@ -3425,6 +3426,7 @@ declare class App extends React.Component<AppProps, AppState> {
     private handleIframeLikeElementHover;
     /** @returns true if iframe-like element click handled */
     private handleIframeLikeCenterClick;
+    private isDoubleClick;
     private isIframeLikeElementCenter;
     private updateEmbedValidationStatus;
     private updateEmbeddables;
@@ -3637,6 +3639,8 @@ declare class App extends React.Component<AppProps, AppState> {
     private onGestureEnd;
     private handleTextWysiwyg;
     private deselectElements;
+    private getSelectedTextElement;
+    private getSelectedTextEditingContainerAtPosition;
     private getTextElementAtPosition;
     private getElementAtPosition;
     private getElementsAtPosition;

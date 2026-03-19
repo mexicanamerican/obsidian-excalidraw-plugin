@@ -12,7 +12,7 @@ Content structure:
 2. The curated script overview (index-new.md)
 3. Raw source of every *.md script in /ea-scripts (each fenced code block is auto-closed to ensure well-formed aggregation)
 
-Generated on: 2026-03-16T18:46:00.868Z
+Generated on: 2026-03-19T12:13:56.808Z
 
 ---
 
@@ -9946,8 +9946,22 @@ const IMAGE_TYPES = ["jpeg", "jpg", "png", "gif", "svg", "webp", "bmp", "ico", "
 const EMBEDED_OBJECT_WIDTH_ROOT = 400;
 const EMBEDED_OBJECT_WIDTH_CHILD = 180;
 
+//special trim function that returns trimmed text, including trimming a bullet point of the bullet
+const trimText = (text) => {
+  if(!text) return text;
+  return text.match(/^(?:[ \t]*[-\*][ \t])?(?:[ \t]*)(.*?)[ \t]*$/)[1];
+}
+
+const parseText = async (text) => {
+  const trimmed = trimText(text);
+  if (trimmed && (trimmed.startsWith("![[") || trimmed.match(/^[-*][ \t]+!\[\[/)) && trimmed.endsWith("]]")) {
+    return text;
+  }
+  return await ea.parseText(text);
+}
+
 const parseImageInput = (input) => {
-  const trimmed = input.trim();
+  const trimmed = trimText(input);
   if (!trimmed.startsWith("![[") || !trimmed.endsWith("]]")) return null;
 
   const content = trimmed.slice(3, -2);
@@ -9965,7 +9979,7 @@ const parseImageInput = (input) => {
   let imageFile = file = null;
   let isImagePath = false;
 
-  const PDF_RECT_LINK_REGEX = /^[^#]*#page=\d*(&\w*=[^&]+){0,}&rect=\d*,\d*,\d*,\d*/;
+  const PDF_RECT_LINK_REGEX = /^[^#]*#page=\d*/; //(&\w*=[^&]+){0,}&rect=\d*,\d*,\d*,\d*
   if (path.match(PDF_RECT_LINK_REGEX)) {
     isImagePath = true;
   } else {
@@ -13516,7 +13530,7 @@ const getAdjustedMaxWidth = async (text, max) => {
   const fontString = `${ea.style.fontSize.toString()}px ${
     ExcalidrawLib.getFontFamilyString({fontFamily: ea.style.fontFamily})}`;
 
-  const parsedText = (await ea.parseText(text)) ?? text;
+  const parsedText = (await parseText(text)) ?? text;
   
   const wrappedText = ExcalidrawLib.wrapText(parsedText, fontString, max);
   const metrics = ea.measureText(wrappedText);
@@ -13644,17 +13658,22 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
   const effectiveMaxWrap = rootCfgForAdd?.maxWrapWidth ?? maxWidth;
   let curMaxW = depth === 0 ? Math.max(400, effectiveMaxWrap) : effectiveMaxWrap;
   
-  // --- ADDED AWAIT EA.PARSETEXT AND AWAIT GETADJUSTEDMAXWIDTH ---
-  const renderedText = (await ea.parseText(text)) ?? text;
-  const metrics = ea.measureText(renderedText);
-  const shouldWrap = metrics.width > curMaxW;
-  let curMaxH = metrics.height;
+  let renderedText=text;
+  let metrics = { w: 0, h: 0 };
+  let shouldWrap = false;
+  
+  if (!imageInfo?.isImagePath && !imageInfo?.imageFile && !embeddableUrl) {
+    renderedText = (await parseText(text)) ?? text;
+    metrics = ea.measureText(renderedText);
+    shouldWrap = metrics.width > curMaxW;
+    let curMaxH = metrics.height;
 
-  if (shouldWrap) {
-    const res = await getAdjustedMaxWidth(text, curMaxW);
-    curMaxW = res.width;
-    curMaxH = res.height;
-  }
+    if (shouldWrap) {
+      const res = await getAdjustedMaxWidth(text, curMaxW);
+      curMaxW = res.width;
+      curMaxH = res.height;
+    }
+  } 
 
   if (!parent) {
     ea.style.strokeColor = multicolor ? defaultNodeColor : st.currentItemStrokeColor;
@@ -14091,6 +14110,9 @@ const getTextFromNode = (all, node, getRaw = false, shortPath = false) => {
     }
     const file = ea.getViewFileForImageElement(node);
     if (file) {
+      if (file.extension === "pdf" && node.link?.startsWith("[[")) {
+        return `!${node.link.match(/^(.*?)\]\]/)[1]}|${Math.round(node.width)}]]`;
+      }
       return  `![[${file.path}${embeddedFile.filenameparts?.linkpartReference}|${Math.round(node.width)}]]`;
     }
     return "";
@@ -16907,7 +16929,7 @@ const commitEdit = async () => {
       }
       ea.style.roughness = getAppState().currentItemRoughness;
 
-      const renderedText = await ea.parseText(textInput);
+      const renderedText = await parseText(textInput);
       const metrics = ea.measureText(renderedText);
       const shouldWrap = metrics.width > maxWidth;
       
@@ -17078,7 +17100,7 @@ const commitEdit = async () => {
       ea.copyViewElementsToEAforEditing([textEl]);
       const eaEl = ea.getElement(textEl.id);
       
-      const renderedText = await ea.parseText(textInput);
+      const renderedText = await parseText(textInput);
       
       eaEl.rawText = textInput;
       eaEl.originalText = renderedText;
@@ -18725,7 +18747,7 @@ const handleKeydown = (e) => {
   if (!currentWindow) return;
 
   const st = getAppState();
-  if (!st || !!st.editingTextElement || !!st.selectedLinearElement?.isEditing || !!st.showHyperlinkPopup) return;
+  if (!st || !!st.editingTextElement || !!st.selectedLinearElement?.isEditing || (st.showHyperlinkPopup === "editor")) return;
 
   if (linkSuggester?.isBlockingKeys()) {
     if (e.key === "Escape") {

@@ -1983,8 +1983,8 @@ export declare const STANDARD_PAGE_SIZES: {
         readonly height: 1632;
     };
     readonly Ledger: {
-        readonly width: 1632;
-        readonly height: 1056;
+        readonly width: 1056;
+        readonly height: 1632;
     };
     readonly "HD Screen": {
         readonly width: 1920;
@@ -3458,6 +3458,7 @@ declare class App extends React.Component<AppProps, AppState> {
     hitLinkElement?: NonDeletedExcalidrawElement;
     lastPointerDownEvent: React.PointerEvent<HTMLElement> | null;
     lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null;
+    lastPointerUpIsDoubleClick: boolean;
     lastPointerMoveEvent: PointerEvent | null;
     /** current frame pointer cords */
     lastPointerMoveCoords: {
@@ -3628,6 +3629,7 @@ declare class App extends React.Component<AppProps, AppState> {
     private handleIframeLikeElementHover;
     /** @returns true if iframe-like element click handled */
     private handleIframeLikeCenterClick;
+    private isDoubleClick;
     private isIframeLikeElementCenter;
     private updateEmbedValidationStatus;
     private updateEmbeddables;
@@ -3840,6 +3842,8 @@ declare class App extends React.Component<AppProps, AppState> {
     private onGestureEnd;
     private handleTextWysiwyg;
     private deselectElements;
+    private getSelectedTextElement;
+    private getSelectedTextEditingContainerAtPosition;
     private getTextElementAtPosition;
     private getElementAtPosition;
     private getElementsAtPosition;
@@ -4326,17 +4330,17 @@ export class AbstractTextComponent<T extends HTMLInputElement | HTMLTextAreaElem
     setValue(value: string): this;
     /**
      * @public
-     * 0.9.7
+     * @since 0.9.7
      */
     setPlaceholder(placeholder: string): this;
     /**
      * @public
-     * 0.9.21
+     * @since 0.9.21
      */
     onChanged(): void;
     /**
      * @public
-     * 0.9.7
+     * @since 0.9.7
      */
     onChange(callback: (value: string) => any): this;
 }
@@ -4408,6 +4412,11 @@ export class App {
      * @since 1.10.0
      */
     renderContext: RenderContext;
+    /**
+     * @public
+     * @since 1.11.4
+     */
+    secretStorage: SecretStorage;
 
     /**
      * @public
@@ -4466,25 +4475,167 @@ export abstract class BaseComponent {
 }
 
 /**
+ * BasesOptions and the associated sub-types are configuration-driven settings controls
+ * which can be provided by a {@link BasesViewRegistration} to expose configuration options
+ * to users in the view config menu of the Bases toolbar.
  * @public
  * @since 1.10.0
  */
-export interface BaseOption {
+export type BasesAllOptions = BasesOptions | BasesOptionGroup<BasesOptions>;
+
+/**
+ * Represents the serialized format of a Bases query as stored in a `.base` file.
+ *
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesConfigFile {
     /**
      * @public
      * @since 1.10.0
      */
-    key: string;
+    filters?: BasesConfigFileFilter;
+
     /**
+     * Configuration for properties in this Base.
+     *
+     * Valid keys for this object currently include:
+     *
+     *   - displayName: string
+     *
+     * @public
+     * @since 1.10.0
+     */
+    properties?: Record<string, Record<string, any>>;
+    /**
+     * Configuration for formulas used in this Base.
+     *
+     * Key: Formula property name.
+     * Value: Formula string.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    formulas?: Record<string, string>;
+    /**
+     * Configuration for summary formulas used in this Base.
+     *
+     * Key: Summary formula name.
+     * Value: Formula string.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    summaries?: Record<string, string>;
+    /**
+     * Configuration for views used in this Base.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    views?: BasesConfigFileView[];
+
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export type BasesConfigFileFilter = string | {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    and: BasesConfigFileFilter[];
+} | {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    or: BasesConfigFileFilter[];
+} | {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    not: BasesConfigFileFilter[];
+};
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesConfigFileView {
+    /**
+     * Unique identifier for the view type. Used to select the correct view renderer.
+     *
      * @public
      * @since 1.10.0
      */
     type: string;
     /**
+     * Friendly name for this view, displayed in the UI to select between views.
+     *
      * @public
      * @since 1.10.0
      */
-    displayName: string;
+    name: string;
+    /**
+     * Additional filters, applied only to this view.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    filters?: BasesConfigFileFilter;
+    /**
+     * Configuration for grouping the results of this view.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    groupBy?: {
+
+    };
+    /**
+     * An ordered list of the properties to display in this view.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    order?: string[];
+    /**
+     * Configuration of summaries to display for each property in this view.
+     *
+     * Key: Property name.
+     * Value: Summary formula name.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    summaries?: Record<string, string>;
+
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesDropdownOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'dropdown';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    options: Record<string, string>;
 }
 
 /**
@@ -4502,7 +4653,7 @@ export class BasesEntry implements FormulaContext {
 
     /**
      * Get the value of the property.
-     * @throws Error if the property is a formula and cannot be evaluated.
+     * Note: Errors are returned as {@link ErrorValue}
      * @public
      * @since 1.10.0
      */
@@ -4539,6 +4690,169 @@ export class BasesEntryGroup {
 }
 
 /**
+ * A text input allowing selection of a file from in the vault.
+ * @public
+ * @since 1.10.2
+ */
+export interface BasesFileOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    type: 'file';
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    placeholder?: string;
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    filter?: (file: TFile) => boolean;
+}
+
+/**
+ * A text input allowing selection of a folder from in the vault.
+ * @public
+ * @since 1.10.2
+ */
+export interface BasesFolderOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    type: 'folder';
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    placeholder?: string;
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    filter?: (folder: TFolder) => boolean;
+}
+
+/**
+ * A text input supporting formula evaluation.
+ * @public
+ * @since 1.10.2
+ */
+export interface BasesFormulaOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    type: 'formula';
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.2
+     */
+    placeholder?: string;
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesMultitextOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'multitext';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: string[];
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    key: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    displayName: string;
+    /**
+     * If provided, the option will be hidden if the function returns true.
+     *
+     * @public
+     * @since 1.10.2
+     * @param config - Read-only copy of the current view configuration.
+     */
+    shouldHide?: () => boolean;
+}
+
+/**
+ * Collapsible container for other ViewOptions.
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesOptionGroup<T extends BasesOption> {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'group';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    displayName: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    items: T[];
+    /**
+     * If provided, the group will be hidden if the function returns true.
+     *
+     * @public
+     * @since 1.10.2
+     * @param config - Read-only copy of the current view configuration.
+     */
+    shouldHide?: () => boolean;
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export type BasesOptions = BasesDropdownOption | BasesFileOption | BasesFolderOption | BasesFormulaOption | BasesMultitextOption | BasesPropertyOption | BasesSliderOption | BasesTextOption | BasesToggleOption;
+
+/**
  * A parsed version of the {@link BasesPropertyId}.
  *
  * @public
@@ -4567,6 +4881,36 @@ export interface BasesProperty {
 export type BasesPropertyId = `${BasesPropertyType}.${string}`;
 
 /**
+ * A dropdown menu allowing selection of a property.
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesPropertyOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'property';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    placeholder?: string;
+    /**
+     * If provided, only properties which pass the filter will be included for selection in the property dropdown.
+     *
+     * @public
+     * @since 1.10.0
+     */
+    filter?: (prop: BasesPropertyId) => boolean;
+}
+
+/**
  * The three valid "sources" of a property in a Base.
  *
  * - `note`: Properties from the frontmatter of markdown files in the vault.
@@ -4589,7 +4933,7 @@ export type BasesPropertyType = 'note' | 'formula' | 'file';
 export class BasesQueryResult {
 
     /**
-     * A ungrouped version of the data, with user-configured sort and limit applied.
+     * An ungrouped version of the data, with user-configured sort and limit applied.
      * Where appropriate, views should support groupBy by using `groupedData` instead of this value.
      *
      * @public
@@ -4623,6 +4967,43 @@ export class BasesQueryResult {
  * @public
  * @since 1.10.0
  */
+export interface BasesSliderOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'slider';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: number;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    min?: number;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    max?: number;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    step?: number;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    instant?: boolean;
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
 export type BasesSortConfig = {
     /**
      * @public
@@ -4635,6 +5016,45 @@ export type BasesSortConfig = {
      */
     direction: 'ASC' | 'DESC';
 };
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesTextOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'text';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: string;
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    placeholder?: string;
+}
+
+/**
+ * @public
+ * @since 1.10.0
+ */
+export interface BasesToggleOption extends BasesOption {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    type: 'toggle';
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    default?: boolean;
+}
 
 /**
  * Plugins can create a class which extends this in order to render a Base.
@@ -4690,6 +5110,13 @@ export abstract class BasesView extends Component {
      */
     abstract onDataUpdated(): void;
 
+    /**
+     * Display the new note menu for a file with the provided filename and optionally a function to modify the frontmatter.
+     * @public
+     * @since 1.10.2
+     */
+    createFileForView(baseFileName?: string, frontmatterProcessor?: (frontmatter: any) => void): Promise<void>;
+
 }
 
 /**
@@ -4720,6 +5147,17 @@ export class BasesViewConfig {
      * @since 1.10.0
      */
     getAsPropertyId(key: string): BasesPropertyId | null;
+    /**
+     * Retrieve a user-configured value from the config, evaluating it as a
+     * formula in the context of the current Base. For embedded bases, or bases
+     * in the sidebar, this means evaluating the formula against the currently
+     * active file.
+     *
+     * @public
+     * @returns the Value result from evaluating the formula, or NullValue if the formula is invalid, or the key is not present.
+     * @since 1.10.2
+     */
+    getEvaluatedFormula(view: BasesView, key: string): Value;
     /**
      * Store configuration data for the view. Views should prefer `BasesViewRegistration.options`
      * to allow users to configure options where appropriate.
@@ -4797,7 +5235,7 @@ export interface BasesViewRegistration {
      * @public
      * @since 1.10.0
      */
-    options?: () => ViewOption[];
+    options?: (config: BasesViewConfig) => BasesAllOptions[];
 }
 
 /**
@@ -5044,6 +5482,11 @@ export class CapacitorAdapter implements DataAdapter {
     append(normalizedPath: string, data: string, options?: DataWriteOptions): Promise<void>;
     /**
      * @public
+     * @since 1.12.3
+     */
+    appendBinary(normalizedPath: string, data: ArrayBuffer, options?: DataWriteOptions): Promise<void>;
+    /**
+     * @public
      * @since 1.7.2
      */
     process(normalizedPath: string, fn: (data: string) => string, options?: DataWriteOptions): Promise<string>;
@@ -5093,6 +5536,55 @@ export class CapacitorAdapter implements DataAdapter {
     getFullPath(normalizedPath: string): string;
 
 }
+
+/**
+ * @public
+ * @since 1.12.2
+ */
+export interface CliData {
+    /**
+     * @public
+     * @since 1.12.2
+     */
+    [key: string]: string | 'true';
+}
+
+/**
+ * @public
+ * @since 1.12.2
+ */
+export interface CliFlag {
+    /**
+     * Value placeholder (e.g., '<filename>', '<path>'). Omit for boolean flags.
+     * @public
+     * @since 1.12.2
+     */
+    value?: string;
+    /**
+     * Description shown in help and autocomplete
+     * @public
+     * @since 1.12.2
+     */
+    description: string;
+    /**
+     * Whether this flag is required (default: false)
+     * @public
+     * @since 1.12.2
+     */
+    required?: boolean;
+}
+
+/**
+ * @public
+ * @since 1.12.2
+ */
+export type CliFlags = Record<string, CliFlag>;
+
+/**
+ * @public
+ * @since 1.12.2
+ */
+export type CliHandler = (params: CliData) => string | Promise<string>;
 
 /**
  * A closeable component that can get dismissed via the Android 'back' button.
@@ -5349,19 +5841,19 @@ export class Component {
      */
     registerEvent(eventRef: EventRef): void;
     /**
-     * Registers an DOM event to be detached when unloading
+     * Registers a DOM event to be detached when unloading
      * @public
      * @since 0.14.8
      */
     registerDomEvent<K extends keyof WindowEventMap>(el: Window, type: K, callback: (this: HTMLElement, ev: WindowEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
     /**
-     * Registers an DOM event to be detached when unloading
+     * Registers a DOM event to be detached when unloading
      * @public
      * @since 0.14.8
      */
     registerDomEvent<K extends keyof DocumentEventMap>(el: Document, type: K, callback: (this: HTMLElement, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
     /**
-     * Registers an DOM event to be detached when unloading
+     * Registers a DOM event to be detached when unloading
      * @public
      * @since 0.14.8
      */
@@ -5449,6 +5941,15 @@ export interface DataAdapter {
      */
     append(normalizedPath: string, data: string, options?: DataWriteOptions): Promise<void>;
     /**
+     * Add data to the end of a binary file.
+     * @param normalizedPath - path to file, use {@link normalizePath} to normalize beforehand.
+     * @param data - the data to append.
+     * @param options - (Optional)
+     * @public
+     * @since 1.12.3
+     */
+    appendBinary(normalizedPath: string, data: ArrayBuffer, options?: DataWriteOptions): Promise<void>;
+    /**
      * Atomically read, modify, and save the contents of a plaintext file.
      * @param normalizedPath - path to file/folder, use {@link normalizePath} to normalize beforehand.
      * @param fn - a callback function which returns the new content of the file synchronously.
@@ -5458,7 +5959,7 @@ export interface DataAdapter {
      */
     process(normalizedPath: string, fn: (data: string) => string, options?: DataWriteOptions): Promise<string>;
     /**
-     * Returns an URI for the browser engine to use, for example to embed an image.
+     * Returns a URI for the browser engine to use, for example to embed an image.
      * @param normalizedPath - path to file/folder, use {@link normalizePath} to normalize beforehand.
      * @public
      */
@@ -5522,7 +6023,7 @@ export interface DataWriteOptions {
      * Time of creation, represented as a unix timestamp, in milliseconds.
      * Omit this if you want to keep the default behaviour.
      * @public
-     * */
+     */
     ctime?: number;
     /**
      * Time of last modification, represented as a unix timestamp, in milliseconds.
@@ -5588,7 +6089,7 @@ export class DateValue extends NotNullValue {
  *
  * @param cb - The function to call.
  * @param timeout - The timeout to wait, in milliseconds
- * @param resetTimer - Whether to reset the timeout when the debouncer is called again.
+ * @param resetTimer - Whether to reset the timeout when the debounce function is called again.
  * @returns a debounced function that takes the same parameter as the original function.
  * @example
  * ```ts
@@ -5674,28 +6175,6 @@ export class DropdownComponent extends ValueComponent<string> {
      * @since 0.9.7
      */
     onChange(callback: (value: string) => any): this;
-}
-
-/**
- * @public
- * @since 1.10.0
- */
-export interface DropdownOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'dropdown';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: string;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    options: Record<string, string>;
 }
 
 /**
@@ -6002,7 +6481,7 @@ export interface EditorRangeOrCaret {
 /**
  * @public
  * @since 0.15.0
- * */
+ */
 export interface EditorScrollInfo {
     /** @public */
     left: number;
@@ -6260,10 +6739,13 @@ export class FileManager {
     renameFile(file: TAbstractFile, newPath: string): Promise<void>;
 
     /**
+     * Prompt the user to confirm they want to delete the specified file or folder
+     * @param file - the file or folder to delete
+     * @returns A promise that resolves to true if the prompt was confirmed or false if it was canceled
      * @public
      * @since 0.15.0
      */
-    promptForDeletion(file: TAbstractFile): Promise<void>;
+    promptForDeletion(file: TAbstractFile): Promise<boolean>;
 
     /**
      * Remove a file or a folder from the vault according the user's preferred 'trash'
@@ -6395,6 +6877,11 @@ export class FileSystemAdapter implements DataAdapter {
      * @public
      */
     append(normalizedPath: string, data: string, options?: DataWriteOptions): Promise<void>;
+    /**
+     * @public
+     * @since 1.12.3
+     */
+    appendBinary(normalizedPath: string, data: ArrayBuffer, options?: DataWriteOptions): Promise<void>;
     /**
      * @public
      */
@@ -6723,29 +7210,6 @@ export function getLanguage(): string;
 export function getLinkpath(linktext: string): string;
 
 /**
- * Collapsible container for other ViewOptions.
- * @public
- * @since 1.10.0
- */
-export interface GroupOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'group';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    displayName: string;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    items: Exclude<ViewOption, GroupOption>[];
-}
-
-/**
  * @public
  */
 export interface HeadingCache extends CacheItem {
@@ -7020,7 +7484,7 @@ export class Keymap {
      * Returns 'window' if Cmd/Ctrl+Alt+Shift is pressed.
      * @public
      * @since 0.16.0
-     * */
+     */
     static isModEvent(evt?: UserEvent | null): PaneType | boolean;
 }
 
@@ -7115,7 +7579,7 @@ export interface ListItemCache extends CacheItem {
     /**
      * A single character indicating the checked status of a task.
      * The space character `' '` is interpreted as an incomplete task.
-     * An other character is interpreted as completed task.
+     * Any other character is interpreted as completed task.
      * `undefined` if this item isn't a task.
      * @public
      */
@@ -7194,7 +7658,7 @@ export class ListValue extends NotNullValue {
 /**
  * @public
  */
-export const livePreviewState: ViewPlugin<LivePreviewStateType>;
+export const livePreviewState: ViewPlugin<LivePreviewStateType, undefined>;
 
 /**
  * The object stored in the view plugin {@link livePreviewState}
@@ -7623,6 +8087,7 @@ export class Menu extends Component implements CloseableComponent {
      * @since 0.16.0
      */
     setUseNativeMenu(useNativeMenu: boolean): this;
+
     /**
      * Adds a menu item. Only works when menu is not shown yet.
      * @public
@@ -7693,7 +8158,7 @@ export class MenuItem {
     setDisabled(disabled: boolean): this;
     /**
      * @param state - If the warning state is enabled
-     * If set to true the MenuItem's title and icon will become red. Or whatever colour is applied to the class 'is-warning' by a theme.
+     * If set to true the MenuItem's title and icon will become red. Or whatever color is applied to the class 'is-warning' by a theme.
      * @public
      * @since 0.15.0
      */
@@ -7952,23 +8417,6 @@ export class MomentFormatComponent extends TextComponent {
 
 /**
  * @public
- * @since 1.10.0
- */
-export interface MultitextOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'multitext';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: string[];
-}
-
-/**
- * @public
  */
 export function normalizePath(path: string): string;
 
@@ -7994,6 +8442,7 @@ export class Notice {
      * @since 1.8.7
      */
     messageEl: HTMLElement;
+
     /**
      * @param message - The message to be displayed, can either be a simple string or a {@link DocumentFragment}
      * @param duration - Time in milliseconds to show the notice for. If this is 0, the
@@ -8392,6 +8841,20 @@ export abstract class Plugin extends Component {
      */
     registerEditorSuggest(editorSuggest: EditorSuggest<any>): void;
     /**
+     * Register a CLI handler to handle a command from the CLI.
+     * Command IDs must be globally unique. Attempting to register a command that is already registered will throw an Error.
+     *
+     * Use the format `<plugin-id>` for your default command, and `<plugin-id>:<action>` for sub-commands and actions.
+     *
+     * @param command The command ID that will be used. Use alphanumeric characters without spaces.
+     * @param description The description text to provide in the help command, and in auto-completion prompts.
+     * @param flags Command line flags that can be passed in.
+     * @param handler The callback handler to handle a CLI invocation.
+     * @public
+     * @since 1.12.2
+     */
+    registerCliHandler(command: string, description: string, flags: CliFlags | null, handler: CliHandler): void;
+    /**
      * Load settings data from disk.
      * Data is stored in `data.json` in the plugin folder.
      * @see {@link https://docs.obsidian.md/Plugins/User+interface/Settings}
@@ -8630,36 +9093,6 @@ export class ProgressBarComponent extends ValueComponent<number> {
      */
     setValue(value: number): this;
 
-}
-
-/**
- * A dropdown menu allowing selection of a property.
- * @public
- * @since 1.10.0
- */
-export interface PropertyOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'property';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: string;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    placeholder?: string;
-    /**
-     * If provided, only properties which pass the filter will be included for selection in the property dropdown.
-     *
-     * @public
-     * @since 1.10.0
-     */
-    filter?: (prop: BasesPropertyId) => boolean;
 }
 
 /**
@@ -8964,6 +9397,62 @@ export interface SearchResultContainer {
 
 /**
  * @public
+ * @since 1.11.1
+ */
+export class SecretComponent extends BaseComponent {
+
+    /**
+     * @public
+     */
+    constructor(app: App, containerEl: HTMLElement);
+    /**
+     * @public
+     * @since 1.11.4
+     */
+    setValue(value: string): this;
+    /**
+     * @public
+     * @since 1.11.4
+     */
+    onChange(cb: (value: string) => unknown): this;
+}
+
+/**
+ * @public
+ * @since 1.11.4
+ */
+export class SecretStorage {
+
+    /**
+     * Sets a secret in the storage.
+     * @param id Lowercase alphanumeric ID with optional dashes
+     * @param secret The secret value to store
+     * @throws Error if ID is invalid
+     * @public
+     * @since 1.11.4
+     */
+    setSecret(id: string, secret: string): void;
+
+    /**
+     * Gets a secret from storage
+     * @param id The secret ID
+     * @returns The secret value or null if not found
+     * @public
+     * @since 1.11.4
+     */
+    getSecret(id: string): string | null;
+    /**
+     * Lists all secrets in storage
+     * @returns Array of secret IDs
+     * @public
+     * @since 1.11.4
+     */
+    listSecrets(): string[];
+
+}
+
+/**
+ * @public
  */
 export interface SectionCache extends CacheItem {
     /**
@@ -9020,7 +9509,7 @@ export class Setting {
     /**
      * @public
      * @since 0.9.7
-     * */
+     */
     components: BaseComponent[];
     /**
      * @public
@@ -9079,6 +9568,11 @@ export class Setting {
     addText(cb: (component: TextComponent) => any): this;
     /**
      * @public
+     * @since 1.11.0
+     */
+    addComponent<T extends BaseComponent>(cb: (el: HTMLElement) => T): this;
+    /**
+     * @public
      * @since 0.9.21
      */
     addSearch(cb: (component: SearchComponent) => any): this;
@@ -9128,11 +9622,57 @@ export class Setting {
 
 /**
  * @public
+ * @since 1.11.0
+ */
+export class SettingGroup {
+
+    /**
+     * @public
+     * @since 1.11.0
+     */
+    constructor(containerEl: HTMLElement);
+    /**
+     * @public
+     * @since 1.11.0
+     */
+    setHeading(text: string | DocumentFragment): this;
+    /**
+     * @public
+     * @since 1.11.0
+     */
+    addClass(cls: string): this;
+    /**
+     * @public
+     * @since 1.11.0
+     */
+    addSetting(cb: (setting: Setting) => void): this;
+    /**
+     * Add a search input at the beginning of the setting group. Useful for filtering
+     * results or adding an input for quick entry.
+     * @public
+     * @since 1.11.0
+     */
+    addSearch(cb: (component: SearchComponent) => any): this;
+    /**
+     * @public
+     * @since 1.11.0
+     */
+    addExtraButton(cb: (component: ExtraButtonComponent) => any): this;
+}
+
+/**
+ * @public
  * @see {@link https://docs.obsidian.md/Plugins/User+interface/Settings#Register+a+settings+tab}
  * @since 0.9.7
  */
 export abstract class SettingTab {
 
+    /**
+     * The icon to display in the settings sidebar.
+     * @public
+     * @since 1.11.0
+     */
+    icon: IconName;
     /**
      * Reference to the app instance.
      * @public
@@ -9140,7 +9680,7 @@ export abstract class SettingTab {
     app: App;
 
     /**
-     * Outermost HTML element on the setting tab.
+     * HTML element for the setting tab content.
      * @public
      */
     containerEl: HTMLElement;
@@ -9238,43 +9778,6 @@ export class SliderComponent extends ValueComponent<number> {
 
 /**
  * @public
- * @since 1.10.0
- */
-export interface SliderOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'slider';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: number;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    min?: number;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    max?: number;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    step?: number;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    instant?: boolean;
-}
-
-/**
- * @public
  */
 export function sortSearchResults(results: SearchResultContainer[]): void;
 
@@ -9290,7 +9793,7 @@ export interface Stat {
     /**
      * Time of creation, represented as a unix timestamp.
      * @public
-     * */
+     */
     ctime: number;
     /**
      * Time of last modification, represented as a unix timestamp.
@@ -9601,28 +10104,6 @@ export abstract class TextFileView extends EditableFileView {
 
 /**
  * @public
- * @since 1.10.0
- */
-export interface TextOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'text';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: string;
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    placeholder?: string;
-}
-
-/**
- * @public
  * @since 0.9.7
  */
 export class TFile extends TAbstractFile {
@@ -9712,23 +10193,6 @@ export class ToggleComponent extends ValueComponent<boolean> {
     onChange(callback: (value: boolean) => any): this;
 }
 
-/**
- * @public
- * @since 1.10.0
- */
-export interface ToggleOption extends BaseOption {
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    type: 'toggle';
-    /**
-     * @public
-     * @since 1.10.0
-     */
-    default?: boolean;
-}
-
 /** @public */
 export interface TooltipOptions {
     /** @public */
@@ -9776,6 +10240,11 @@ export type UserEvent = MouseEvent | KeyboardEvent | TouchEvent | PointerEvent;
  * @since 1.10.0
  */
 export abstract class Value {
+    /**
+     * @public
+     * @since 1.10.0
+     */
+    static type: string;
 
     /**
      * @public
@@ -9953,7 +10422,7 @@ export class Vault extends Events {
     readBinary(file: TFile): Promise<ArrayBuffer>;
 
     /**
-     * Returns an URI for the browser engine to use, for example to embed an image.
+     * Returns a URI for the browser engine to use, for example to embed an image.
      * @public
      * @since 0.9.7
      */
@@ -10010,6 +10479,15 @@ export class Vault extends Events {
      * @since 0.13.0
      */
     append(file: TFile, data: string, options?: DataWriteOptions): Promise<void>;
+    /**
+     * Add data to the end of a binary file inside the vault.
+     * @param file - The file
+     * @param data - the data to add
+     * @param options - (Optional)
+     * @public
+     * @since 1.12.3
+     */
+    appendBinary(file: TFile, data: ArrayBuffer, options?: DataWriteOptions): Promise<void>;
     /**
      * Atomically read, modify, and save the contents of a note.
      * @param file - the file to be read and modified.
@@ -10218,16 +10696,6 @@ export abstract class View extends Component {
 export type ViewCreator = (leaf: WorkspaceLeaf) => View;
 
 /**
- * ViewOption and the associated sub-types are configuration-driven settings controls
- * which can be provided by a {@link BasesViewRegistration} to expose configuration options
- * to users in the view config menu of the Bases toolbar.
- *
- * @public
- * @since 1.10.0
- */
-export type ViewOption = TextOption | MultitextOption | GroupOption | PropertyOption | ToggleOption | SliderOption | DropdownOption;
-
-/**
  * @public
  */
 export interface ViewState {
@@ -10346,7 +10814,7 @@ export class Workspace extends Events {
      * or push it to a queue to be called later when layout is ready.
      * @public
      * @since 0.11.0
-     * */
+     */
     onLayoutReady(callback: () => any): void;
     /**
      * @public
@@ -10914,6 +11382,7 @@ export class WorkspaceRoot extends WorkspaceContainer {
     win: Window;
     /** @public */
     doc: Document;
+
 }
 
 /**
@@ -11001,7 +11470,10 @@ export interface WorkspaceWindowInitData {
 }
 
 
-/** @public */
+/**
+ * Can be any Lucide icon name or an internal icon name.
+ * @public
+ */
 export type IconName = string;
 
 ```
@@ -11301,7 +11773,7 @@ Content structure:
 2. The curated script overview (index-new.md)
 3. Raw source of every *.md script in /ea-scripts (each fenced code block is auto-closed to ensure well-formed aggregation)
 
-Generated on: 2026-03-16T18:46:00.868Z
+Generated on: 2026-03-19T12:13:56.808Z
 
 ---
 
@@ -21235,8 +21707,22 @@ const IMAGE_TYPES = ["jpeg", "jpg", "png", "gif", "svg", "webp", "bmp", "ico", "
 const EMBEDED_OBJECT_WIDTH_ROOT = 400;
 const EMBEDED_OBJECT_WIDTH_CHILD = 180;
 
+//special trim function that returns trimmed text, including trimming a bullet point of the bullet
+const trimText = (text) => {
+  if(!text) return text;
+  return text.match(/^(?:[ \t]*[-\*][ \t])?(?:[ \t]*)(.*?)[ \t]*$/)[1];
+}
+
+const parseText = async (text) => {
+  const trimmed = trimText(text);
+  if (trimmed && (trimmed.startsWith("![[") || trimmed.match(/^[-*][ \t]+!\[\[/)) && trimmed.endsWith("]]")) {
+    return text;
+  }
+  return await ea.parseText(text);
+}
+
 const parseImageInput = (input) => {
-  const trimmed = input.trim();
+  const trimmed = trimText(input);
   if (!trimmed.startsWith("![[") || !trimmed.endsWith("]]")) return null;
 
   const content = trimmed.slice(3, -2);
@@ -21254,7 +21740,7 @@ const parseImageInput = (input) => {
   let imageFile = file = null;
   let isImagePath = false;
 
-  const PDF_RECT_LINK_REGEX = /^[^#]*#page=\d*(&\w*=[^&]+){0,}&rect=\d*,\d*,\d*,\d*/;
+  const PDF_RECT_LINK_REGEX = /^[^#]*#page=\d*/; //(&\w*=[^&]+){0,}&rect=\d*,\d*,\d*,\d*
   if (path.match(PDF_RECT_LINK_REGEX)) {
     isImagePath = true;
   } else {
@@ -24805,7 +25291,7 @@ const getAdjustedMaxWidth = async (text, max) => {
   const fontString = `${ea.style.fontSize.toString()}px ${
     ExcalidrawLib.getFontFamilyString({fontFamily: ea.style.fontFamily})}`;
 
-  const parsedText = (await ea.parseText(text)) ?? text;
+  const parsedText = (await parseText(text)) ?? text;
   
   const wrappedText = ExcalidrawLib.wrapText(parsedText, fontString, max);
   const metrics = ea.measureText(wrappedText);
@@ -24933,17 +25419,22 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
   const effectiveMaxWrap = rootCfgForAdd?.maxWrapWidth ?? maxWidth;
   let curMaxW = depth === 0 ? Math.max(400, effectiveMaxWrap) : effectiveMaxWrap;
   
-  // --- ADDED AWAIT EA.PARSETEXT AND AWAIT GETADJUSTEDMAXWIDTH ---
-  const renderedText = (await ea.parseText(text)) ?? text;
-  const metrics = ea.measureText(renderedText);
-  const shouldWrap = metrics.width > curMaxW;
-  let curMaxH = metrics.height;
+  let renderedText=text;
+  let metrics = { w: 0, h: 0 };
+  let shouldWrap = false;
+  
+  if (!imageInfo?.isImagePath && !imageInfo?.imageFile && !embeddableUrl) {
+    renderedText = (await parseText(text)) ?? text;
+    metrics = ea.measureText(renderedText);
+    shouldWrap = metrics.width > curMaxW;
+    let curMaxH = metrics.height;
 
-  if (shouldWrap) {
-    const res = await getAdjustedMaxWidth(text, curMaxW);
-    curMaxW = res.width;
-    curMaxH = res.height;
-  }
+    if (shouldWrap) {
+      const res = await getAdjustedMaxWidth(text, curMaxW);
+      curMaxW = res.width;
+      curMaxH = res.height;
+    }
+  } 
 
   if (!parent) {
     ea.style.strokeColor = multicolor ? defaultNodeColor : st.currentItemStrokeColor;
@@ -25380,6 +25871,9 @@ const getTextFromNode = (all, node, getRaw = false, shortPath = false) => {
     }
     const file = ea.getViewFileForImageElement(node);
     if (file) {
+      if (file.extension === "pdf" && node.link?.startsWith("[[")) {
+        return `!${node.link.match(/^(.*?)\]\]/)[1]}|${Math.round(node.width)}]]`;
+      }
       return  `![[${file.path}${embeddedFile.filenameparts?.linkpartReference}|${Math.round(node.width)}]]`;
     }
     return "";
@@ -28196,7 +28690,7 @@ const commitEdit = async () => {
       }
       ea.style.roughness = getAppState().currentItemRoughness;
 
-      const renderedText = await ea.parseText(textInput);
+      const renderedText = await parseText(textInput);
       const metrics = ea.measureText(renderedText);
       const shouldWrap = metrics.width > maxWidth;
       
@@ -28367,7 +28861,7 @@ const commitEdit = async () => {
       ea.copyViewElementsToEAforEditing([textEl]);
       const eaEl = ea.getElement(textEl.id);
       
-      const renderedText = await ea.parseText(textInput);
+      const renderedText = await parseText(textInput);
       
       eaEl.rawText = textInput;
       eaEl.originalText = renderedText;
@@ -30014,7 +30508,7 @@ const handleKeydown = (e) => {
   if (!currentWindow) return;
 
   const st = getAppState();
-  if (!st || !!st.editingTextElement || !!st.selectedLinearElement?.isEditing || !!st.showHyperlinkPopup) return;
+  if (!st || !!st.editingTextElement || !!st.selectedLinearElement?.isEditing || (st.showHyperlinkPopup === "editor")) return;
 
   if (linkSuggester?.isBlockingKeys()) {
     if (e.key === "Escape") {
