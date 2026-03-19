@@ -23,7 +23,7 @@ export function setPen (pen: PenStyle, api: any) {
       ...pen.backgroundColor ? {currentItemBackgroundColor: pen.backgroundColor} : null,
       ...pen.strokeColor ? {currentItemStrokeColor: pen.strokeColor} : null,
       ...pen.fillStyle === "" ? null : {currentItemFillStyle: pen.fillStyle},
-      ...pen.roughness ? null : {currentItemRoughness: pen.roughness},
+      ...(pen.roughness !== null) ? {currentItemRoughness: pen.roughness} : null,
       ...pen.freedrawOnly && !st.resetCustomPen //switching from custom pen to next custom pen
         ? {
           resetCustomPen: {
