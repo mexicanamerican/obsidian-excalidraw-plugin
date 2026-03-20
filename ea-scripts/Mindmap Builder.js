@@ -4944,12 +4944,13 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
   let renderedText=text;
   let metrics = { w: 0, h: 0 };
   let shouldWrap = false;
+  let curMaxH = 0;
   
   if (!imageInfo?.isImagePath && !imageInfo?.imageFile && !embeddableUrl) {
     renderedText = (await parseText(text)) ?? text;
     metrics = ea.measureText(renderedText);
     shouldWrap = metrics.width > curMaxW;
-    let curMaxH = metrics.height;
+    curMaxH = metrics.height;
 
     if (shouldWrap) {
       const res = await getAdjustedMaxWidth(text, curMaxW);
