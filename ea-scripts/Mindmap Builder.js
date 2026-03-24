@@ -7121,12 +7121,35 @@ const navigateMap = async ({key, zoom = false, focus = false} = {}) => {
     const parentCenter = { x: parent.x + parent.width / 2, y: parent.y + parent.height / 2 };
 
     // Always sort by angle from 12 o'clock (0 degrees) to ensure clockwise navigation
-    // regardless of layout mode or hierarchy level
-    siblings.sort(
-      (a, b) =>
-        getAngleFromCenter(parentCenter, { x: a.x + a.width / 2, y: a.y + a.height / 2 }) -
-        getAngleFromCenter(parentCenter, { x: b.x + b.width / 2, y: b.y + b.height / 2 }),
-    );
+    // regardless of layout mode or hierarchy level.
+    // We project the coordinates to neutralize width/height skewing the geometric center.
+    siblings.sort((a, b) => {
+      const aCX = a.x + a.width / 2;
+      const aCY = a.y + a.height / 2;
+      const bCX = b.x + b.width / 2;
+      const bCY = b.y + b.height / 2;
+
+      let aPoint = { x: aCX, y: aCY };
+      let bPoint = { x: bCX, y: bCY };
+
+      if (mapMode === "Radial") {
+        // Use the edge closest to the parent to neutralize text width/height skew in Radial
+        aPoint.x = aCX >= parentCenter.x ? a.x : a.x + a.width;
+        aPoint.y = aCY >= parentCenter.y ? a.y : a.y + a.height;
+        bPoint.x = bCX >= parentCenter.x ? b.x : b.x + b.width;
+        bPoint.y = bCY >= parentCenter.y ? b.y : b.y + b.height;
+      } else if (isVerticalLayout) {
+        // Neutralize Y distance to sort strictly by X sequentially on each side
+        aPoint.y = parentCenter.y + (aCY >= parentCenter.y ? 100000 : -100000);
+        bPoint.y = parentCenter.y + (bCY >= parentCenter.y ? 100000 : -100000);
+      } else {
+        // Neutralize X distance to sort strictly by Y sequentially on each side
+        aPoint.x = parentCenter.x + (aCX >= parentCenter.x ? 100000 : -100000);
+        bPoint.x = parentCenter.x + (bCX >= parentCenter.x ? 100000 : -100000);
+      }
+
+      return getAngleFromCenter(parentCenter, aPoint) - getAngleFromCenter(parentCenter, bPoint);
+    });
 
     const idx = siblings.findIndex((s) => s.id === current.id);
     const startIndex = (idx === -1 ? 0 : idx); // Start at 0 if current isn't found
