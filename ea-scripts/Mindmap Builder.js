@@ -3054,8 +3054,19 @@ const isStructuralElement = (el, allElements, rootId = null, elementById = null,
   const isStructuralType = el.customData?.isBranch || el.customData?.growthMode || el.customData?.isBoundary || typeof el.customData?.mindmapOrder !== "undefined";
   
   if (rootId && isStructuralType) {
-    // Optimization: Pass maps to getHierarchy to prevent O(N) lookups
-    const info = getHierarchy(el, allElements, elementById, parentMap);
+    let targetEl = el;
+    
+    if (el.type === "arrow" && el.customData?.isBranch) {
+      const targetId = el.endBinding?.elementId || el.startBinding?.elementId;
+      if (targetId) {
+        targetEl = elementById?.get(targetId) || allElements.find(e => e.id === targetId);
+      }
+    }
+    
+    if (!targetEl) return false;
+
+    // Pass maps to getHierarchy to prevent O(N) lookups
+    const info = getHierarchy(targetEl, allElements, elementById, parentMap);
     if (info?.rootId === rootId) return true;
     if (info?.rootId) return false; 
   }
@@ -3070,13 +3081,24 @@ const isStructuralElement = (el, allElements, rootId = null, elementById = null,
   return !!connectedArrow;
 };
 
+const getViewGroupElements = (groupID) => {
+  return ea.getViewElements().filter( el => el.groupIds.includes(groupID) );
+}
+
+const getCommonGroupForElements = (elements) => {
+  const groupIds = elements
+    .map(el=>el.groupIds)
+    .reduce((prev,cur)=>cur.filter(v=>prev.includes(v)));
+  return groupIds;
+};
+
 /**
  * A group is considered a "Mindmap Group" if it contains at least 2 structural elements.
  * Groups with only 1 structural element (e.g. a Node grouped with a Sticker) are treated as decoration.
  */
-const isMindmapGroup = (groupId, allElements, rootId) => {
+const isMindmapGroup = (groupId, allElements) => {
   const groupEls = allElements.filter(el => el.groupIds?.includes(groupId));
-  const structuralCount = groupEls.filter(el => isStructuralElement(el, allElements, rootId)).length;
+  const structuralCount = groupEls.filter(el => isStructuralElement(el, allElements)).length;
   return structuralCount >= 2;
 };
 
@@ -3097,7 +3119,7 @@ const collectDecorationIds = (allElements, rootId) => new Set(
  */
 const getStructuralGroup = (element, allElements, rootId) => {
   if (!element.groupIds || element.groupIds.length === 0) return null;
-  return element.groupIds.find(gid => isMindmapGroup(gid, allElements, rootId));
+  return element.groupIds.find(gid => isMindmapGroup(gid, allElements));
 };
 
 const applyRecursiveGrouping = (nodeId, allElements) => {
@@ -3269,7 +3291,7 @@ const updateNodeBoundary = (node, allElements, rootId) => {
   boundaryEl.polygon = true;
   boundaryEl.locked = false;
 
-  if (node.groupIds.length > 0 && isMindmapGroup(node.groupIds[0], allElements, rootId)) {
+  if (node.groupIds.length > 0 && isMindmapGroup(node.groupIds[0], allElements)) {
      if (!boundaryEl.groupIds || boundaryEl.groupIds.length === 0 || boundaryEl.groupIds[0] !== node.groupIds[0]) {
          boundaryEl.groupIds = [node.groupIds[0]];
      }
@@ -4578,7 +4600,7 @@ const triggerGlobalLayout = async (rootId, forceUngroup = false, mustHonorMindma
         mindmapIds.forEach((id) => {
           const el = ea.getElement(id);
           if (el && el.groupIds) {
-            el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allElements, rootId));
+            el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allElements));
           }
         });
       }
@@ -5256,7 +5278,7 @@ const addNode = async (text, follow = false, skipFinalLayout = false, batchModeA
     if (groupBranches) {
       ea.getElements().forEach((el) => {
         if (el.groupIds) {
-          el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allEls, rootId));
+          el.groupIds = el.groupIds.filter(gid => !isMindmapGroup(gid, allEls));
         }
       });
       const l1Nodes = getChildrenNodes(rootId, allEls);
@@ -7219,9 +7241,23 @@ const getBranchElementIds = (nodeId, allElements) => {
 const getStructuralGroupForNode = (branchIds, workbenchEls, rootId) => {
   const decorationAndCrossLinkIds = getDecorationAndCrossLinkIdsForBranches(branchIds, workbenchEls, rootId);
   const elements = workbenchEls.filter(el => branchIds.includes(el.id) || decorationAndCrossLinkIds.includes(el.id));
-  const commonGroupId = ea.getCommonGroupForElements(elements);
-  const structuralGroupId = (commonGroupId && isMindmapGroup(commonGroupId, workbenchEls, rootId)) ? commonGroupId : null;
+  const commonGroupId = getCommonGroupForElements(elements)[0];
+  const structuralGroupId = (commonGroupId && isMindmapGroup(commonGroupId, workbenchEls)) ? commonGroupId : null;
   return {structuralGroupId, groupedElementIds: structuralGroupId ? elements.map(e => e.id) : []};
+};
+
+/**
+ * 
+ * @param {*} nodeId 
+ * @param {*} workbenchEls ExcalidrawAutomate elements on the workbench
+ * @returns the group ID if a structural mindmap group exists for the branch, else null
+ */
+const getStructuralGroupsForNode = (branchIds, workbenchEls, rootId) => {
+  const decorationAndCrossLinkIds = getDecorationAndCrossLinkIdsForBranches(branchIds, workbenchEls, rootId);
+  const elements = workbenchEls.filter(el => branchIds.includes(el.id) || decorationAndCrossLinkIds.includes(el.id));
+  const commonGroupIds = getCommonGroupForElements(elements);
+  const structuralGroupIds = commonGroupIds.filter(commonGroupId => isMindmapGroup(commonGroupId, workbenchEls));
+  return {structuralGroupIds, groupedElementIds: elements.map(e => e.id)};
 };
 
 /**
@@ -7391,9 +7427,15 @@ const toggleBranchGroup = async () => {
   const workbenchEls = ea.getElements();
 
   let newGroupId;
-  const {structuralGroupId} = getStructuralGroupForNode(branchIds, workbenchEls, info.rootId);
-  if (structuralGroupId) {
-    removeGroupFromElements(structuralGroupId, workbenchEls);
+  let {structuralGroupIds, groupedElementIds} = getStructuralGroupsForNode(branchIds, workbenchEls, info.rootId);
+  if (structuralGroupIds.length > 0) {
+    //normally there should only be one structural group, however do to a bug in earlier MinMap Builder versions,
+    //some branches may have multiple structural groups for the exact same set of nodes.
+    structuralGroupIds.forEach(structuralGroupId => {
+      if(getViewGroupElements(structuralGroupId).length === groupedElementIds.length) {
+        removeGroupFromElements(structuralGroupId, workbenchEls);
+      }
+    });
   } else {
     newGroupId = ea.addToGroup([...branchIds, ...decorationAndCrossLinkIds]);
   }
@@ -7403,7 +7445,9 @@ const toggleBranchGroup = async () => {
   if (newGroupId) {
     let selectedGroupIds = {};
     selectedGroupIds[newGroupId] = true;
-    ea.viewUpdateScene({appState: {selectedGroupIds}})
+    ea.viewUpdateScene({appState: {selectedGroupIds, selectedElementIds: {}}});
+  } else {
+    ea.viewUpdateScene({appState: {selectedGroupIds: {}, selectedElementIds: {[sel.id]: true}}});
   }
 
   updateUI();
@@ -7669,7 +7713,7 @@ const toggleBoundary = async () => {
         roundness: arrowType === "curved" ? {type: 2} : null,
       };
 
-      if (sel.groupIds.length > 0 && isMindmapGroup(sel.groupIds[0], ea.getViewElements(), info?.rootId)) {
+      if (sel.groupIds.length > 0 && isMindmapGroup(sel.groupIds[0], ea.getViewElements())) {
         boundaryEl.groupIds = [sel.groupIds[0]];
       } else {
         boundaryEl.groupIds = [];
@@ -7913,7 +7957,7 @@ const updateUI = (sel) => {
 
     const updateGroupBtn = (btn) => {
       if (!btn) return;
-      const isGrouped = branchIds.length > 1 && !!ea.getCommonGroupForElements(all.filter(el => branchIds.includes(el.id)));
+      const isGrouped = branchIds.length > 1 && !!getCommonGroupForElements(all.filter(el => branchIds.includes(el.id)))[0];
       btn.setIcon(isGrouped ? "ungroup" : "group");
       const groupTooltip = isGrouped ? t("TOGGLE_GROUP_TOOLTIP_UNGROUP") : t("TOGGLE_GROUP_TOOLTIP_GROUP");
       btn.setTooltip(`${groupTooltip} ${getActionHotkeyString(ACTION_TOGGLE_GROUP)}`);

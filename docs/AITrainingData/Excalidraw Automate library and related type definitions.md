@@ -2441,7 +2441,7 @@ export interface AppState {
     /**
      * set when a new text is created or when an existing text is being edited
      */
-    editingTextElement: NonDeletedExcalidrawElement | null;
+    editingTextElement: ExcalidrawTextElement | null;
     activeTool: {
         /**
          * indicates a previous tool we should revert back to if we deselect the
@@ -3262,6 +3262,7 @@ declare class App extends React.Component<AppProps, AppState> {
         x: number;
         y: number;
     } | null;
+    private lastCompletedCanvasClicks;
     /** previous frame pointer coords */
     previousPointerMoveCoords: {
         x: number;
@@ -3422,6 +3423,7 @@ declare class App extends React.Component<AppProps, AppState> {
      * If disabled, returns null.
      */
     getEffectiveGridSize: () => NullableGridSize;
+    private getTextCreationGridPoint;
     private getHTMLIFrameElement;
     private handleIframeLikeElementHover;
     /** @returns true if iframe-like element click handled */
@@ -3642,6 +3644,8 @@ declare class App extends React.Component<AppProps, AppState> {
     private getSelectedTextElement;
     private getSelectedTextEditingContainerAtPosition;
     private getTextElementAtPosition;
+    private isHittingTextAutoResizeHandle;
+    private handleTextAutoResizeHandlePointerDown;
     private getElementAtPosition;
     private getElementsAtPosition;
     getElementHitThreshold(element: ExcalidrawElement): number;
@@ -3651,7 +3655,9 @@ declare class App extends React.Component<AppProps, AppState> {
     private debounceDoubleClickTimestamp;
     private startImageCropping;
     private finishImageCropping;
+    private shouldHandleBrowserCanvasDoubleClick;
     private handleCanvasDoubleClick;
+    private handleCanvasClick;
     private getElementLinkAtPosition;
     private handleElementLinkClick;
     private getTopLayerFrameAtSceneCoords;
