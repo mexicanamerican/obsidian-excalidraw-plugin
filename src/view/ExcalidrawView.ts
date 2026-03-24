@@ -6263,8 +6263,11 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
     //console.log("ExcalidrawView.instantiateExcalidraw()");
     this.clearDirty();
 
+    // apply the handedness, settings were just reloaded in the calling method.
+    this.setHandedness(this.plugin.settings.isLeftHanded);
+
     this.excalidrawRoot = ReactDOM.createRoot(this.contentEl);
-    this.excalidrawRoot.render(React.createElement(this.excalidrawRootElement.bind(this,initdata)));
+    this.excalidrawRoot.render(React.createElement(this.excalidrawRootElement.bind(this, initdata)));
   }
 
   private updateContainerSize(containerId?: string, delay: boolean = false, justloaded: boolean = false) {
@@ -6394,6 +6397,14 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
     (process.env.NODE_ENV === 'development') && DEBUGGING && debug(this.setUIMode, "ExcalidrawView.setDesktopUIMode");
     const api = this.excalidrawAPI as ExcalidrawImperativeAPI;
     api.setDesktopUIMode(mode);
+  }
+
+  /**
+   * Applies the desired handedness to this `ExcalidrawView`.
+   * @param isLeftHanded - the desired handedness
+   */
+  public setHandedness(isLeftHanded: boolean) {
+    this.contentEl.toggleClass("excalidraw-left-handed", isLeftHanded);
   }
 
   /**

@@ -1010,13 +1010,10 @@ export class CommandManager {
         const view = this.app.workspace.getActiveViewOfType(ExcalidrawView);
         (async()=>{
           const isLeftHanded = this.settings.isLeftHanded;
-          await this.plugin.loadSettings({applyLefthandedMode: false});
+          await this.plugin.loadSettings();
           this.settings.isLeftHanded = !isLeftHanded;
           this.plugin.saveSettings();
-          //not clear why I need to do this. If I don't double apply the stylesheet changes 
-          //then the style won't be applied in the popout windows
           setLeftHandedMode(!isLeftHanded);
-          setTimeout(()=>setLeftHandedMode(!isLeftHanded));
         })()
         return true;
       },

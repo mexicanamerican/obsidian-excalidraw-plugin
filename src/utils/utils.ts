@@ -19,6 +19,7 @@ import {
   DEVICE,
   getContainerElement,
   SCRIPT_INSTALL_FOLDER,
+  VIEW_TYPE_EXCALIDRAW,
 } from "../constants/constants";
 import ExcalidrawPlugin from "../core/main";
 import { ExcalidrawElement, ExcalidrawImageElement, ExcalidrawTextElement, ImageCrop } from "@zsviczian/excalidraw/types/element/src/types";
@@ -42,6 +43,7 @@ import { ExcalidrawSettings } from "src/core/settings";
 import { FileData } from "src/types/embeddedFileLoaderTypes";
 import { ExportSettings } from "src/types/exportUtilTypes";
 import { UIMode } from "src/shared/Dialogs/UIModeSettingComponent";
+import ExcalidrawView from "../view/ExcalidrawView";
 
 declare const PLUGIN_VERSION:string;
 declare var LZString: any;
@@ -595,35 +597,14 @@ export function scaleLoadedImage (
   return { dirty, scene };
 };
 
-export function setDocLeftHandedMode(isLeftHanded: boolean, ownerDocument:Document) {
-  const newStylesheet = ownerDocument.createElement("style");
-  newStylesheet.id = "excalidraw-left-handed";
-  newStylesheet.textContent = `.excalidraw .App-bottom-bar {
-    justify-content:flex-end !important;
-    left: auto !important;
-    right: 0 !important;
-    transform: none !important;
-  }`;
-  const oldStylesheet = ownerDocument.getElementById(newStylesheet.id);
-  if (oldStylesheet) {
-    ownerDocument.head.removeChild(oldStylesheet);
-  }
-  if (isLeftHanded) {
-    ownerDocument.head.appendChild(newStylesheet);
-  }
-}
-
 export function setLeftHandedMode (isLeftHanded: boolean) {
-  if(DEVICE.isPhone) return; //no lefthanded mode on phones
-  const visitedDocs = new Set<Document>();
-  EXCALIDRAW_PLUGIN.app.workspace.iterateAllLeaves((leaf) => {
-    const ownerDocument = DEVICE.isMobile?document:leaf.view.containerEl.ownerDocument;
-    if(!ownerDocument) return;
-    if(visitedDocs.has(ownerDocument)) return;
-    visitedDocs.add(ownerDocument);
-    setDocLeftHandedMode(isLeftHanded,ownerDocument);
+  if (DEVICE.isPhone) return; // no left-handed mode on phones
+  EXCALIDRAW_PLUGIN.app.workspace.getLeavesOfType(VIEW_TYPE_EXCALIDRAW).forEach((leaf) => {
+    if (leaf.view instanceof ExcalidrawView) {
+      leaf.view.setHandedness(isLeftHanded);
+    }
   })  
-};
+}
 
 export function calculateUIModeValue(settings: ExcalidrawSettings): UIMode {
   const phoneMode = settings.phoneUIMode ?? "mobile";
