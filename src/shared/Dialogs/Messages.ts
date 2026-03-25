@@ -17,10 +17,19 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 
 <div class="ex-coffee-div"><a href="https://ko-fi.com/zsolt"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com"  height=45></a></div>
 `,
+"2.22.0":`
+## Fixed
+- Tray-mode panel buttons get misaligned [#2718](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2718) 🙏[@heinrich26](https://github.com/heinrich26)
+
+## New from Excalidraw.com
+- Various text element editing improvements, including handle on the right side of wrapped text to enable text auto-resizing (instead of having to open the context menu for this) [#10979](https://github.com/excalidraw/excalidraw/pull/10979)
+- Support for Mermaid state diagrams [#11031](https://github.com/excalidraw/excalidraw/pull/11031)
+
+`,
 "2.21.2":`
 ## Fixed
 - The new ExcalidrawAutomate function \`parseText()\` broke if the text was a transcluded image or PDF document, causing downstream paste issues in MindMap Builder.
-- Fix custom pen sloppiness not being saved to a template drawing [#2715](https://github.com/zsviczian/obsidian-excalidraw-plugin/pull/2715) 🙏[@sreedharsreeram](https://github.com/sreedharsreeram)
+- Custom pen sloppiness not being saved to a template drawing [#2715](https://github.com/zsviczian/obsidian-excalidraw-plugin/pull/2715) 🙏[@sreedharsreeram](https://github.com/sreedharsreeram)
 
 `,
 "2.21.1":`
