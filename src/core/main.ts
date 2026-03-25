@@ -1260,13 +1260,9 @@ export default class ExcalidrawPlugin extends Plugin {
     terminateCompressionWorker();
   }
 
-  public async loadSettings(opts: {
-    applyLefthandedMode?: boolean,
-    reEnableAutosave?: boolean
-  } = {applyLefthandedMode: true, reEnableAutosave: false}
+  public async loadSettings(opts: { reEnableAutosave?: boolean } = { reEnableAutosave: false }
   ) {
     (process.env.NODE_ENV === 'development') && DEBUGGING && debug(this.loadSettings,`ExcalidrawPlugin.loadSettings`, opts);
-    if(typeof opts.applyLefthandedMode === "undefined") opts.applyLefthandedMode = true;
     if(typeof opts.reEnableAutosave === "undefined") opts.reEnableAutosave = false;
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     if(!this.settings.previewImageType) { //migration 1.9.13
@@ -1278,7 +1274,6 @@ export default class ExcalidrawPlugin extends Plugin {
           : PreviewImageType.PNG; 
       }
     }
-    if(opts.applyLefthandedMode) setLeftHandedMode(this.settings.isLeftHanded);
     if(opts.reEnableAutosave) this.settings.autosave = true;
     setDebugging(this.settings.isDebugMode);
   }

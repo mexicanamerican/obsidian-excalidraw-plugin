@@ -96,10 +96,7 @@ export class UIModeSettingsComponent {
           .setValue(this.settings.isLeftHanded)
           .onChange(async (value) => {
             this.settings.isLeftHanded = value;
-            //not clear why I need to do this. If I don't double apply the stylesheet changes 
-            //then the style won't be applied in the popout windows
-            setLeftHandedMode(value); 
-            setTimeout(()=>setLeftHandedMode(value));
+            setLeftHandedMode(value);
             this.onChange();
           }),
       );
