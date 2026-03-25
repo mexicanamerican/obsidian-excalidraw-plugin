@@ -938,16 +938,19 @@ textarea.excalidraw-wysiwyg, .excalidraw input {
   box-shadow: 0 1px 4px 0 rgba(0,0,0,0.10);
   padding: 0.5em 0.8em;
   margin-bottom: 2em;
-  min-width: 18rem;
+  width: fit-content;
+  max-width: calc(100% - 1.6em);
   position: sticky;
   top: 1rem;
-  margin-right: 1rem;
-  margin-left: 1rem;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .excalidraw-search .document-search {
   align-items: center;
-  max-width: none;
+  align-self: center;
+  max-width: 30rem;
+  width: min(100%, 30rem);
 }
 
 .excalidraw-search .search-input-container.document-search-input {

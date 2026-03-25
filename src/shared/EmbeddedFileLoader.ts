@@ -486,104 +486,108 @@ export class EmbeddedFilesLoader {
       return null;
     }
 
-    const app = this.plugin.app;
+    try {
+      const app = this.plugin.app;
 
-    const isHyperLink = inFile instanceof EmbeddedFile ? inFile.isHyperLink : false;
-    const isLocalLink = inFile instanceof EmbeddedFile ? inFile.isLocalLink : false;
-    const hyperlink = inFile instanceof EmbeddedFile ? inFile.hyperlink : "";
-    const file: TFile = inFile instanceof EmbeddedFile ? inFile.file : inFile;
-    if(file && markdownRendererRecursionWatcthdog.has(file)) {
-      new Notice(`Loading of ${file.path}. Please check if there is an inifinite loop of one file embedded in the other.`);
-      return null;
-    }
+      const isHyperLink = inFile instanceof EmbeddedFile ? inFile.isHyperLink : false;
+      const isLocalLink = inFile instanceof EmbeddedFile ? inFile.isLocalLink : false;
+      const hyperlink = inFile instanceof EmbeddedFile ? inFile.hyperlink : "";
+      const file: TFile = inFile instanceof EmbeddedFile ? inFile.file : inFile;
+      if(file && markdownRendererRecursionWatcthdog.has(file)) {
+        new Notice(`Loading of ${file.path}. Please check if there is an inifinite loop of one file embedded in the other.`);
+        return null;
+      }
 
-    const linkParts =
-      isHyperLink
-        ? null
-        : inFile instanceof EmbeddedFile
-          ? inFile.linkParts
-          : {
-              original: file.path,
-              path: file.path,
-              isBlockRef: false,
-              ref: null,
-              width: this.plugin.settings.mdSVGwidth,
-              height: this.plugin.settings.mdSVGmaxHeight,
-              page: null,
-            };
-
-    let hasSVGwithBitmap = false;
-    const isExcalidrawFile = !isHyperLink && !isLocalLink && this.plugin.isExcalidrawFile(file);
-    const isPDF = !isHyperLink && !isLocalLink && file.extension.toLowerCase() === "pdf";
-
-    if (
-      !isHyperLink && !isPDF && !isLocalLink &&
-      !(
-        IMAGE_TYPES.contains(file.extension) ||
-        isExcalidrawFile ||
-        file.extension === "md"
-      )
-    ) {
-      return null;
-    }
-    const ab = isHyperLink || isPDF || isExcalidrawFile
-      ? null
-      : isLocalLink
-        ? await readLocalFileBinary(this.getLocalPath((inFile as EmbeddedFile).hyperlink))
-        : await app.vault.readBinary(file);
-
-    let dURL: DataURL = null;
-    if (isExcalidrawFile) {
-      const res = await this.getExcalidrawSVG({
-        isDark: this.isDark,
-        file,
-        depth,
-        inFile,
-        hasSVGwithBitmap,
-      });
-      dURL = res.dataURL;
-      hasSVGwithBitmap = res.hasSVGwithBitmap;
-    }
-
-    const excalidrawSVG = isExcalidrawFile ? dURL : null;
-
-    const [pdfDataURL, pdfSize, pdfPageViewProps] = isPDF
-      ? await this.pdfToDataURL(file,linkParts)
-      : [null, null, null];
-
-    let mimeType: MimeType = isPDF
-      ? "image/png"
-      : "image/svg+xml";
-
-    const extension = isHyperLink || isLocalLink
-      ? getURLImageExtension(hyperlink)
-      : file.extension;
-    if (!isExcalidrawFile && !isPDF) {
-      mimeType = getMimeType(extension);
-    }
-
-    let dataURL =
-      isHyperLink
-      ? (
-          inFile instanceof EmbeddedFile
-            ? await getDataURLFromURL(inFile.hyperlink, mimeType)
-            : null
-        )
-      : excalidrawSVG ?? pdfDataURL ??
-        (file?.extension === "svg"
-          ? await getSVGData(app, file, inFile instanceof EmbeddedFile ? inFile.colorMap : null)
-          : file?.extension === "md"
+      const linkParts =
+        isHyperLink
           ? null
-          : await getDataURL(ab, mimeType));
+          : inFile instanceof EmbeddedFile
+            ? inFile.linkParts
+            : {
+                original: file.path,
+                path: file.path,
+                isBlockRef: false,
+                ref: null,
+                width: this.plugin.settings.mdSVGwidth,
+                height: this.plugin.settings.mdSVGmaxHeight,
+                page: null,
+              };
 
-    if(!isHyperLink && !dataURL && !isLocalLink) {
-      markdownRendererRecursionWatcthdog.add(file);
-      const result = await this.convertMarkdownToSVG(this.plugin, file, linkParts, depth);
-      markdownRendererRecursionWatcthdog.delete(file);
-      dataURL = result.dataURL;
-      hasSVGwithBitmap = result.hasSVGwithBitmap;
-    }
-    try{
+      let hasSVGwithBitmap = false;
+      const isExcalidrawFile = !isHyperLink && !isLocalLink && this.plugin.isExcalidrawFile(file);
+      const isPDF = !isHyperLink && !isLocalLink && file.extension.toLowerCase() === "pdf";
+
+      if (
+        !isHyperLink && !isPDF && !isLocalLink &&
+        !(
+          IMAGE_TYPES.contains(file.extension) ||
+          isExcalidrawFile ||
+          file.extension === "md"
+        )
+      ) {
+        return null;
+      }
+      const ab = isHyperLink || isPDF || isExcalidrawFile
+        ? null
+        : isLocalLink
+          ? await readLocalFileBinary(this.getLocalPath((inFile as EmbeddedFile).hyperlink))
+          : await app.vault.readBinary(file);
+
+      let dURL: DataURL = null;
+      if (isExcalidrawFile) {
+        const res = await this.getExcalidrawSVG({
+          isDark: this.isDark,
+          file,
+          depth,
+          inFile,
+          hasSVGwithBitmap,
+        });
+        dURL = res.dataURL;
+        hasSVGwithBitmap = res.hasSVGwithBitmap;
+      }
+
+      const excalidrawSVG = isExcalidrawFile ? dURL : null;
+
+      const [pdfDataURL, pdfSize, pdfPageViewProps] = isPDF
+        ? await this.pdfToDataURL(file,linkParts)
+        : [null, null, null];
+
+      let mimeType: MimeType = isPDF
+        ? "image/png"
+        : "image/svg+xml";
+
+      const extension = isHyperLink || isLocalLink
+        ? getURLImageExtension(hyperlink)
+        : file.extension;
+      if (!isExcalidrawFile && !isPDF) {
+        mimeType = getMimeType(extension);
+      }
+
+      let dataURL =
+        isHyperLink
+        ? (
+            inFile instanceof EmbeddedFile
+              ? await getDataURLFromURL(inFile.hyperlink, mimeType)
+              : null
+          )
+        : excalidrawSVG ?? pdfDataURL ??
+          (file?.extension === "svg"
+            ? await getSVGData(app, file, inFile instanceof EmbeddedFile ? inFile.colorMap : null)
+            : file?.extension === "md"
+            ? null
+            : await getDataURL(ab, mimeType));
+
+      if(!isHyperLink && !dataURL && !isLocalLink) {
+        markdownRendererRecursionWatcthdog.add(file);
+        try {
+          const result = await this.convertMarkdownToSVG(this.plugin, file, linkParts, depth);
+          dataURL = result.dataURL;
+          hasSVGwithBitmap = result.hasSVGwithBitmap;
+        } finally {
+          markdownRendererRecursionWatcthdog.delete(file);
+        }
+      }
+
       const size = isPDF ? pdfSize : await getImageSize(dataURL);
       return {
         mimeType,
@@ -597,7 +601,14 @@ export class EmbeddedFilesLoader {
         size,
         pdfPageViewProps,
       };
-    } catch(e) {
+    } catch (error) {
+      errorlog({
+        where: "EmbeddedFileLoader._getObsidianImage",
+        uid: this.uid,
+        file: inFile instanceof EmbeddedFile ? inFile.file?.path ?? inFile.hyperlink : inFile?.path,
+        depth,
+        error,
+      });
       return null;
     }
   }
@@ -625,6 +636,21 @@ export class EmbeddedFilesLoader {
     if (this.isDark === undefined) {
       this.isDark = excalidrawData?.scene?.appState?.theme === "dark";
     }
+    const createSafeLoadTask = (
+      task: () => Promise<void>,
+      context: Record<string, unknown>,
+    ) => promiseTry(async () => {
+      try {
+        await task();
+      } catch (error) {
+        errorlog({
+          where: "EmbeddedFileLoader.loadSceneFiles",
+          uid: this.uid,
+          ...context,
+          error,
+        });
+      }
+    });
     let entry: IteratorResult<[FileId, EmbeddedFile]>;
     const files: FileData[][] = [];
     files.push([]);
@@ -635,7 +661,7 @@ export class EmbeddedFilesLoader {
         if(fileIDWhiteList && !fileIDWhiteList.has(entry.value[0])) continue;
         const embeddedFile: EmbeddedFile = entry.value[1];
         const id = entry.value[0];
-        yield promiseTry(async () => {
+        yield createSafeLoadTask(async () => {
           if(this.terminate) {
             return;
           }
@@ -669,6 +695,11 @@ export class EmbeddedFilesLoader {
             };
             files[batch].push(fileData);
           }
+        }, {
+          phase: "embedded-file",
+          fileId: id,
+          filepath: embeddedFile.file?.path ?? embeddedFile.hyperlink,
+          depth,
         });
       }
 
@@ -678,7 +709,7 @@ export class EmbeddedFilesLoader {
         if(fileIDWhiteList && !fileIDWhiteList.has(equationItem.value[0])) continue;
         const equation = equationItem.value[1];
         const id = equationItem.value[0];
-        yield promiseTry(async () => {
+        yield createSafeLoadTask(async () => {
           if (this.terminate) {
             return;
           }
@@ -698,13 +729,17 @@ export class EmbeddedFilesLoader {
               files[batch].push(fileData);
             }
           }
+        }, {
+          phase: "equation",
+          fileId: id,
+          latex: equation?.latex,
         });
       }
 
       if(shouldRenderMermaid()) {
         const mermaidElements = getMermaidImageElements(excalidrawData.scene.elements);
         for(const element of mermaidElements) {
-          yield promiseTry(async () => {
+          yield createSafeLoadTask(async () => {
             if(this.terminate) {
               return;
             }
@@ -758,6 +793,10 @@ export class EmbeddedFilesLoader {
               }
               return;
             }
+          }, {
+            phase: "mermaid",
+            fileId: element.fileId,
+            elementId: element.id,
           });
         }
       };
