@@ -1182,3 +1182,23 @@ textarea.excalidraw-wysiwyg, .excalidraw input {
 .is-mobile .excalidraw.excalidraw--mobile .FixedSideContainer.FixedSideContainer_side_top.App-top-bar {
   margin-top: 1rem
 }
+
+/*
+Obsidian Sheets Plus support
+*/
+.excalidraw__embeddable__outer .lj-content-view {
+	width: var(--embeddable-width);
+	height: var(--embeddable-height);
+}
+
+.excalidraw__embeddable__outer #sheet-box {
+	height: calc(var(--embeddable-height) - var(--lj-toolbar-height) + 40px);
+}
+
+.excalidraw__embeddable__outer .lj-univer .univer-relative.univer-grid {
+    width: var(--embeddable-width);
+}
+
+/*
+End Obsidian Sheets Plus support
+*/

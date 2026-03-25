@@ -20,11 +20,14 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 "2.22.0":`
 ## Fixed
 - Tray-mode panel buttons get misaligned [#2718](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2718) 🙏[@heinrich26](https://github.com/heinrich26)
+- Improved loading of nested Excalidraw files in the Excalidraw scene, plus some limited performance improvement.
 
 ## New from Excalidraw.com
 - Various text element editing improvements, including handle on the right side of wrapped text to enable text auto-resizing (instead of having to open the context menu for this) [#10979](https://github.com/excalidraw/excalidraw/pull/10979)
 - Support for Mermaid state diagrams [#11031](https://github.com/excalidraw/excalidraw/pull/11031)
 
+## New
+- (partial) support for embedding the [Sheet Plus](obsidian://show-plugin?id=sheet-plus) plugin as an active embedded element in Excalidraw.
 `,
 "2.21.2":`
 ## Fixed

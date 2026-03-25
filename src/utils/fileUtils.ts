@@ -485,8 +485,45 @@ export const getExcalidrawEmbeddedFilesFiletree = (sourceFile: TFile, plugin: Ex
 }
 
 export const hasExcalidrawEmbeddedImagesTreeChanged = (sourceFile: TFile, mtime:number, plugin: ExcalidrawPlugin):boolean => {
-  const fileList = getExcalidrawEmbeddedFilesFiletree(sourceFile, plugin);
-  return fileList.some(f=>f.stat.mtime > mtime);
+  if(!sourceFile || !plugin.isExcalidrawFile(sourceFile)) {
+    return false;
+  }
+
+  const visited = new Set<TFile>();
+  const stack: TFile[] = [sourceFile];
+  const app = plugin.app;
+
+  while (stack.length > 0) {
+    const currentFile = stack.pop();
+    const resolvedLinks = app.metadataCache.resolvedLinks[currentFile.path];
+    if (!resolvedLinks) {
+      continue;
+    }
+
+    const paths = Object.keys(resolvedLinks);
+    for (let i = paths.length - 1; i >= 0; i--) {
+      const file = app.vault.getAbstractFileByPath(paths[i]);
+      if (!file || !(file instanceof TFile)) {
+        continue;
+      }
+
+      const isExcalidraw = plugin.isExcalidrawFile(file);
+      if ((file.extension === "md" && !isExcalidraw) || visited.has(file)) {
+        continue;
+      }
+
+      visited.add(file);
+      if (file.stat.mtime > mtime) {
+        return true;
+      }
+
+      if (isExcalidraw) {
+        stack.push(file);
+      }
+    }
+  }
+
+  return false;
 }
 
 export async function exportImageToFile(view: ExcalidrawView, path: string, content: string | ArrayBuffer | Blob, extension: string): Promise<TFile> {

@@ -339,7 +339,7 @@ export function renderWebView (src: string, view: ExcalidrawView, id: string, _:
 //Render WorkspaceLeaf or CanvasNode
 //--------------------------------------------------------------------------------
 function RenderObsidianView(
-  { mdProps, element, linkText, view, containerRef, activeEmbeddable, theme, canvasColor, selectedElementId }:{
+  { mdProps, element, linkText, view, containerRef, activeEmbeddable, theme, canvasColor, selectedElementId, sceneZoom }:{
   mdProps: EmbeddableMDCustomProps;
   element: ExcalidrawEmbeddableElement;
   linkText: string;
@@ -349,6 +349,7 @@ function RenderObsidianView(
   theme: string;
   canvasColor: string;
   selectedElementId: string;
+  sceneZoom: number;
 }): JSX.Element {
   
   const { subpath, file } = processLinkText(linkText, view);
@@ -364,7 +365,6 @@ function RenderObsidianView(
   const isActiveRef = React.useRef(false);
   const viewTypeRef = React.useRef("empty");
   const themeRef = React.useRef(theme);
-  const elementRef = React.useRef(element);
   const pdfObserverRef = React.useRef(null);
   const pdfObserverDisabledRef = React.useRef(false);
   const mobilePatchCleanupRef = React.useRef(null);
@@ -374,11 +374,6 @@ function RenderObsidianView(
   React.useEffect(() => {
     themeRef.current = theme;
   }, [theme]);
-
-  // Update elementRef when element changes
-  React.useEffect(() => {
-    elementRef.current = element;
-  }, [element]);
  
   //--------------------------------------------------------------------------------
   //block propagation of events to the parent if the embeddable element is active
@@ -556,7 +551,24 @@ function RenderObsidianView(
   //--------------------------------------------------------------------------------
   //Set colors of the canvas node
   //--------------------------------------------------------------------------------
+  function roundEmbeddableSize(value: number): number {
+    return Math.round(value * 1000) / 1000;
+  }
+
+  function setEmbeddableSizeVars(canvasNode: HTMLDivElement, element: ExcalidrawEmbeddableElement, sceneZoom: number) {
+    const scaleX = Math.abs(element.scale?.[0] ?? 1);
+    const scaleY = Math.abs(element.scale?.[1] ?? 1);
+    const width = roundEmbeddableSize(element.width / scaleX);
+    const height = roundEmbeddableSize(element.height / scaleY);
+    canvasNode?.style.setProperty("--embeddable-width", `${width}px`);
+    canvasNode?.style.setProperty("--embeddable-height", `${height}px`);
+    canvasNode?.style.setProperty("--embeddable-scaleX", `${roundEmbeddableSize(scaleX)}`);
+    canvasNode?.style.setProperty("--embeddable-scaleY", `${roundEmbeddableSize(scaleY)}`);
+    canvasNode?.style.setProperty("--scene-zoom", `${roundEmbeddableSize(sceneZoom ?? 1)}`);
+  }
+
   function setColors (canvasNode: HTMLDivElement, element: ExcalidrawEmbeddableElement, mdProps: EmbeddableMDCustomProps, canvasColor: string, viewType: string) {
+    setEmbeddableSizeVars(canvasNode, element, sceneZoom);
     if(!mdProps) return;
     if (!leafRef.current?.hasOwnProperty("node")) return;
 
@@ -647,7 +659,6 @@ function RenderObsidianView(
     if(!containerRef.current) {
       return;
     }
-    const element = elementRef.current;
     const canvasNode = containerRef.current;
     if(!canvasNode.hasClass("canvas-node")) return;
     setColors(canvasNode, element, mdProps, canvasColor, viewTypeRef.current);
@@ -660,11 +671,24 @@ function RenderObsidianView(
     mdProps?.borderMatchElement,
     mdProps?.borderColor,
     mdProps?.borderOpacity,
-    elementRef.current,
+    element.backgroundColor,
+    element.strokeColor,
+    element.width,
+    element.height,
+    element.scale?.[0],
+    element.scale?.[1],
+    sceneZoom,
     containerRef.current,
     canvasColor,
     viewTypeRef.current,
   ])
+
+  React.useEffect(() => {
+    if(!containerRef.current) {
+      return;
+    }
+    setEmbeddableSizeVars(containerRef.current, element, sceneZoom);
+  }, [element.width, element.height, element.scale?.[0], element.scale?.[1], sceneZoom]);
 
   //--------------------------------------------------------------------------------
   //Switch to preview mode when the iframe is not active
@@ -886,6 +910,7 @@ export const CustomEmbeddable: React.FC<{element: ExcalidrawEmbeddableElement; v
         theme={appState.theme}
         canvasColor={appState.viewBackgroundColor}
         selectedElementId={selectedElementIds.length === 1 ? selectedElementIds[0] : null}
+        sceneZoom={appState.zoom.value}
       />
     </div>
   )
