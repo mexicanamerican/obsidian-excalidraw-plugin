@@ -622,7 +622,7 @@ export function calculateUIModeValue(settings: ExcalidrawSettings): UIMode {
 
 export function setUIMode(app: App, settings: ExcalidrawSettings) {
   const uiMode = calculateUIModeValue(settings);
-  getExcalidrawViews(app).forEach((view) => view.setUIMode(uiMode));
+  getExcalidrawViews(app).forEach((view:ExcalidrawView) => !!view.isLoaded && view.setUIMode(uiMode));
 };
 
 export type LinkParts = {

@@ -412,10 +412,11 @@ div.excalidraw-draginfo {
   border-radius: 5px;
 }
 
+/*
 .excalidraw [data-radix-popper-content-wrapper] {
-  /*Overrides position:fixed in popover*/
+  Overrides position:fixed in popover
   position: absolute !important;
-}
+}*/
 
 /* In Obsidian-Excalidraw, the Sidebar-Trigger is sometimes in a Container/
    Island, so it shall be styled like any other of its .ToolIcon siblings */
@@ -775,9 +776,10 @@ root {
  --excalidraw-caret-color: initial;
 }
 
+/*
 textarea.excalidraw-wysiwyg, .excalidraw input {
   caret-color: var(--excalidraw-caret-color) !important;
-}
+}*/
 
 .excalidraw-settings-links-container {
     align-items: center;
@@ -1202,3 +1204,25 @@ Obsidian Sheets Plus support
 /*
 End Obsidian Sheets Plus support
 */
+
+/*Revert greedy Obsidian style settings*/
+
+.excalidraw input[type="radio"]:active,
+.excalidraw input[type="radio"]:focus,
+.excalidraw input[type="radio"]:focus-visible,
+.excalidraw input[type="radio"]:checked {
+  background-color: revert;
+  border-color: revert;
+  box-shadow: none;
+  outline: revert;
+}
+
+.excalidraw input[type="radio"]::after,
+.excalidraw input[type="radio"]:checked::after {
+  content: none !important;
+  display: none !important;
+  background-color: transparent !important;
+  -webkit-mask-image: none !important;
+  -webkit-mask-size: initial !important;
+  -webkit-mask-position: initial !important;
+}

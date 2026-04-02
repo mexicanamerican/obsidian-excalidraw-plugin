@@ -3966,6 +3966,7 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
         bindingPreference: st.bindingPreference,
         isBindingEnabled: st.isBindingEnabled,
         isMidpointSnappingEnabled: st.isMidpointSnappingEnabled,
+        boxSelectionMode: st.boxSelectionMode,
       },
       prevTextMode: this.prevTextMode,
       files,
@@ -5860,6 +5861,7 @@ export default class ExcalidrawView extends TextFileView implements HoverParent{
       MainMenu,          
       {},
       React.createElement(MainMenu.DefaultItems.ChangeCanvasBackground),
+      React.createElement(MainMenu.DefaultItems.Preferences),
       React.createElement(MainMenu.DefaultItems.ToggleTheme),
       React.createElement(MainMenu.Separator),
       React.createElement(

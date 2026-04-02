@@ -92,6 +92,7 @@ export const setDynamicStyle = (
     [`--color-surface-primary-container`]: str(isDark?accent().darkerBy(step):accent().lighterBy(step)),
     [`--bold-color`]: str(!isDark?accent().darkerBy(15):accent().lighterBy(15)),
     [`--color-primary-darker`]: str(accent().darkerBy(step)),
+    [`--color-brand-hover`]: str(accent().darkerBy(step)),
     [`--color-primary-darkest`]: str(accent().darkerBy(2*step)),
     ['--button-bg-color']: str(gray1()),
     [`--button-gray-1`]: str(gray1()),

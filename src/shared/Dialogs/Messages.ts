@@ -19,15 +19,18 @@ I build this plugin in my free time, as a labor of love. Curious about the philo
 `,
 "2.22.0":`
 ## Fixed
-- Tray-mode panel buttons get misaligned [#2718](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2718) 🙏[@heinrich26](https://github.com/heinrich26)
-- Improved loading of nested Excalidraw files in the Excalidraw scene, plus some limited performance improvement.
+- Fixed misaligned panel buttons in tray mode [#2718](https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2718) 🙏[@heinrich26](https://github.com/heinrich26)
+- Improved loading of nested Excalidraw files within a scene, with some additional performance gains.
+- Fixed an issue where the caret color did not match the text color [#11018](https://github.com/excalidraw/excalidraw/issues/11018)
 
 ## New from Excalidraw.com
-- Various text element editing improvements, including handle on the right side of wrapped text to enable text auto-resizing (instead of having to open the context menu for this) [#10979](https://github.com/excalidraw/excalidraw/pull/10979)
-- Support for Mermaid state diagrams [#11031](https://github.com/excalidraw/excalidraw/pull/11031)
+- Added several text editing improvements, including a right-side handle on wrapped text for easier auto-resizing without opening the context menu [#10979](https://github.com/excalidraw/excalidraw/pull/10979)
+- Added support for Mermaid state diagrams [#11031](https://github.com/excalidraw/excalidraw/pull/11031)
+- There is a new Preferences menu above the Dark/Light mode switch in the main menu [#10760](https://github.com/excalidraw/excalidraw/pull/10760)
+- Added a new Preferences option to switch between Wrap and Overlap selection modes. Overlap mode behaves similarly to the lasso selection tool available under More Tools [#11053](https://github.com/excalidraw/excalidraw/pull/11053)
 
 ## New
-- (partial) support for embedding the [Sheet Plus](obsidian://show-plugin?id=sheet-plus) plugin as an active embedded element in Excalidraw.
+- Added support for embedding the [Sheet Plus](obsidian://show-plugin?id=sheet-plus) plugin as an active embeddable element in Excalidraw. At the moment, changing the canvas theme between dark and light mode does not automatically re-render embedded sheets. To apply the theme change, close and reopen the drawing. This will likely be improved in a future update.
 `,
 "2.21.2":`
 ## Fixed
