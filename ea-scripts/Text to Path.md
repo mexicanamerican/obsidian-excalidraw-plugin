@@ -39,6 +39,9 @@ if(!pathEl) {
   pathElID = pathEl.id;
 }
 const originalPathType = pathEl.type;
+const originalPathDirectionLR = ["line","arrow","freedraw"].includes(pathEl.type)
+  ? (pathEl.points[pathEl.points.length-1][0] < 0 ? true : false)
+  : true;
 
 const st = ea.getExcalidrawAPI().getAppState();
 const fontSize = textEl?.fontSize ?? st.currentItemFontSize;
@@ -94,6 +97,7 @@ if (
 let currentOffsetPct = textEl?.customData?.text2Path?.offsetPct ?? 0;
 // Map legacy archAbove to currentIsReversed for backwards compatibility
 let currentIsReversed = textEl?.customData?.text2Path?.isReversed ?? (textEl?.customData?.text2Path?.archAbove === false ? true : false);
+let currentPlaceInside = textEl?.customData?.text2Path?.placeInside ?? false; 
 let currentText = textEl?.customData?.text2Path
   ? textEl.customData.text2Path.text
   : textEl?.text ?? "";
@@ -194,19 +198,32 @@ modal.onOpen = () => {
   offsetSetting.controlEl.style.width = "100%";
   offsetSetting.infoEl.style.flex = "0 1 auto"; 
 
-  // Reverse Text Toggle (Only for closed shapes)
-  if (isClosedShape) {
-    new ea.obsidian.Setting(modal.contentEl)
-      .setName("Reverse text")
-      .setDesc("Flips the text direction (useful for placing text on the inside or bottom of a shape).")
-      .addToggle(toggle => {
-        toggle.setValue(currentIsReversed)
-              .onChange(val => {
-                currentIsReversed = val;
-                updatePath();
-              });
-      });
-  }
+  new ea.obsidian.Setting(modal.contentEl)
+    .setName("Reverse text")
+    .setDesc("Flips the text direction (useful for placing text on the inside or bottom of a shape).")
+    .addToggle(toggle => {
+      toggle.setValue(currentIsReversed)
+            .onChange(val => {
+              currentIsReversed = val;
+              updatePath();
+            });
+    });
+
+  const placementLabel = isClosedShape ? "Place inside shape" : "Place on opposite side";
+  const placementDesc = isClosedShape
+      ? "Places the text on the inside of the shape's boundary."
+      : "Places the text on the other side of the path.";
+
+  new ea.obsidian.Setting(modal.contentEl)
+    .setName(placementLabel)
+    .setDesc(placementDesc)
+    .addToggle(toggle => {
+      toggle.setValue(currentPlaceInside)
+            .onChange(val => {
+              currentPlaceInside = val;
+              updatePath();
+            });
+    });
 
   // Action Buttons
   const btnContainer = modal.contentEl.createDiv({ attr: { style: "display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;" } });
@@ -343,7 +360,7 @@ function calculatePathPoints(element) {
 }
 
 // Function to distribute text along any path
-function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0, isLeftToRight, isClosed = false, isReversed = false) {
+function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0, isLeftToRight, isClosed = false, isReversed = false, isInside = false) {
   if (pathPoints.length === 0) return;
 
   const originalText = text;
@@ -383,9 +400,6 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
   
   // --- NEW: Trimming logic to remove freedraw terminal hooks ---
   if (originalPathType === "freedraw" && !isClosed && pathSegments.length > 0) {
-    // Trim the last 15 pixels of the path to completely cut off the pen-lift hook.
-    // This ensures characters falling near the end of the line aren't placed on the 
-    // micro-hook segment (which causes them to flip upside down).
     let trimDist = 15;
     while (pathSegments.length > 0 && trimDist > 0) {
       const lastSeg = pathSegments[pathSegments.length - 1];
@@ -454,10 +468,12 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
       // For open lines, shift UP so the text sits on top of the line
       const margin = ea.style.fontSize * 0.2;
       dy = (charPixelHeight / 2) + margin;
+      if (isInside) dy = -dy; 
     } else {
       // For shapes, the path was already expanded outwards by fontHeight/2 earlier in the script.
       // Therefore, the base path is exactly where the text centers should be.
       dy = 0;
+      if (isInside) dy = -fontHeight; 
     }
 
     // Target spatial distance from the previous character center
@@ -498,7 +514,14 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
     const charID = ea.addText(drawX, drawY, character);
     
     ea.addAppendUpdateCustomData(charID, {
-      text2Path: {pathID, text: originalText, pathElID, isReversed, offsetPct: currentOffsetPct}
+      text2Path: {
+        pathID, 
+        text: originalText, 
+        pathElID, 
+        isReversed, 
+        offsetPct: currentOffsetPct, 
+        placeInside: isInside
+      }
     });
     objectIDs.push(charID);
   }
@@ -1176,17 +1199,18 @@ async function fitTextToShape() {
   
   const textWidth = ea.measureText(currentText).width;
   let offsetValue = 0;
-
+//(currentPlaceInside !==
+  const effectiveCurrentOffsetPct = originalPathDirectionLR ? -currentOffsetPct : currentOffsetPct;
   if (pathEl.polygon) {
     // With double-loops removed from the path array, pathLength is now 1 round.
     // 100 divisor maps +/- 50% slider range exactly to 1 full loop length.
-    offsetValue = (currentOffsetPct / 100) * pathLength; 
+    offsetValue = (effectiveCurrentOffsetPct / 100) * pathLength; 
   } else {
     // Open path calibration
-    if (currentOffsetPct < 0) {
-      offsetValue = (Math.abs(currentOffsetPct) / 50) * -textWidth;
+    if (effectiveCurrentOffsetPct < 0) {
+      offsetValue = (Math.abs(effectiveCurrentOffsetPct) / 50) * -textWidth;
     } else {
-      offsetValue = (currentOffsetPct / 50) * pathLength;
+      offsetValue = (effectiveCurrentOffsetPct / 50) * pathLength;
     }
   }
 
@@ -1201,7 +1225,8 @@ async function fitTextToShape() {
     offsetValue,
     isLeftToRight,
     pathEl.polygon,
-    currentIsReversed
+    currentIsReversed,
+    currentPlaceInside 
   );
 
   const groupID = ea.addToGroup(objectIDs);
