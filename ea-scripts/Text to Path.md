@@ -58,6 +58,11 @@ const isClosedShape = ["ellipse", "rectangle", "diamond"].includes(originalPathT
 if(!isPathLinear) {
   ea.copyViewElementsToEAforEditing([pathEl]);
   pathEl = ea.getElement(pathEl.id);
+
+  if (pathEl.type === "line" && isClosedShape && isClockwise(pathEl.points)) {
+    pathEl.points = pathEl.points.reverse();
+  }
+
   pathEl.x -= fontHeight/2;
   pathEl.y -= fontHeight/2;
   pathEl.width += fontHeight;
@@ -82,11 +87,13 @@ if(!isPathLinear) {
 // Convert path to SVG and use real path for text placement.
 // ---------------------------------------------------------
 let isLeftToRight = true;
+let pathElBottom = null;
+
 if (
   (["line", "arrow"].includes(pathEl.type) && pathEl.roundness !== null) ||
   pathEl.type === "freedraw"
 ) {
-  [pathEl, isLeftToRight] = await convertBezierToPoints();
+  [pathEl, isLeftToRight, pathElBottom] = await convertBezierToPoints();
 } else if (pathEl.points) {
   isLeftToRight = pathEl.points[pathEl.points.length - 1][0] >= 0;
 }
@@ -109,6 +116,11 @@ currentText = currentText.replace(/ \n/g," ").replace(/\n /g, " ").replace(/\n/g
 let generatedIDs = [];
 let updateTimeout = null;
 let textUpdateTimeout = null;
+
+function isClockwise(points) {
+  if(points.length <=3 ) return true
+  return points[points.length-2] > 0
+}
 
 async function updatePath() {
   if (!currentText || currentText.trim() === "") return;
@@ -402,8 +414,7 @@ function calculatePathPoints(element) {
 }
 
 // Function to distribute text along any path
-// Function to distribute text along any path
-function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0, isLeftToRight, isClosed = false, isReversed = false, isInside = false) {
+function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0, isLeftToRight, isClosed = false, isReversed = false, isInside = false, isBottomEdge = false) {
   if (pathPoints.length === 0) return;
 
   const originalText = text;
@@ -464,8 +475,6 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
   if (pathSegments.length === 0) return;
 
   // Pre-calculate contextual widths to preserve natural kerning
-  // Appending a generic space forces the Canvas API to include the final character's full right-side bearing, 
-  // preventing the overlap of the final character at the end of the text path string.
   const substrWidths = [];
   const spaceWidth = ea.measureText(" ").width;
   for (let i = 0; i <= text.length; i++) {
@@ -515,24 +524,30 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
       // For open lines, shift UP so the text sits on top of the line
       const margin = ea.style.fontSize * 0.2;
       dy = (charPixelHeight / 2) + margin;
+      
+      // Apply custom distance offset (mapped to percentage of fontSize)
+      dy += (currentDistanceOffset / 100) * ea.style.fontSize;
+      
+      // If we are using the bottom edge, its normal vectors actually point UP into the stroke.
+      // So we must invert dy to push the text DOWN away from the stroke edge.
+      // if (isBottomEdge) dy = -dy;
+      
       if (isInside) dy = -dy; 
     } else {
       // For shapes, the path was already expanded outwards by fontHeight/2 earlier in the script.
       // Therefore, the base path is exactly where the text centers should be.
       dy = 0;
-      if (isInside) dy = -fontHeight; 
-    }
-
-    const distanceAdjustment = (currentDistanceOffset / 100) * ea.style.fontSize;
-    if (isInside) {
-      dy -= distanceAdjustment; // Push deeper inside
-    } else {
-      dy += distanceAdjustment; // Push higher outside
+      
+      // Apply custom distance offset (mapped to percentage of fontSize)
+      dy += (currentDistanceOffset / 100) * ea.style.fontSize;
+      
+      if (isInside) dy = -dy - fontHeight; 
     }
 
     // Target spatial distance from the previous character center
     let targetDist = i === 0 ? centers[0] : centers[i] - centers[i-1];
     
+    // Apply custom letter spacing (scale mapped to percentage of font size)
     if (i > 0) {
       targetDist += (currentLetterSpacing / 100) * ea.style.fontSize;
       if (targetDist < 1) targetDist = 1; // Prevent backward steps or collapsed kerning
@@ -719,10 +734,34 @@ async function convertBezierToPoints() {
       
       isLeftToRight = pathEl.points[pathEl.points.length-1][0] >= 0;
 
-      // Handle Freedraw Trimming
-      if (pathEl.type === "freedraw" && points.length > 3) {
-        if (!isLeftToRight) points = points.reverse();
-        points = points.slice(0, Math.ceil(points.length / 2) - 2);
+      let pointsTop = points;
+      let pointsBottom = null;
+
+      // Handle Freedraw Trimming and Bottom Edge Extraction
+      if (pathEl.type === "freedraw" && points.length > 10) {
+        // Perfect Freehand creates a looped polygon. 
+        // The first half traces one edge, the second half traces the return edge.
+        const half = Math.floor(points.length / 2);
+        
+        let topEdge = points.slice(0, half);
+        // Reverse the bottom edge so it flows Start->End, matching the top edge
+        let bottomEdge = points.slice(half).reverse();
+        
+        // Trim the rounded end-caps (usually ~6 points at both ends)
+        const TRIM = 6;
+        if (topEdge.length > TRIM * 2) topEdge = topEdge.slice(TRIM, topEdge.length - TRIM);
+        if (bottomEdge.length > TRIM * 2) bottomEdge = bottomEdge.slice(TRIM, bottomEdge.length - TRIM);
+
+        // Ensure topEdge is actually the visual Top
+        // If drawn Right-to-Left, the SVG winding order might map the first half to the bottom
+        if (!isLeftToRight) {
+           const temp = topEdge;
+           topEdge = bottomEdge;
+           bottomEdge = temp;
+        }
+
+        pointsTop = topEdge;
+        pointsBottom = bottomEdge;
       } 
       // FIX: robustly handle simulated A->B->A strokes on lines and Double-Rounds on polygons
       else if (points.length > 10) {
@@ -740,28 +779,39 @@ async function convertBezierToPoints() {
             }
           }
           if (loopEndIdx !== -1 && loopEndIdx < points.length * 0.9) {
-            points = points.slice(0, loopEndIdx + 1);
+            pointsTop = points.slice(0, loopEndIdx + 1);
           }
         } else if (isLoop) {
           // Open Lines: If it loops back, Excalidraw drew A->B->A. Slice in half to keep A->B.
           if (!isLeftToRight) points = points.reverse();
-          points = points.slice(0, Math.ceil(points.length / 2));
+          pointsTop = points.slice(0, Math.ceil(points.length / 2));
         }
       }
 
-      if (points.length > 1) {
+      if (pointsTop.length > 1) {
         ea.clear();
         ea.style.backgroundColor="transparent";
         ea.style.roughness = 0;
         ea.style.strokeWidth = 1;
         ea.style.roundness = null;
         
-        const lineId = ea.addLine(points);
+        // We create line elements for BOTH the top and bottom edges in the EA workbench 
+        // so we can dynamically swap them inside fitTextToShape when the user toggles settings.
+        const lineId = ea.addLine(pointsTop);
         const line = ea.getElement(lineId);
         line.polygon = pathEl.polygon; 
         
         tempElementIDs.push(lineId);
-        return [line, isLeftToRight];
+        
+        let lineBottom = null;
+        if (pointsBottom && pointsBottom.length > 1) {
+          const lineBottomId = ea.addLine(pointsBottom);
+          lineBottom = ea.getElement(lineBottomId);
+          lineBottom.polygon = pathEl.polygon;
+          tempElementIDs.push(lineBottomId);
+        }
+
+        return [line, isLeftToRight, lineBottom];
       } else {
         new Notice("Could not extract enough points from SVG path.");
       }
@@ -769,7 +819,7 @@ async function convertBezierToPoints() {
       new Notice("No path element found in SVG.");
     }
   }
-  return [pathEl, isLeftToRight];
+  return [pathEl, isLeftToRight, null];
 }
 
 /**
@@ -1247,10 +1297,18 @@ async function addToView() {
 
 // ------------------------------------------------------------
 // Convert any shape type to a series of points along a path
-// In practice this only applies to ellipses and streight lines
+// In practice this only applies to ellipses and straight lines
 // ------------------------------------------------------------
 async function fitTextToShape() {
-  const pathPoints = calculatePathPoints(pathEl);
+  // Swap to the bottom path if it's a freedraw and the user reversed the text or placed it inside
+  let activePathEl = pathEl;
+  if (originalPathType === "freedraw" && pathElBottom) {
+     if (currentPlaceInside) {
+        activePathEl = pathElBottom;
+     }
+  }
+  
+  const pathPoints = calculatePathPoints(activePathEl);
 
   let pathLength = 0;
   for (let i = 1; i < pathPoints.length; i++) {
@@ -1261,7 +1319,7 @@ async function fitTextToShape() {
   
   const textWidth = ea.measureText(currentText).width;
   let offsetValue = 0;
-//(currentPlaceInside !==
+  
   const effectiveCurrentOffsetPct = originalPathDirectionLR ? -currentOffsetPct : currentOffsetPct;
   if (pathEl.polygon) {
     // With double-loops removed from the path array, pathLength is now 1 round.
@@ -1288,7 +1346,8 @@ async function fitTextToShape() {
     isLeftToRight,
     pathEl.polygon,
     currentIsReversed,
-    currentPlaceInside 
+    currentPlaceInside,
+    activePathEl === pathElBottom // Pass a flag to invert dy if using the bottom edge
   );
 
   const groupID = ea.addToGroup(objectIDs);

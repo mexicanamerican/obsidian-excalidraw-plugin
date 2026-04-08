@@ -2380,6 +2380,7 @@ export type ObservedElementsAppState = {
     lockedMultiSelections: AppState["lockedMultiSelections"];
     activeLockedId: AppState["activeLockedId"];
 };
+export type BoxSelectionMode = "contain" | "overlap";
 export interface AppState {
     contextMenu: {
         items: ContextMenuItems;
@@ -2418,6 +2419,8 @@ export interface AppState {
      * `bindingPreference` and keyboard modifiers (ctrl/alt)
      */
     isBindingEnabled: boolean;
+    /** user box selection preference; defaults to "contain" when unset */
+    boxSelectionMode: BoxSelectionMode;
     /** user arrow binding preference */
     bindingPreference: "enabled" | "disabled";
     /** user preference whether arrow snap to midpoints while binding */
@@ -2441,7 +2444,7 @@ export interface AppState {
     /**
      * set when a new text is created or when an existing text is being edited
      */
-    editingTextElement: NonDeletedExcalidrawElement | null;
+    editingTextElement: ExcalidrawTextElement | null;
     activeTool: {
         /**
          * indicates a previous tool we should revert back to if we deselect the
@@ -3114,7 +3117,7 @@ export declare const getRectangleBoxAbsoluteCoords: (boxSceneCoords: RectangleBo
 export declare const getDiamondPoints: (element: ExcalidrawElement) => number[];
 export declare const getCubicBezierCurveBound: (p0: GlobalPoint, p1: GlobalPoint, p2: GlobalPoint, p3: GlobalPoint) => Bounds;
 export declare const getMinMaxXYFromCurvePathOps: (ops: Op[], transformXY?: (p: GlobalPoint) => GlobalPoint) => Bounds;
-export declare const getBoundsFromPoints: (points: ExcalidrawFreeDrawElement["points"]) => Bounds;
+export declare const getBoundsFromPoints: <P extends GlobalPoint | LocalPoint>(points: readonly P[], padding?: number) => Bounds;
 /** @returns number in pixels */
 export declare const getArrowheadSize: (arrowhead: Arrowhead) => number;
 /** @returns number in degrees */
@@ -3153,7 +3156,9 @@ export declare const getCenterForBounds: (bounds: Bounds) => GlobalPoint;
  */
 export declare const aabbForElement: (element: Readonly<ExcalidrawElement>, elementsMap: ElementsMap, offset?: [number, number, number, number]) => Bounds;
 export declare const pointInsideBounds: <P extends GlobalPoint | LocalPoint>(p: P, bounds: Bounds) => boolean;
+export declare const pointInsideBoundsInclusive: <P extends GlobalPoint | LocalPoint>(p: P, bounds: Bounds) => boolean;
 export declare const doBoundsIntersect: (bounds1: Bounds | null, bounds2: Bounds | null) => boolean;
+export declare const boundsContainBounds: (outerBounds: Bounds, innerBounds: Bounds) => boolean;
 export declare const elementCenterPoint: (element: ExcalidrawElement, elementsMap: ElementsMap, xOffset?: number, yOffset?: number) => GlobalPoint;
 
 /* ************************************** */
@@ -3262,6 +3267,7 @@ declare class App extends React.Component<AppProps, AppState> {
         x: number;
         y: number;
     } | null;
+    private lastCompletedCanvasClicks;
     /** previous frame pointer coords */
     previousPointerMoveCoords: {
         x: number;
@@ -3422,6 +3428,7 @@ declare class App extends React.Component<AppProps, AppState> {
      * If disabled, returns null.
      */
     getEffectiveGridSize: () => NullableGridSize;
+    private getTextCreationGridPoint;
     private getHTMLIFrameElement;
     private handleIframeLikeElementHover;
     /** @returns true if iframe-like element click handled */
@@ -3642,6 +3649,8 @@ declare class App extends React.Component<AppProps, AppState> {
     private getSelectedTextElement;
     private getSelectedTextEditingContainerAtPosition;
     private getTextElementAtPosition;
+    private isHittingTextAutoResizeHandle;
+    private handleTextAutoResizeHandlePointerDown;
     private getElementAtPosition;
     private getElementsAtPosition;
     getElementHitThreshold(element: ExcalidrawElement): number;
@@ -3651,7 +3660,9 @@ declare class App extends React.Component<AppProps, AppState> {
     private debounceDoubleClickTimestamp;
     private startImageCropping;
     private finishImageCropping;
+    private shouldHandleBrowserCanvasDoubleClick;
     private handleCanvasDoubleClick;
+    private handleCanvasClick;
     private getElementLinkAtPosition;
     private handleElementLinkClick;
     private getTopLayerFrameAtSceneCoords;
