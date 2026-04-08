@@ -95,6 +95,9 @@ if (
 // Retrieve original settings from text-on-path customData
 // ---------------------------------------------------------
 let currentOffsetPct = textEl?.customData?.text2Path?.offsetPct ?? 0;
+let currentDistanceOffset = textEl?.customData?.text2Path?.distanceOffset ?? 0;
+let currentLetterSpacing = textEl?.customData?.text2Path?.letterSpacing ?? 0;
+
 // Map legacy archAbove to currentIsReversed for backwards compatibility
 let currentIsReversed = textEl?.customData?.text2Path?.isReversed ?? (textEl?.customData?.text2Path?.archAbove === false ? true : false);
 let currentPlaceInside = textEl?.customData?.text2Path?.placeInside ?? false; 
@@ -105,6 +108,7 @@ currentText = currentText.replace(/ \n/g," ").replace(/\n /g, " ").replace(/\n/g
 
 let generatedIDs = [];
 let updateTimeout = null;
+let textUpdateTimeout = null;
 
 async function updatePath() {
   if (!currentText || currentText.trim() === "") return;
@@ -163,6 +167,10 @@ modal.onOpen = () => {
       text.setValue(currentText)
           .onChange(val => {
             currentText = val.replace(/ \n/g," ").replace(/\n /g, " ").replace(/\n/g," ");
+            if (textUpdateTimeout) clearTimeout(textUpdateTimeout);
+            textUpdateTimeout = setTimeout(() => {
+              updatePath();
+            }, 1000); 
           });
       // Make text area fill its container
       text.inputEl.style.width = "100%";
@@ -198,6 +206,38 @@ modal.onOpen = () => {
   offsetSetting.controlEl.style.width = "100%";
   offsetSetting.infoEl.style.flex = "0 1 auto"; 
 
+  const distanceSetting = new ea.obsidian.Setting(modal.contentEl)
+    .setName("Distance from line")
+    .addSlider(slider => {
+      slider.setLimits(-50, 50, 1)
+            .setValue(currentDistanceOffset)
+            .onChange(val => {
+              currentDistanceOffset = val;
+              if (updateTimeout) clearTimeout(updateTimeout);
+              updateTimeout = setTimeout(() => { updatePath(); }, 500); 
+            });
+      slider.sliderEl.style.width = "100%";
+    });
+  distanceSetting.controlEl.style.flexGrow = "1";
+  distanceSetting.controlEl.style.width = "100%";
+  distanceSetting.infoEl.style.flex = "0 1 auto"; 
+
+  const spacingSetting = new ea.obsidian.Setting(modal.contentEl)
+    .setName("Character spacing")
+    .addSlider(slider => {
+      slider.setLimits(-25, 50, 1)
+            .setValue(currentLetterSpacing)
+            .onChange(val => {
+              currentLetterSpacing = val;
+              if (updateTimeout) clearTimeout(updateTimeout);
+              updateTimeout = setTimeout(() => { updatePath(); }, 500); 
+            });
+      slider.sliderEl.style.width = "100%";
+    });
+  spacingSetting.controlEl.style.flexGrow = "1";
+  spacingSetting.controlEl.style.width = "100%";
+  spacingSetting.infoEl.style.flex = "0 1 auto"; 
+
   new ea.obsidian.Setting(modal.contentEl)
     .setName("Reverse text")
     .setDesc("Flips the text direction (useful for placing text on the inside or bottom of a shape).")
@@ -231,12 +271,14 @@ modal.onOpen = () => {
   const updateBtn = btnContainer.createEl("button", { text: "Update Preview" });
   updateBtn.onclick = () => {
     if (updateTimeout) clearTimeout(updateTimeout);
+    if (textUpdateTimeout) clearTimeout(textUpdateTimeout);
     updatePath();
   };
 
   const closeBtn = btnContainer.createEl("button", { text: "Done", cls: "mod-cta" });
   closeBtn.onclick = async () => {
     if (updateTimeout) clearTimeout(updateTimeout);
+    if (textUpdateTimeout) clearTimeout(textUpdateTimeout);
     await updatePath();
     modal.close();
   };
@@ -360,6 +402,7 @@ function calculatePathPoints(element) {
 }
 
 // Function to distribute text along any path
+// Function to distribute text along any path
 function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0, isLeftToRight, isClosed = false, isReversed = false, isInside = false) {
   if (pathPoints.length === 0) return;
 
@@ -398,7 +441,7 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
     pathLength += segLength;
   }
   
-  // --- NEW: Trimming logic to remove freedraw terminal hooks ---
+  // --- Trimming logic to remove freedraw terminal hooks ---
   if (originalPathType === "freedraw" && !isClosed && pathSegments.length > 0) {
     let trimDist = 15;
     while (pathSegments.length > 0 && trimDist > 0) {
@@ -421,9 +464,13 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
   if (pathSegments.length === 0) return;
 
   // Pre-calculate contextual widths to preserve natural kerning
+  // Appending a generic space forces the Canvas API to include the final character's full right-side bearing, 
+  // preventing the overlap of the final character at the end of the text path string.
   const substrWidths = [];
+  const spaceWidth = ea.measureText(" ").width;
   for (let i = 0; i <= text.length; i++) {
-    substrWidths.push(ea.measureText(text.substring(0, i)).width);
+    const sub = text.substring(0, i);
+    substrWidths.push(ea.measureText(sub + " ").width - spaceWidth);
   }
 
   // Calculate the exact target distance (center-to-center) on a straight line
@@ -476,8 +523,20 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
       if (isInside) dy = -fontHeight; 
     }
 
+    const distanceAdjustment = (currentDistanceOffset / 100) * ea.style.fontSize;
+    if (isInside) {
+      dy -= distanceAdjustment; // Push deeper inside
+    } else {
+      dy += distanceAdjustment; // Push higher outside
+    }
+
     // Target spatial distance from the previous character center
     let targetDist = i === 0 ? centers[0] : centers[i] - centers[i-1];
+    
+    if (i > 0) {
+      targetDist += (currentLetterSpacing / 100) * ea.style.fontSize;
+      if (targetDist < 1) targetDist = 1; // Prevent backward steps or collapsed kerning
+    }
 
     if (i === 0) {
       // Find the starting reference point at 'offset'
@@ -513,6 +572,7 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
     
     const charID = ea.addText(drawX, drawY, character);
     
+    // Pass custom properties back into the customData to be persisted
     ea.addAppendUpdateCustomData(charID, {
       text2Path: {
         pathID, 
@@ -520,6 +580,8 @@ function distributeTextAlongPath(text, pathPoints, pathID, objectIDs, offset = 0
         pathElID, 
         isReversed, 
         offsetPct: currentOffsetPct, 
+        distanceOffset: currentDistanceOffset,
+        letterSpacing: currentLetterSpacing,
         placeInside: isInside
       }
     });
